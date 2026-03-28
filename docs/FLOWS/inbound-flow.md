@@ -76,7 +76,9 @@ The system must perform the following checks:
 - Does the target location exist?
 - Does it belong to the correct warehouse zone?
 - Is the location blocked for inbound?
-- Is the location suitable for the specific product (e.g., hazardous, refrigerated)?
+
+**Future Consideration:**
+- Location suitability for specific product types (e.g., hazardous, refrigerated) will require additional product and location attributes not yet defined in the domain model.
 
 **Rule:** If the location is invalid or blocked, the operation is rejected. Operator correction or supervisor override is required.
 
@@ -187,10 +189,12 @@ For the MVP, inbound operations are modeled as a movement of type `receipt`.
   "toLocationId": "loc_001",
   "type": "receipt",
   "quantity": 100,
-  "performedBy": "user_001",
   "reference": "inbound_receipt_001"
 }
 ```
+
+> [!NOTE]
+> `performedBy` is set automatically from the authenticated session.
 
 ---
 

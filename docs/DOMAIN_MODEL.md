@@ -1,4 +1,4 @@
-```md
+
 # NexusWMS Domain Model
 
 ## Domain Goal
@@ -49,7 +49,7 @@ Responsibilities:
 
 - incident registration
 - incident type classification
-- open / review / resolved / closed state
+- open / in_review / resolved / closed state
 - evidence references
 - ownership and escalation
 - corrective action traceability
@@ -176,12 +176,14 @@ Key concepts:
 
 Represents a product-position stock record.
 
+**Unique constraint**: `(productId, locationId, lotNumber)`. No two StockItem records may share the same product, location, and lot combination. If `lotNumber` is null, uniqueness is `(productId, locationId)` where `lotNumber IS NULL`.
+
 Initial attributes:
 
 - id
 - productId
 - locationId
-- quantityOnHand
+- quantityOnHand (derived: quantityAvailable + quantityBlocked)
 - quantityAvailable
 - quantityBlocked
 - lotNumber
@@ -189,6 +191,17 @@ Initial attributes:
 - receivedAt
 - expiresAt
 - status
+- version (optimistic locking, integer, starts at 1)
+- updatedAt
+
+> [!IMPORTANT]
+> **Quantity derivation rule**: `quantityOnHand` must always equal `quantityAvailable + quantityBlocked`. This is enforced by a database CHECK constraint: `CHECK (quantityOnHand = quantityAvailable + quantityBlocked)`. All mutations must update all three fields atomically.
+
+> [!IMPORTANT]
+> **Concurrency control**: StockItem uses optimistic locking via a `version` column. Every mutation must increment `version` and include `WHERE version = :expected_version` in the UPDATE query. If the version does not match, the operation must be retried or rejected with a `409 Conflict` response.
+
+> [!IMPORTANT]
+> **Creation ownership**: Only the Inventory domain may create StockItem records. The Movements domain requests StockItem creation through the Inventory domain's internal service interface. Movement handlers must never INSERT into the stock_items table directly.
 
 ### InventoryIncident
 
@@ -200,10 +213,13 @@ Initial attributes:
 - productId
 - locationId
 - type
+- severity
 - description
+- quantityAffected
 - status
 - reportedBy
 - createdAt
+- updatedAt
 
 ### InventoryMovement
 
@@ -217,9 +233,11 @@ Initial attributes:
 - toLocationId
 - type
 - quantity
+- reason
 - performedBy
 - performedAt
 - reference
+- idempotencyKey
 
 ### Warehouse
 
@@ -248,6 +266,28 @@ Initial attributes:
 - bin
 - label
 - isBlocked
+- updatedAt
+
+### AuditLog
+
+Represents a traceable record of a state-changing operation.
+
+Audit records are append-only and immutable. They are stored separately from domain entities and event logs.
+
+Attributes:
+
+- id
+- actorId
+- actorType (human | system | agent)
+- action (e.g., `incident.created`, `movement.registered`, `location.blocked`)
+- entityType (e.g., `StockItem`, `InventoryIncident`, `InventoryMovement`)
+- entityId
+- changeset (JSON diff of modified attributes)
+- correlationId
+- timestamp
+
+> [!NOTE]
+> The AuditLog table is write-only from the application's perspective. Domain services write audit entries but never update or delete them. Read access is through a dedicated Audit query service.
 
 ---
 
@@ -307,7 +347,7 @@ Not modeled in detail yet:
 - advanced replenishment optimization
 
 These may be added after the operational core is stable.
-```
+
 
 ## State Transitions
 

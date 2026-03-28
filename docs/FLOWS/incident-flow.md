@@ -59,18 +59,29 @@ It ensures traceability, operational clarity, and AI-safe handling of incident d
 ```json
 {
   "type": "damage",
+  "severity": "medium",
   "description": "Box crushed during unloading",
   "locationId": "loc_001",
-  "sku": "TV-001",
+  "productId": "prod_001",
   "quantityAffected": 5
 }
 ```
 
 **Validations:**
 - Location must exist and be active.
-- SKU must exist in the product catalog.
+- `productId` must exist in the product catalog.
 - Quantity must be greater than zero.
 - Description must be sanitized (Prompt Injection Protection).
+
+**Duplicate detection:**
+
+Before creating a new incident, the system checks for an existing `open` incident with the same `productId`, `locationId`, and `type` created within the last 15 minutes. If found:
+- The request is rejected with `409 Conflict`.
+- The response body includes the existing incident ID.
+- This prevents double-reporting of the same physical damage by different operators.
+
+> [!NOTE]
+> The 15-minute window is configurable. It is intentionally short to avoid blocking legitimate reports of different incidents at the same location.
 
 ---
 
@@ -98,32 +109,53 @@ The system performs an automated analysis to assist the operator:
 
 ### 3. Incident Persistence
 
-**Entity:** `Incident`
+**Entity:** `InventoryIncident`
 
 **Fields:**
 - `id`: Unique identifier (UUID).
 - `type`: Category of the incident.
+- `severity`: Severity level (low, medium, high).
 - `description`: Human-readable summary.
 - `locationId`: Reference to the warehouse location.
-- `sku`: Reference to the affected product.
+- `productId`: Reference to the affected product.
 - `quantityAffected`: Units involved.
-- `status`: Current state (`open` | `investigating` | `resolved`).
+- `status`: Current state (`open` | `in_review` | `resolved` | `closed`).
 - `createdAt`: Timestamp.
-- `createdBy`: Actor identification.
+- `createdBy`: Actor identification (server-set from authenticated session).
 
 ---
 
 ### 4. Inventory Impact
 
-If the incident affects physical stock, the system must update inventory availability:
+If the incident affects physical stock, the system must trigger inventory changes **through the Movements domain**, not by direct mutation.
 
-**Rules:**
-- `quantityBlocked` += `quantityAffected`
-- `quantityAvailable` -= `quantityAffected`
+> [!CAUTION]
+> Inventory is never mutated directly by the Incident domain. This is a core system invariant (DOMAIN_MODEL rule 3, RULES.md Rule 2). All stock changes must flow through the Movements domain to preserve traceability and auditability.
+
+> [!CAUTION]
+> **Transaction boundary**: The incident persistence (step 3) and the adjustment movement creation (this step) must occur within a **single database transaction**. If the adjustment fails, the incident must not persist. This is architecturally valid because NexusWMS is a modular monolith with a shared database.
+
+**Process:**
+
+1. Incident is persisted with `quantityAffected`.
+2. If stock blocking is required, the system creates an `adjustment` movement:
+   - `productId`: from the incident
+   - `fromLocationId`: from the incident
+   - `type`: `adjustment`
+   - `quantity`: min(`quantityAffected`, `quantityAvailable`) — partial blocking if insufficient
+   - `reason`: `incident_damage` (or matching incident type)
+   - `reference`: `incident:{incidentId}`
+3. The adjustment movement updates `quantityBlocked` and `quantityAvailable` through the Inventory domain's normal mutation path.
+4. Both `movement.created` and `inventory.stock.adjusted` events are written to the event outbox within the same transaction.
+5. If no available stock exists at the location, the incident persists with stock impact = 0 and a flag indicating no blocking was possible.
+
+**Edge case: `quantityAffected` > `quantityAvailable`:**
+
+The incident is always persisted (reporting an anomaly is valid regardless of stock levels). The adjustment blocks only up to `quantityAvailable`. The incident record retains the full `quantityAffected`. The difference is visible in audit and signals a potential pre-existing inventory discrepancy.
 
 **Validation:**
-- Cannot reduce available stock below zero.
-- Must maintain total stock consistency (`available + blocked + reserved = total`).
+- Must maintain total stock consistency (`quantityAvailable + quantityBlocked = quantityOnHand`).
+- Stock consistency is enforced by database CHECK constraints as a safety net.
 
 ---
 
@@ -131,22 +163,22 @@ If the incident affects physical stock, the system must update inventory availab
 
 After successful persistence, the following events are emitted:
 
-**Event: `incident.created`**
+**Event: `incident.reported`**
 ```json
 {
   "incidentId": "inc_001",
   "type": "damage",
+  "severity": "medium",
   "locationId": "loc_001",
-  "sku": "TV-001",
+  "productId": "prod_001",
   "quantityAffected": 5
 }
 ```
 
-**Event: `inventory.stock.adjusted` (Optional)**
+**Event: `inventory.stock.adjusted`** (emitted by the Movements domain if stock blocking was triggered)
 ```json
 {
   "productId": "prod_001",
-  "sku": "TV-001",
   "locationId": "loc_001",
   "previousQuantity": 100,
   "newQuantity": 95,
@@ -155,22 +187,26 @@ After successful persistence, the following events are emitted:
 ```
 
 > [!NOTE]
-> Events are immutable facts emitted only after the transaction is successfully committed to the database.
+> Events are immutable facts emitted only after the transaction is successfully committed to the database. The `inventory.stock.adjusted` event is emitted by the Movements domain, not the Incidents domain.
 
 ---
 
 ### 6. Investigation Phase
 
-**Updates:**
+**Status Update:**
+`PATCH /api/incidents/{id}/status`
+
+- Sets status to `in_review`.
+
+**Metadata Update:**
 `PATCH /api/incidents/{id}`
 
 **Allowed Operations:**
-- Update `status` to `investigating`.
 - Add internal `notes`.
 - Reassign to a different operator.
 
 **Constraints:**
-- No silent mutation of original report data.
+- No silent mutation of original report data (`type`, `description`, `productId`, `locationId`).
 - Full version history must be preserved in the audit log.
 
 ---

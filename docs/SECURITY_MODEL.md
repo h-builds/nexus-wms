@@ -202,6 +202,71 @@ The API must **NOT**:
 
 ---
 
+## Actor Identity Extraction
+
+> [!CAUTION]
+> Actor identity (`reportedBy`, `performedBy`, `createdBy`) must **always** be extracted from the authenticated session or token.
+
+The API must **NEVER** accept actor identity from the request body. Fields like `reportedBy` and `performedBy` appear in responses and audit records as server-set values, not client-provided values.
+
+This prevents:
+
+- actor impersonation
+- unreliable audit trails
+- spoofed action attribution
+
+---
+
+## Offline Identity Attestation
+
+> [!WARNING]
+> The offline-first mobile direction (ADR-003) conflicts with server-set actor identity. This section defines the resolution.
+
+When the Field-Agent Mobile app operates offline, it cannot establish a server session at the time of action. The following protocol applies:
+
+### Offline token
+
+At authentication time (while online), the server issues a **signed offline token** containing:
+
+```json
+{
+  "actorId": "user_001",
+  "actorType": "human",
+  "role": "operator",
+  "issuedAt": "2026-03-27T08:00:00Z",
+  "expiresAt": "2026-03-27T20:00:00Z",
+  "deviceId": "device_abc",
+  "signature": "hmac_sha256(...)"
+}
+```
+
+### Offline action recording
+
+When the mobile app creates a movement or incident while offline:
+
+1. The action is stored locally with the offline token attached.
+2. The `performedAt` / `createdAt` timestamp is recorded by the device at action time (not sync time).
+3. When connectivity resumes, the sync request includes the offline token and the device timestamp.
+
+### Server-side sync processing
+
+When the server receives a sync batch:
+
+1. Verify the offline token signature.
+2. Reject if the token has expired (max 12-hour window).
+3. Extract `actorId` from the **offline token**, not from the current session.
+4. Preserve the device-recorded timestamp as `performedAt`, but add a `syncedAt` server timestamp.
+5. Process each action through normal validation and domain logic.
+6. Flag any actions where `syncedAt - performedAt > 1 hour` for supervisor review.
+
+### Constraints
+
+- Offline tokens are device-bound and non-transferable.
+- The offline window is limited (default: 12 hours).
+- Sync conflicts (same stock modified by online and offline users) are resolved by optimistic locking — the later sync receives a `409 Conflict` and must be manually reconciled.
+
+---
+
 ## AI Agent Security (Critical)
 
 > [!CAUTION]

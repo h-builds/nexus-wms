@@ -100,6 +100,8 @@ Agents must respect `DATA_GUARDRAILS.md`. They must not:
   - `inventory.stock.received`
   - `inventory.stock.picked`
   - `inventory.stock.relocated`
+  - `inventory.stock.putaway`
+  - `inventory.stock.returned`
 - **Responsibilities**:
   - detect unusual drops in stock
   - detect negative stock conditions
@@ -144,6 +146,8 @@ Agents must respect `DATA_GUARDRAILS.md`. They must not:
 - **Inputs**:
   - `movement.created`
   - `inventory.stock.relocated`
+  - `inventory.stock.putaway`
+  - `inventory.stock.returned`
 - **Responsibilities**:
   - detect excessive relocations
   - detect inefficient movement patterns

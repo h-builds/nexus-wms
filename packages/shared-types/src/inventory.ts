@@ -6,8 +6,7 @@ export type InventoryStatus =
 
 export interface StockItem {
   id: string;
-  sku: string;
-  productName: string;
+  productId: string;
   locationId: string;
   quantityOnHand: number;
   quantityAvailable: number;
@@ -17,4 +16,6 @@ export interface StockItem {
   receivedAt?: string;
   expiresAt?: string;
   status: InventoryStatus;
+  version: number;
+  updatedAt: string;
 }

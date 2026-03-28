@@ -1,12 +1,22 @@
-export interface InventoryAdjustedEvent {
-  type: "inventory.adjusted";
-  payload: {
-    productId: string;
-    locationId: string;
-    previousQuantity: number;
-    newQuantity: number;
-    reason: string;
-    actorId: string;
-    occurredAt: string;
-  };
-}
+/**
+ * Re-export all event types from @nexus/event-contracts.
+ *
+ * This file exists for backward compatibility.
+ * New code should import directly from @nexus/event-contracts.
+ */
+export type {
+  DomainEventEnvelope,
+  StockAdjustedEvent,
+  StockAdjustedPayload,
+  StockRelocatedEvent,
+  StockReceivedEvent,
+  StockPickedEvent,
+  StockPutawayEvent,
+  StockReturnedEvent,
+  IncidentReportedEvent,
+  IncidentStatusUpdatedEvent,
+  MovementCreatedEvent,
+  LocationBlockedEvent,
+  LocationUnblockedEvent,
+  ProductCreatedEvent,
+} from "@nexus-wms/event-contracts";

@@ -140,6 +140,65 @@ This keeps:
 
 ---
 
+## Module Dependency Rules
+
+Inter-module dependencies must be explicit and controlled. The following directed dependency graph defines allowed runtime dependencies between backend modules:
+
+```text
+Movements  → Inventory (request StockItem creation, update quantities)
+Movements  → Locations  (validate location existence and block status)
+Movements  → Product    (validate product existence)
+Incidents  → Movements  (create adjustment movements for stock blocking)
+Incidents  → Product    (validate product existence)
+Incidents  → Locations  (validate location existence)
+Audit      ← ALL        (all modules write audit entries)
+Identity   ← ALL        (all modules resolve actor identity)
+```
+
+**Prohibited dependencies:**
+
+- Inventory must **NOT** depend on Incidents or Movements (it is the innermost domain)
+- Locations must **NOT** depend on Inventory or Movements
+- Product must **NOT** depend on any other domain module
+- No circular dependencies are permitted
+
+**Inter-module communication** within the modular monolith is via direct service injection (Laravel dependency injection). No HTTP calls between modules. No event-driven inter-module commands (events are for notification, not invocation).
+
+---
+
+## Caching Strategy
+
+### Reference data (rarely changes)
+
+The following data changes infrequently and should be cached at the application level:
+
+| Resource | Cache TTL | Invalidation |
+| :--- | :--- | :--- |
+| Products | 5 minutes | On `product.created` or product update |
+| Locations | 5 minutes | On `location.blocked`, `location.unblocked`, or location create |
+| Warehouses | 15 minutes | On warehouse configuration change |
+
+### Operational data (changes frequently)
+
+| Resource | Cache | Strategy |
+| :--- | :--- | :--- |
+| Inventory (StockItem) | No application cache | Always read from DB (concurrency-critical) |
+| Movements | No application cache | Append-only, query from DB |
+| Incidents | No application cache | State changes frequently |
+
+### HTTP cache headers
+
+All `GET` endpoints should return:
+
+- `Cache-Control: no-cache` for operational data (inventory, incidents, movements)
+- `Cache-Control: max-age=300` for reference data (products, locations)
+- `ETag` header for all single-resource endpoints (`GET /api/{resource}/{id}`)
+
+> [!NOTE]
+> StockItem data must never be cached at the application or HTTP level due to concurrency requirements. Stale stock data leads to overselling.
+
+---
+
 ## Frontend Architecture
 
 Frontend applications are organized by domain instead of by generic technical type only.
