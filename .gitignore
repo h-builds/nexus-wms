@@ -1,0 +1,12 @@
+node_modules
+.pnpm-store
+dist
+build
+coverage
+.env
+.env.*
+vendor
+composer.lock
+.DS_Store
+.idea
+.vscode

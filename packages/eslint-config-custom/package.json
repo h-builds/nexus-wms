@@ -1,0 +1,6 @@
+{
+  "name": "@nexus-wms/eslint-config-custom",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs"
+}
