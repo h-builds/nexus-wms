@@ -5,8 +5,8 @@
 This document defines the **Runtime AI Pipeline** that operates within NexusWMS (the resulting system).
 
 > [!CAUTION]
-> **This document does NOT govern Development Coding Assistants (like Cursor or Copilot).** 
-> If you are an AI reading this file while attempting to write source code (e.g., building a controller or a service), **IGNORE the "Agents DO NOT mutate state" rules below**. Those rules apply to the *operational monitoring AI microservices* running inside the warehouse, not to you as a developer. Your coding rules are strictly contained in `.ai/RULES.md`.
+> **This document does NOT govern Development Coding Assistants (like Cursor or Copilot).**
+> If you are an AI reading this file while attempting to write source code (e.g., building a controller or a service), **IGNORE the "Agents DO NOT mutate state" rules below**. Those rules apply to the _operational monitoring AI microservices_ running inside the warehouse, not to you as a developer. Your coding rules are strictly contained in `.ai/RULES.md`.
 
 Runtime Agents are not generic software assistants. They are domain-scoped warehouse operators that:
 
@@ -50,8 +50,8 @@ Agents are conceptualized as reacting to:
 - state changes
 - anomalies
 
-**Event Consumption Guardrail (MVP):** 
-Agents must **NOT** directly read or poll the `event_outbox` database table. The outbox pattern guarantees transaction atomicity for the core system. Direct DB polling by AI scripts risks locking or skipping events. 
+**Event Consumption Guardrail (MVP):**
+Agents must **NOT** directly read or poll the `event_outbox` database table. The outbox pattern guarantees transaction atomicity for the core system. Direct DB polling by AI scripts risks locking or skipping events.
 During the MVP phase, Agents operate via explicit REST API reporting or process events pushed to them synchronously by the application layer. True asynchronous streaming ingestion (e.g., Kafka, RabbitMQ) is deferred to Phase 2.
 
 ---
@@ -161,7 +161,6 @@ Agents must respect `DATA_GUARDRAILS.md`. They must not:
 
 ---
 
-
 ### 5. Audit Support Agent (Future-Oriented)
 
 - **Domain**: Audit
@@ -261,8 +260,6 @@ Agents will eventually integrate with:
 - orchestration layer (Orchestrator Twin)
 - future AI execution engine
 
-
-
 ## Final Rule
 
 > [!IMPORTANT]
@@ -279,3 +276,8 @@ Agents will eventually integrate with:
 - override
 - shortcut
 - corrupt system behavior
+
+---
+
+Context loading rules are defined in `.ai/CONTEXT_LOADING.md`.
+Agents must never load full repository context by default.
