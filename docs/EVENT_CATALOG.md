@@ -44,6 +44,8 @@ All events follow this structure:
 
 ---
 
+---
+
 ## Inventory Events
 
 ### inventory.stock.adjusted

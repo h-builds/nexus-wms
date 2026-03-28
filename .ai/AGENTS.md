@@ -1,28 +1,302 @@
-# NexusWMS Agent Operating Guide
+# NexusWMS AI Agents
 
-## Mission
+## Purpose
 
-Support implementation and maintenance of a modular warehouse orchestration platform.
+This document defines the AI agents that operate within NexusWMS.
 
-## Mandatory Priorities
+Agents are not generic assistants. They are domain-scoped operators that:
 
-1. Preserve domain boundaries.
-2. Prefer explicit contracts over hidden coupling.
-3. Do not introduce cross-domain shortcuts.
-4. Keep field operations offline-capable.
-5. Every AI-assisted change must remain auditable.
+- observe events
+- analyze system state
+- suggest actions (MVP)
+- execute actions (future)
+- respect governance constraints
 
-## Domain Boundaries
+All agents must comply with:
 
-- Inventory owns stock truth.
-- Incidents owns anomaly reporting and lifecycle.
-- Movements owns operational stock transitions.
-- Locations owns physical placement hierarchy.
-- Audit owns traceability and history.
+- `CONTEXT.md`
+- `RULES.md`
+- `DATA_GUARDRAILS.md`
+- `EVALS.md`
 
-## Forbidden Actions
+---
 
-- Do not move business rules to controllers.
-- Do not duplicate canonical shared types inside apps.
-- Do not bypass validation schemas.
-- Do not write directly across another domain’s persistence layer.
+## Agent Design Principles
+
+### 1. Domain Alignment
+
+Each agent must belong to a specific domain:
+
+- Inventory
+- Incidents
+- Movements
+- Monitoring
+- Simulation (future)
+
+> [!IMPORTANT]
+> No cross-domain uncontrolled agents are permitted.
+
+---
+
+### 2. Event-Driven Thinking
+
+Agents do not poll blindly. They react to:
+
+- domain events
+- state changes
+- anomalies
+
+Events are their primary input.
+
+---
+
+### 3. Suggestion First (MVP)
+
+In the MVP phase:
+
+- Agents **DO NOT** mutate system state.
+- Agents **DO NOT** execute commands automatically.
+
+Agents focus on:
+
+- analysis
+- detecting anomalies
+- suggesting actions
+
+---
+
+### 4. Explainability Required
+
+Every agent output must include:
+
+- what it detected
+- why it matters
+- what it suggests
+- what data it used
+
+> [!TIP]
+> No black-box decisions are allowed.
+
+---
+
+### 5. No Data Overreach
+
+Agents must respect `DATA_GUARDRAILS.md`. They must not:
+
+- expose sensitive data
+- invent missing data
+- use hidden context
+
+---
+
+## Agent Types
+
+### 1. Inventory Monitoring Agent
+
+- **Domain**: Inventory
+- **Purpose**: Monitor stock levels and detect anomalies.
+- **Inputs**:
+  - `inventory.stock.adjusted`
+  - `inventory.stock.received`
+  - `inventory.stock.picked`
+  - `inventory.stock.relocated`
+- **Responsibilities**:
+  - detect unusual drops in stock
+  - detect negative stock conditions
+  - detect abnormal movement patterns
+- **Outputs (MVP)**:
+  - anomaly alerts
+  - suggested investigation actions
+
+**Example Output**:
+
+- "Stock for SKU TV-001 dropped 40% in 2 hours"
+- "Suggested action: review recent movements for this SKU"
+
+---
+
+### 2. Incident Analysis Agent
+
+- **Domain**: Incidents
+- **Purpose**: Analyze incidents and detect patterns.
+- **Inputs**:
+  - `incident.reported`
+  - `incident.status.updated`
+- **Responsibilities**:
+  - detect recurring issues by product
+  - detect problematic locations
+  - identify high-frequency incident types
+- **Outputs (MVP)**:
+  - pattern insights
+  - suggested root cause investigations
+
+**Example Output**:
+
+- "Product TV-001 has 5 damage incidents in 24h"
+- "Suggested action: inspect packaging process"
+
+---
+
+### 3. Movement Intelligence Agent
+
+- **Domain**: Movements
+- **Purpose**: Analyze stock movements for inefficiencies or anomalies.
+- **Inputs**:
+  - `movement.created`
+  - `inventory.stock.relocated`
+- **Responsibilities**:
+  - detect excessive relocations
+  - detect inefficient movement patterns
+  - detect redundant operations
+- **Outputs (MVP)**:
+  - optimization suggestions
+  - anomaly alerts
+
+---
+
+### 4. Operational Monitoring Agent
+
+- **Domain**: Monitoring
+- **Purpose**: Provide system-level insights across domains.
+- **Inputs**:
+  - all domain events
+- **Responsibilities**:
+  - correlate incidents with movements
+  - detect systemic issues
+  - surface operational risks
+- **Outputs (MVP)**:
+  - cross-domain insights
+  - escalation suggestions
+
+---
+
+### 5. Audit Support Agent (Future-Oriented)
+
+- **Domain**: Audit
+- **Purpose**: Support traceability and investigation.
+- **Inputs**:
+  - all events
+  - audit logs (future)
+- **Responsibilities**:
+  - reconstruct event timelines
+  - explain how a state was reached
+  - assist audits and investigations
+- **Outputs**:
+  - trace narratives
+  - investigation summaries
+
+---
+
+## Agent Interaction Model (MVP)
+
+User Action → API → Domain Logic → Event Emitted → Agent Consumes → Suggestion Generated → UI Displays Insight
+
+**Agents do not**:
+
+- call APIs
+- mutate state
+- bypass backend logic
+
+---
+
+## Future Evolution (Post-MVP)
+
+Agents may evolve to:
+
+- execute approved actions
+- trigger workflows
+- orchestrate multi-step operations
+- simulate scenarios (digital twin)
+- optimize inventory placement
+- predict stock shortages
+
+**This requires**:
+
+- explicit authorization model
+- stronger audit system
+- decision trace storage
+
+---
+
+## Guardrails for All Agents
+
+> [!CAUTION]
+> Agents must **NEVER**:
+>
+> - mutate inventory directly
+> - bypass domain services
+> - invent system data
+> - fabricate events
+> - expose sensitive information
+> - assume features that are not implemented
+
+---
+
+## Agent Output Contract
+
+Every agent output should follow:
+
+- **Observation**: [Summary of detection]
+- **Context**: [Data used for detection]
+- **Reasoning**: [Logic behind the suggestion]
+- **Suggested Action**: [Action to be taken by user]
+
+**Optional**:
+
+- Confidence level
+- Related events
+
+---
+
+## Example Agent Output
+
+- **Observation**: Stock for SKU TV-001 dropped significantly.
+- **Context**:
+  - Previous quantity: 100
+  - Current quantity: 60
+  - Time window: 2 hours
+- **Reasoning**: Drop exceeds normal movement patterns.
+- **Suggested Action**: Review recent picking and relocation movements.
+
+---
+
+## Integration Points
+
+Agents will eventually integrate with:
+
+- event stream
+- monitoring dashboards (Vapor Monitor)
+- orchestration layer (Orchestrator Twin)
+- future AI execution engine
+
+---
+
+## Code Generation Expectations
+
+Agents must generate:
+
+- clean, production-ready code
+- no placeholder logic
+- no unnecessary comments
+- no verbose explanations inside code
+
+Detailed coding rules are defined in .ai/RULES.md
+
+---
+
+## Final Rule
+
+> [!IMPORTANT]
+> Agents are assistants to the system, not replacements for domain logic.
+
+**They must**:
+
+- observe
+- interpret
+- suggest
+
+**They must not**:
+
+- override
+- shortcut
+- corrupt system behavior

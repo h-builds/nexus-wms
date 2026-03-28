@@ -1,3 +1,5 @@
+# NexusWMS Pull Request Template
+
 ## Summary
 
 Describe briefly what changed.
