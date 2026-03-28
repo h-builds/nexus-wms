@@ -148,8 +148,8 @@ Not included in this phase:
 
 ### Pending (Next Actions)
 
-- [ ] implement Product domain
-- [ ] implement Locations domain
+- [x] implement Product domain
+- [x] implement Locations domain
 - [ ] implement Inventory domain
 - [ ] implement Incident flow (end-to-end)
 - [ ] implement Event emission layer

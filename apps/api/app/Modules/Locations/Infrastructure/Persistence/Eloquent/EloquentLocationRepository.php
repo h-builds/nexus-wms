@@ -6,6 +6,7 @@ namespace App\Modules\Locations\Infrastructure\Persistence\Eloquent;
 
 use App\Modules\Locations\Domain\Entities\Location;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class EloquentLocationRepository implements LocationRepository
 {
@@ -42,13 +43,16 @@ final class EloquentLocationRepository implements LocationRepository
         return $model ? $this->toDomain($model) : null;
     }
 
-    public function all(): array
+    public function paginate(int $page = 1, int $perPage = 50): LengthAwarePaginator
     {
-        return LocationModel::query()
+        $paginator = LocationModel::query()
             ->orderBy('label')
-            ->get()
-            ->map(fn (LocationModel $model): Location => $this->toDomain($model))
-            ->all();
+            ->paginate(perPage: $perPage, page: $page);
+
+        // Transform internal models to domain entities
+        $paginator->getCollection()->transform(fn (LocationModel $model): Location => $this->toDomain($model));
+
+        return $paginator;
     }
 
     private function toDomain(LocationModel $model): Location

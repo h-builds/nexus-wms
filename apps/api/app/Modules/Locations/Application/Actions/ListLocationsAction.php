@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Locations\Application\Actions;
 
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class ListLocationsAction
 {
@@ -13,8 +14,8 @@ final class ListLocationsAction
     ) {
     }
 
-    public function execute(): array
+    public function execute(int $page = 1, int $perPage = 50): LengthAwarePaginator
     {
-        return $this->locations->all();
+        return $this->locations->paginate($page, $perPage);
     }
 }

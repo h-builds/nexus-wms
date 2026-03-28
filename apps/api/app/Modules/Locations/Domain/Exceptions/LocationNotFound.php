@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Locations\Domain\Exceptions;
 
+use Illuminate\Http\JsonResponse;
 use RuntimeException;
 
 final class LocationNotFound extends RuntimeException
 {
     public static function withId(string $id): self
     {
-        return new self("Location with id [{$id}] was not found.");
+        return new self(sprintf('Location with ID [%s] not found.', $id));
     }
 
-    public function render($request)
+    public function render(): JsonResponse
     {
         return response()->json([
             'error' => [

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Locations\Domain\Repositories;
 
 use App\Modules\Locations\Domain\Entities\Location;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface LocationRepository
 {
@@ -15,7 +16,7 @@ interface LocationRepository
     public function findByLabel(string $label): ?Location;
 
     /**
-     * @return Location[]
+     * @return LengthAwarePaginator
      */
-    public function all(): array;
+    public function paginate(int $page = 1, int $perPage = 50): LengthAwarePaginator;
 }

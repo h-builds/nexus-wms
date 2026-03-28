@@ -39,7 +39,7 @@ Operational data is generally allowed when needed:
 - sku
 - product name
 - locationId
-- warehouseId
+- warehouseCode
 - quantity values
 - movement type
 - incident type
@@ -142,7 +142,7 @@ Prefer identifiers as default references:
 
 - productId
 - locationId
-- warehouseId
+- warehouseCode
 - incidentId
 - movementId
 - actorId
@@ -297,7 +297,7 @@ Typically acceptable for MVP operational usage:
 - name
 - category
 - unitOfMeasure
-- warehouseId
+- warehouseCode
 - locationId
 - location label
 - quantityOnHand

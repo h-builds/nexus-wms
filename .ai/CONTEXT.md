@@ -29,6 +29,7 @@ Current stage:
 - Orchestrator Twin shell working
 - initial documentation completed
 - Product domain backend (API, entities, migration) completed
+- Locations domain backend (API, entities, migration, documentation alignment) completed
 
 Implemented documentation:
 
@@ -40,7 +41,7 @@ Implemented documentation:
 
 Not fully implemented yet:
 
-- remaining domain entities in Laravel (Locations, Inventory, etc.)
+- remaining domain entities in Laravel (Inventory, Incidents, Movements, etc.)
 - remaining migrations
 - remaining API routes/controllers/resources
 - realtime events

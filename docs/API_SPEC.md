@@ -420,7 +420,7 @@ Purpose:
 
 Query params:
 
-- `warehouseId` (optional)
+- `warehouseCode` (optional)
 - `zone` (optional)
 - `aisle` (optional)
 - `rack` (optional)
@@ -432,14 +432,14 @@ Response:
 {
   "data": [
     {
-      "id": "loc_001",
-      "warehouseId": "wh_001",
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "warehouseCode": "WH1",
       "zone": "A",
       "aisle": "01",
       "rack": "R1",
       "level": "L2",
       "bin": "B3",
-      "label": "A-01-R1-L2-B3",
+      "label": "WH1-A-01-R1-L2-B3",
       "isBlocked": false
     }
   ],
@@ -463,14 +463,14 @@ Response:
 ```json
 {
   "data": {
-    "id": "loc_001",
-    "warehouseId": "wh_001",
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "warehouseCode": "WH1",
     "zone": "A",
     "aisle": "01",
     "rack": "R1",
     "level": "L2",
     "bin": "B3",
-    "label": "A-01-R1-L2-B3",
+    "label": "WH1-A-01-R1-L2-B3",
     "isBlocked": false
   }
 }
@@ -490,13 +490,12 @@ Request Body:
 
 ```json
 {
-  "warehouseId": "wh_001",
+  "warehouseCode": "WH1",
   "zone": "A",
   "aisle": "01",
   "rack": "R1",
   "level": "L2",
-  "bin": "B3",
-  "label": "A-01-R1-L2-B3"
+  "bin": "B3"
 }
 ```
 
@@ -505,14 +504,14 @@ Response:
 ```json
 {
   "data": {
-    "id": "loc_001",
-    "warehouseId": "wh_001",
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "warehouseCode": "WH1",
     "zone": "A",
     "aisle": "01",
     "rack": "R1",
     "level": "L2",
     "bin": "B3",
-    "label": "A-01-R1-L2-B3",
+    "label": "WH1-A-01-R1-L2-B3",
     "isBlocked": false
   }
 }

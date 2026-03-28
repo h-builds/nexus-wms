@@ -1,6 +1,6 @@
 export interface WarehouseLocation {
   id: string;
-  warehouseId: string;
+  warehouseCode: string;
   zone?: string;
   aisle?: string;
   rack?: string;

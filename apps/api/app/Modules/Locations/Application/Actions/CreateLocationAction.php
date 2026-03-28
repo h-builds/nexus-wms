@@ -21,7 +21,14 @@ final class CreateLocationAction
 
     public function execute(CreateLocationData $data): Location
     {
-        $label = "{$data->warehouseCode}-{$data->zone}-{$data->aisle}-{$data->rack}-{$data->level}-{$data->bin}";
+        $label = sprintf('%s-%s-%s-%s-%s-%s',
+            $data->warehouseCode,
+            $data->zone,
+            $data->aisle,
+            $data->rack,
+            $data->level,
+            $data->bin
+        );
 
         $existing = $this->locations->findByLabel($label);
 

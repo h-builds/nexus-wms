@@ -258,7 +258,7 @@ Represents a physical storage position.
 Initial attributes:
 
 - id
-- warehouseId
+- warehouseId (Current implementation uses warehouseCode. warehouseId will be introduced once Warehouse domain is implemented.)
 - zone
 - aisle
 - rack

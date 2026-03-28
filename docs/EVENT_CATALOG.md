@@ -291,6 +291,26 @@ Triggered when any movement is registered. This is a generic event emitted along
 
 ## Location Events
 
+### location.created
+
+Triggered when a new physical warehouse location is registered.
+
+**Source**:
+
+- `POST /api/locations`
+
+**Payload**:
+
+```json
+{
+  "locationId": "loc_001",
+  "label": "WH1-A-01-R1-L2-B3",
+  "warehouseCode": "WH1"
+}
+```
+
+---
+
 ### location.blocked
 
 Triggered when a location becomes blocked.

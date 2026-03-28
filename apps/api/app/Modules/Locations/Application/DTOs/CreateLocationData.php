@@ -17,19 +17,16 @@ final class CreateLocationData
     ) {
     }
 
-    /**
-     * @param array<string, mixed> $input
-     */
-    public static function fromArray(array $input): self
+    public static function fromArray(array $data): self
     {
         return new self(
-            warehouseCode: (string) $input['warehouseCode'],
-            zone: (string) $input['zone'],
-            aisle: (string) $input['aisle'],
-            rack: (string) $input['rack'],
-            level: (string) $input['level'],
-            bin: (string) $input['bin'],
-            actorId: isset($input['actorId']) ? (string) $input['actorId'] : null,
+            warehouseCode: $data['warehouseCode'],
+            zone: $data['zone'],
+            aisle: $data['aisle'],
+            rack: $data['rack'],
+            level: $data['level'],
+            bin: $data['bin'],
+            actorId: $data['actorId'] ?? null,
         );
     }
 }
