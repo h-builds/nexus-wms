@@ -19,16 +19,16 @@ The project is currently focused on the backend implementation of its Foundation
 
 ## 🤖 AI Governance: What and Why?
 
-A unique structural element of this project is the **`.ai/` folder**. 
+A unique structural element of this project is the **[`.ai/`](.ai/) folder**. 
 
 ### Why do we need AI Governance?
 When utilizing AI coding assistants (like Copilot, Cursor, or autonomous agents) to build a complex domain like a Warehouse Management System, the LLMs often hallucinate architectural drift, invent generic REST endpoints, or bypass transactional boundaries (e.g., modifying inventory without emitting an audit event).
 
 ### How it works
-The `.ai/` directory acts as an impenetrable "prompt firewall" and ruleset for any AI touching this codebase. It enforces **Architectural Governance as Code**, ensuring that the AI operates within strict backend boundaries:
-- **`RULES.md` & `DOMAIN_MODEL.md`:** Prevents the AI from hallucinating incorrect warehouse logic (e.g., deleting stock instead of emitting an adjustment event).
-- **`AGENTS.md`:** Constrains AI behavior. For example, it strictly forbids the AI from writing scripts that directly poll the `event_outbox` table, forcing it to use the bounded REST APIs to respect transactional atomicity.
-- **`EVALS.md` & `REVIEW_CHECKLIST.md`:** Standardizes how the AI validates its own work against the defined domain model before submitting PRs or finalizing tasks.
+The [`.ai/`](.ai/) directory acts as an impenetrable "prompt firewall" and ruleset for any AI touching this codebase. It enforces **Architectural Governance as Code**, ensuring that the AI operates within strict backend boundaries:
+- **[`RULES.md`](.ai/RULES.md)** & **[`DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md):** Prevents the AI from hallucinating incorrect warehouse logic (e.g., deleting stock instead of emitting an adjustment event).
+- **[`AGENTS.md`](.ai/AGENTS.md):** Constrains AI behavior. For example, it strictly forbids the AI from writing scripts that directly poll the `event_outbox` table, forcing it to use the bounded REST APIs to respect transactional atomicity.
+- **[`EVALS.md`](.ai/EVALS.md)** & **[`REVIEW_CHECKLIST.md`](.ai/REVIEW_CHECKLIST.md):** Standardizes how the AI validates its own work against the defined domain model before submitting PRs or finalizing tasks.
 
 By explicitly documenting the architecture in a machine-readable format, NexusWMS proves that LLM-driven development can be deterministic, auditable, and architecturally sound.
 
@@ -36,10 +36,10 @@ By explicitly documenting the architecture in a machine-readable format, NexusWM
 
 ## 📦 App Surfaces
 
-- `apps/api`: Laravel 13 backend (System of Record, Domain Logic).
-- `apps/vapor-monitor`: Real-time monitoring dashboard (Vue 3.6).
-- `apps/field-agent-mobile`: Mobile operational capture (Vue 3.6).
-- `apps/orchestrator-twin`: Tactical simulation layer (Vue 3.6).
+- [`apps/api`](apps/api): Laravel 13 backend (System of Record, Domain Logic).
+- [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6).
+- [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6).
+- [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation layer (Vue 3.6).
 
 ## 🏗️ Architecture Principles
 - **Modular Monolith:** Event-driven internal communication, zero circular dependencies.
