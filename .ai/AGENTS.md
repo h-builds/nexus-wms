@@ -2,14 +2,18 @@
 
 ## Purpose
 
-This document defines the AI agents that operate within NexusWMS.
+This document defines the **Runtime AI Pipeline** that operates within NexusWMS (the resulting system).
 
-Agents are not generic assistants. They are domain-scoped operators that:
+> [!CAUTION]
+> **This document does NOT govern Development Coding Assistants (like Cursor or Copilot).** 
+> If you are an AI reading this file while attempting to write source code (e.g., building a controller or a service), **IGNORE the "Agents DO NOT mutate state" rules below**. Those rules apply to the *operational monitoring AI microservices* running inside the warehouse, not to you as a developer. Your coding rules are strictly contained in `.ai/RULES.md`.
 
-- observe events
-- analyze system state
-- suggest actions (MVP)
-- execute actions (future)
+Runtime Agents are not generic software assistants. They are domain-scoped warehouse operators that:
+
+- observe production events
+- analyze physical system state
+- suggest operational actions (MVP)
+- execute operational actions (future)
 - respect governance constraints
 
 All agents must comply with:
@@ -147,9 +151,6 @@ Agents must respect `DATA_GUARDRAILS.md`. They must not:
 - **Purpose**: Analyze stock movements for inefficiencies or anomalies.
 - **Inputs**:
   - `movement.created`
-  - `inventory.stock.relocated`
-  - `inventory.stock.putaway`
-  - `inventory.stock.returned`
 - **Responsibilities**:
   - detect excessive relocations
   - detect inefficient movement patterns
@@ -160,21 +161,6 @@ Agents must respect `DATA_GUARDRAILS.md`. They must not:
 
 ---
 
-### 4. Operational Monitoring Agent
-
-- **Domain**: Monitoring
-- **Purpose**: Provide system-level insights across domains.
-- **Inputs**:
-  - all domain events
-- **Responsibilities**:
-  - correlate incidents with movements
-  - detect systemic issues
-  - surface operational risks
-- **Outputs (MVP)**:
-  - cross-domain insights
-  - escalation suggestions
-
----
 
 ### 5. Audit Support Agent (Future-Oriented)
 
@@ -275,20 +261,7 @@ Agents will eventually integrate with:
 - orchestration layer (Orchestrator Twin)
 - future AI execution engine
 
----
 
-## Code Generation Expectations
-
-Agents must generate:
-
-- clean, production-ready code
-- no placeholder logic
-- no unnecessary comments
-- no verbose explanations inside code
-
-Detailed coding rules are defined in .ai/RULES.md
-
----
 
 ## Final Rule
 

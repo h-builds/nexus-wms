@@ -1323,3 +1323,14 @@ AI-generated code must be production-grade, readable, and minimal.
 - never silently fail
 - always handle edge cases
 - provide meaningful error messages
+
+---
+
+## Rule 60 — Code Generation Expectations (Runtime & Structural)
+
+When acting as an AI Coding Assistant generating system codebase artifacts, you must generate:
+
+- clean, production-ready code
+- no placeholder logic (unless explicitly allowed via Phase deferral tags like `TODO(Phase2)`)
+- no unnecessary comments
+- no verbose explanations inside code
