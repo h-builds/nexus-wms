@@ -1,85 +1,201 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">NexusWMS</p>
+        <h1>Vapor Monitor</h1>
+      </div>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <div class="status-pill">Operational Control Center</div>
+    </header>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
+    <main class="content">
+      <aside class="sidebar">
+        <nav>
+          <ul>
+            <li>Dashboard</li>
+            <li>Inventory</li>
+            <li>Incidents</li>
+            <li>Occupancy</li>
+            <li>Purchasing</li>
+          </ul>
+        </nav>
+      </aside>
 
-  <RouterView />
+      <section class="main-panel">
+        <div class="card-grid">
+          <article class="card">
+            <p class="label">Live Inbound</p>
+            <strong>0</strong>
+          </article>
+
+          <article class="card">
+            <p class="label">Open Incidents</p>
+            <strong>0</strong>
+          </article>
+
+          <article class="card">
+            <p class="label">Blocked Stock</p>
+            <strong>0</strong>
+          </article>
+
+          <article class="card">
+            <p class="label">Occupancy</p>
+            <strong>0%</strong>
+          </article>
+        </div>
+
+        <article class="panel">
+          <h2>Realtime Activity Feed</h2>
+          <p>No events connected yet.</p>
+        </article>
+      </section>
+    </main>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+:global(*) {
+  box-sizing: border-box;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+:global(body) {
+  margin: 0;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  background: #0b1020;
+  color: #e5e7eb;
 }
 
-nav {
-  width: 100%;
+:global(#app) {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
   font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+h1 {
+  margin: 0;
+  font-size: 32px;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+.status-pill {
+  padding: 10px 14px;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 14px;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+.content {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
 }
 
-nav a:first-of-type {
-  border: 0;
+.sidebar,
+.panel,
+.card {
+  border: 1px solid #1f2937;
+  background: #111827;
+  border-radius: 16px;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+.sidebar {
+  padding: 18px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.sidebar li {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+.main-panel {
+  display: grid;
+  gap: 24px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  padding: 18px;
+}
+
+.label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.card strong {
+  font-size: 28px;
+}
+
+.panel {
+  padding: 20px;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 960px) {
+  .content {
+    grid-template-columns: 1fr;
   }
 
-  .logo {
-    margin: 0 2rem 0 0;
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
+  .card-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

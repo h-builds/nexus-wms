@@ -1,6 +1,6 @@
 {
-  "name": "apps-orchestrator-twin-temp",
-  "version": "0.0.0",
+  "name": "@nexus-wms/orchestrator-twin",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {

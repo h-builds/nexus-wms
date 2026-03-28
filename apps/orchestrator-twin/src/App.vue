@@ -1,85 +1,169 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">NexusWMS</p>
+        <h1>Orchestrator Twin</h1>
+      </div>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <div class="status-pill">Tactical Simulation Layer</div>
+    </header>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
+    <main class="layout">
+      <section class="scene-panel">
+        <div class="scene-placeholder">
+          <span>3D / 2.5D Warehouse Scene Placeholder</span>
+        </div>
+      </section>
 
-  <RouterView />
+      <aside class="insights-panel">
+        <article class="card">
+          <p class="label">Congestion Risk</p>
+          <strong>Low</strong>
+        </article>
+
+        <article class="card">
+          <p class="label">Slotting Recommendation</p>
+          <strong>Pending</strong>
+        </article>
+
+        <article class="card">
+          <p class="label">Workforce Balance</p>
+          <strong>50 / 50</strong>
+        </article>
+
+        <article class="card">
+          <p class="label">Next Simulation</p>
+          <strong>Not configured</strong>
+        </article>
+      </aside>
+    </main>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+:global(*) {
+  box-sizing: border-box;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+:global(body) {
+  margin: 0;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  background: #020617;
+  color: #e2e8f0;
 }
 
-nav {
-  width: 100%;
+:global(#app) {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
   font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.status-pill {
+  padding: 10px 14px;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.5fr 380px;
+  gap: 24px;
+}
+
+.scene-panel,
+.card {
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  border-radius: 16px;
+}
+
+.scene-panel {
+  padding: 20px;
+  min-height: 70vh;
+}
+
+.scene-placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100%;
+  border: 1px dashed #334155;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.35), rgba(15, 23, 42, 0.9));
+  color: #94a3b8;
   text-align: center;
-  margin-top: 2rem;
+  padding: 24px;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+.insights-panel {
+  display: grid;
+  gap: 16px;
+  align-content: start;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+.card {
+  padding: 18px;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+.label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #94a3b8;
 }
 
-nav a:first-of-type {
-  border: 0;
+.card strong {
+  font-size: 24px;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
   }
 
-  .logo {
-    margin: 0 2rem 0 0;
+  .scene-panel {
+    min-height: 50vh;
   }
+}
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
