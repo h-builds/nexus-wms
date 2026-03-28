@@ -16,7 +16,10 @@ final class DuplicateSku extends RuntimeException
     public function render($request)
     {
         return response()->json([
-            'message' => $this->getMessage(),
+            'error' => [
+                'code' => 'duplicate_sku',
+                'message' => $this->getMessage(),
+            ],
         ], 409);
     }
 }

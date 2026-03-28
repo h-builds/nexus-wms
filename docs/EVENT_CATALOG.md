@@ -344,7 +344,9 @@ Triggered when a new product is created.
 {
   "productId": "prod_001",
   "sku": "TV-001",
-  "name": "Televisor Samsung 55"
+  "name": "Televisor Samsung 55",
+  "category": "electronics",
+  "unitOfMeasure": "unit"
 }
 ```
 

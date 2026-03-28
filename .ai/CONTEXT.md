@@ -28,6 +28,7 @@ Current stage:
 - Vapor Monitor shell working
 - Orchestrator Twin shell working
 - initial documentation completed
+- Product domain backend (API, entities, migration) completed
 
 Implemented documentation:
 
@@ -39,9 +40,9 @@ Implemented documentation:
 
 Not fully implemented yet:
 
-- domain entities in Laravel
-- migrations
-- API routes/controllers/resources
+- remaining domain entities in Laravel (Locations, Inventory, etc.)
+- remaining migrations
+- remaining API routes/controllers/resources
 - realtime events
 - mobile app
 - AI runtime logic
@@ -278,7 +279,7 @@ Design for them, but do not claim they are implemented unless they actually are.
 
 Near-term implementation order should be:
 
-1. products
+1. products (completed)
 2. locations
 3. inventory
 4. incidents

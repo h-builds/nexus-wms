@@ -326,7 +326,8 @@ Response:
       "sku": "TV-001",
       "name": "Televisor Samsung 55",
       "category": "electronics",
-      "unitOfMeasure": "unit"
+      "unitOfMeasure": "unit",
+      "attributes": {}
     }
   ],
   "meta": {
@@ -353,9 +354,15 @@ Response:
     "sku": "TV-001",
     "name": "Televisor Samsung 55",
     "category": "electronics",
-    "unitOfMeasure": "unit"
+    "unitOfMeasure": "unit",
+    "attributes": {}
   }
 }
+
+Status codes:
+
+- `200 OK`
+- `404 Not Found`
 ```
 
 ### POST /api/products
@@ -375,7 +382,8 @@ Request Body:
   "sku": "TV-001",
   "name": "Televisor Samsung 55",
   "category": "electronics",
-  "unitOfMeasure": "unit"
+  "unitOfMeasure": "unit",
+  "attributes": {}
 }
 ```
 
@@ -388,7 +396,8 @@ Response:
     "sku": "TV-001",
     "name": "Televisor Samsung 55",
     "category": "electronics",
-    "unitOfMeasure": "unit"
+    "unitOfMeasure": "unit",
+    "attributes": {}
   }
 }
 ```
@@ -396,6 +405,7 @@ Response:
 Status codes:
 
 - `201 Created`
+- `409 Conflict` (duplicate sku)
 - `422 Unprocessable Entity`
 
 ---

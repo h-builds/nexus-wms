@@ -16,7 +16,10 @@ final class ProductNotFound extends RuntimeException
     public function render($request)
     {
         return response()->json([
-            'message' => $this->getMessage(),
+            'error' => [
+                'code' => 'product_not_found',
+                'message' => $this->getMessage(),
+            ],
         ], 404);
     }
 }
