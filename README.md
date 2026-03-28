@@ -34,6 +34,130 @@ By explicitly documenting the architecture in a machine-readable format, NexusWM
 
 ---
 
+## Architecture Overview
+
+### 1. Monorepo Architecture
+
+The architectural layout of the NexusWMS portfolio, showing the relationship between the frontends and the monolithic backend.
+
+```mermaid
+flowchart TD
+    classDef backend fill:#f0f8ff,stroke:#00509E,stroke-width:2px,color:#000
+    classDef currentFrontend fill:#f9f6f7,stroke:#333,stroke-width:1px,color:#000
+    classDef futureFrontend fill:#f5f5f5,stroke:#999,stroke-width:1px,stroke-dasharray: 4 4,color:#444
+
+    API["apps/api\n(Laravel 13 - Modular Monolith)"]:::backend
+
+    subgraph Frontends ["Frontend Applications"]
+        Monitor["apps/vapor-monitor\n(Vue - Operational Dashboard)"]:::currentFrontend
+        Twin["apps/orchestrator-twin\n(Vue - Digital Twin Shell)"]:::currentFrontend
+        Mobile["apps/field-agent-mobile\n(Future Mobile App)"]:::futureFrontend
+    end
+
+    Monitor -->|REST / JSON| API
+    Twin -.->|REST / WS| API
+    Mobile -.->|Sync| API
+```
+
+### 2. Domain Model Overview
+
+The domain model emphasizes the division of responsibilities across the warehouse execution core.
+
+```mermaid
+flowchart TD
+    classDef implemented fill:#d4edda,stroke:#28a745,color:#000
+    classDef upcoming fill:#fff3cd,stroke:#ffc107,color:#000
+    classDef future fill:#e2e3e5,stroke:#6c757d,stroke-dasharray: 4 4,color:#000
+
+    Product["📦 Product ✅\n(Master Data)"]:::implemented
+    Location["🏗️ Location ✅\n(Defines Structure)"]:::implemented
+    
+    Inventory["📊 Inventory ⏳\n(Owns Stock)"]:::upcoming
+    Movement["🔄 Movement ⏳\n(Modifies Inventory)"]:::upcoming
+    Incident["⚠️ Incident ⏳\n(Registers Anomalies)"]:::upcoming
+    
+    Audit["📝 Audit 🔮\n(Traceability)"]:::future
+
+    Movement -->|Transitions| Inventory
+    Incident -->|Flags Anomaly| Inventory
+    Inventory -->|References| Product
+    Inventory -->|Stored in| Location
+    Audit -.->|Records| Movement
+    Audit -.->|Records| Incident
+```
+
+### 3. Request Flow (Current State)
+
+The synchronous flow of data from user interaction through the bounded domain layer.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend App
+    participant A as API Controller
+    participant D as Domain Action
+    participant DB as Database
+
+    U->>F: Interacts with UI
+    F->>A: HTTP Request
+    A->>A: Validate Payload
+    A->>D: Invoke Application Action
+    D->>DB: Query / Mutate Entity
+    DB-->>D: Return Data
+    D-->>A: Domain Resource
+    A-->>F: JSON Response
+    F-->>U: Update View
+```
+
+### 4. Event Flow (Conceptual)
+
+The planned asynchronous architecture for event distribution. **Note: Event Relay and Message Broker are not yet implemented.**
+
+```mermaid
+flowchart LR
+    classDef current fill:#e3f2fd,stroke:#0d47a1,color:#000
+    classDef future fill:#f9f9f9,stroke:#999,stroke-dasharray: 4 4,color:#555
+
+    Action["Domain Action\n(Current)"]:::current
+    Outbox["Transactional Outbox\n(Database)"]:::current
+    Relay["Event Relay\n(Future)"]:::future
+    Bus["Message Broker\n(Kafka / RabbitMQ - Future)"]:::future
+    Consumers["Consumers\n(Twin, Audit, etc. - Future)"]:::future
+
+    Action -->|Transactional Insert| Outbox
+    Outbox -.->|Tails / Polls| Relay
+    Relay -.->|Publishes| Bus
+    Bus -.->|Consumes| Consumers
+```
+
+### 5. MVP Scope Diagram
+
+A visual boundary of what is included in the initial MVP versus what is explicitly out of scope for Phase 1.
+
+```mermaid
+flowchart TB
+    subgraph MVP ["🎯 Phase 1 MVP Scope"]
+        direction TB
+        P["Product Lookup"]
+        L["Location Lookup"]
+        I["Inventory Tracking"]
+        IR["Incident Registration"]
+        MT["Movement Execution"]
+    end
+
+    subgraph FutureScope ["🚫 Out of Scope (Phase 2+)"]
+        direction TB
+        AI["AI Automation & Routing"]
+        DT["Digital Twin Simulation"]
+        RE["Realtime Event Streaming"]
+        ROB["Robotics Fleet Control"]
+    end
+
+    MVP ~~~ FutureScope
+```
+
+---
+
 ## 📦 App Surfaces
 
 - [`apps/api`](apps/api): Laravel 13 backend (System of Record, Domain Logic).
