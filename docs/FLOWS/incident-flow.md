@@ -53,10 +53,10 @@ It ensures traceability, operational clarity, and AI-safe handling of incident d
 - System-generated anomaly (Future)
 
 **Request:**
-`POST /api/incidents`
+```http
+POST /api/incidents
+Idempotency-Key: req_123_uuid_here
 
-**Payload:**
-```json
 {
   "type": "damage",
   "severity": "medium",
@@ -166,23 +166,41 @@ After successful persistence, the following events are emitted:
 **Event: `incident.reported`**
 ```json
 {
-  "incidentId": "inc_001",
-  "type": "damage",
-  "severity": "medium",
-  "locationId": "loc_001",
-  "productId": "prod_001",
-  "quantityAffected": 5
+  "eventId": "evt_001",
+  "eventType": "incident.reported",
+  "eventVersion": 1,
+  "occurredAt": "2026-03-27T12:30:00Z",
+  "actorId": "user_001",
+  "correlationId": "req_123",
+  "causationId": "req_123",
+  "payload": {
+    "incidentId": "inc_001",
+    "type": "damage",
+    "severity": "medium",
+    "locationId": "loc_001",
+    "productId": "prod_001",
+    "quantityAffected": 5
+  }
 }
 ```
 
 **Event: `inventory.stock.adjusted`** (emitted by the Movements domain if stock blocking was triggered)
 ```json
 {
-  "productId": "prod_001",
-  "locationId": "loc_001",
-  "previousQuantity": 100,
-  "newQuantity": 95,
-  "reason": "incident_damage"
+  "eventId": "evt_002",
+  "eventType": "inventory.stock.adjusted",
+  "eventVersion": 1,
+  "occurredAt": "2026-03-27T12:30:01Z",
+  "actorId": "user_001",
+  "correlationId": "req_123",
+  "causationId": "evt_001",
+  "payload": {
+    "productId": "prod_001",
+    "locationId": "loc_001",
+    "previousQuantity": 100,
+    "newQuantity": 95,
+    "reason": "incident_damage"
+  }
 }
 ```
 

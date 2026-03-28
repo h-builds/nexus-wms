@@ -145,6 +145,7 @@ Triggered when new stock enters the system.
 
 ```json
 {
+  "movementId": "mov_001",
   "productId": "prod_001",
   "locationId": "loc_001",
   "quantity": 100,

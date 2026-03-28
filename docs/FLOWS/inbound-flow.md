@@ -75,7 +75,7 @@ The system must perform the following checks:
 The system must perform the following checks:
 - Does the target location exist?
 - Does it belong to the correct warehouse zone?
-- Is the location blocked for inbound?
+- Is the location blocked?
 
 **Future Consideration:**
 - Location suitability for specific product types (e.g., hazardous, refrigerated) will require additional product and location attributes not yet defined in the domain model.
@@ -137,21 +137,40 @@ After successful persistence, the following events are emitted:
 **Event: `movement.created`**
 ```json
 {
-  "movementId": "mov_001",
-  "productId": "prod_001",
-  "type": "receipt",
-  "quantity": 100,
-  "toLocationId": "loc_001"
+  "eventId": "evt_001",
+  "eventType": "movement.created",
+  "eventVersion": 1,
+  "occurredAt": "2026-03-27T14:00:00Z",
+  "actorId": "user_002",
+  "correlationId": "req_124",
+  "causationId": "req_124",
+  "payload": {
+    "movementId": "mov_001",
+    "productId": "prod_001",
+    "type": "receipt",
+    "quantity": 100,
+    "toLocationId": "loc_001"
+  }
 }
 ```
 
 **Event: `inventory.stock.received`**
 ```json
 {
-  "productId": "prod_001",
-  "locationId": "loc_001",
-  "quantity": 100,
-  "lotNumber": "LOT-2026-001"
+  "eventId": "evt_002",
+  "eventType": "inventory.stock.received",
+  "eventVersion": 1,
+  "occurredAt": "2026-03-27T14:00:01Z",
+  "actorId": "user_002",
+  "correlationId": "req_124",
+  "causationId": "evt_001",
+  "payload": {
+    "movementId": "mov_001",
+    "productId": "prod_001",
+    "locationId": "loc_001",
+    "quantity": 100,
+    "lotNumber": "LOT-2026-001"
+  }
 }
 ```
 
@@ -183,7 +202,10 @@ The system must record:
 For the MVP, inbound operations are modeled as a movement of type `receipt`.
 
 **Example Request:**
-```json
+```http
+POST /api/movements
+Idempotency-Key: req_124_uuid_here
+
 {
   "productId": "prod_001",
   "toLocationId": "loc_001",

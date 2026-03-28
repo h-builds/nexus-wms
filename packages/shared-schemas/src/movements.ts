@@ -27,6 +27,7 @@ export const CreateMovementSchema = z
     quantity: z.number().int().positive(),
     reason: AdjustmentReasonSchema.optional(),
     reference: z.string().optional(),
+    lotNumber: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     // Receipt: toLocationId required, fromLocationId not required

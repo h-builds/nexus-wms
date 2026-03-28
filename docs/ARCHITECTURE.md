@@ -199,6 +199,30 @@ All `GET` endpoints should return:
 
 ---
 
+## Idempotency Store
+
+API commands requiring the `Idempotency-Key` header (e.g., `POST /api/movements`) rely on a centralized concurrency-safe store to prevent duplicate execution.
+
+### Storage Mechanism (MVP)
+
+- **Technology**: Redis.
+- **Data Structure**: Key-Value mapping `idempotency_key:{uuid} -> { status, response_body, status_code }`.
+- **TTL (Time to Live)**: 24 hours.
+
+### Execution Flow
+
+1. API Middleware attempts a Redis `SETNX` (SET if Not eXists) with the idempotency key, marking it as `in_progress`.
+2. If `SETNX` fails (key exists):
+   - If status is `completed`, immediately return the cached `response_body` and `status_code`.
+   - If status is `in_progress`, return `409 Conflict` (concurrent request race).
+3. If `SETNX` succeeds, process the request.
+4. After transaction commit, update the Redis key with status `completed` and the finalized HTTP response payload.
+5. If the transaction rolls back or fails with a 5xx error, delete the Redis key to allow safe retries.
+
+This guarantees that network retries from mobile clients do not result in double-receipts or double-incidents without requiring complex locking on the primary SQL database.
+
+---
+
 ## Frontend Architecture
 
 Frontend applications are organized by domain instead of by generic technical type only.

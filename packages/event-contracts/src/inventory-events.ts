@@ -41,6 +41,7 @@ export type StockRelocatedEvent = DomainEventEnvelope<
 >;
 
 export interface StockReceivedPayload {
+  movementId: string;
   productId: string;
   locationId: string;
   quantity: number;

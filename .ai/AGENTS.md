@@ -40,13 +40,15 @@ Each agent must belong to a specific domain:
 
 ### 2. Event-Driven Thinking
 
-Agents do not poll blindly. They react to:
+Agents are conceptualized as reacting to:
 
 - domain events
 - state changes
 - anomalies
 
-Events are their primary input.
+**Event Consumption Guardrail (MVP):** 
+Agents must **NOT** directly read or poll the `event_outbox` database table. The outbox pattern guarantees transaction atomicity for the core system. Direct DB polling by AI scripts risks locking or skipping events. 
+During the MVP phase, Agents operate via explicit REST API reporting or process events pushed to them synchronously by the application layer. True asynchronous streaming ingestion (e.g., Kafka, RabbitMQ) is deferred to Phase 2.
 
 ---
 

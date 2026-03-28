@@ -264,7 +264,13 @@ Response:
       "expiresAt": null,
       "status": "available"
     }
-  ]
+  ],
+  "meta": {
+    "currentPage": 1,
+    "perPage": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -322,7 +328,13 @@ Response:
       "category": "electronics",
       "unitOfMeasure": "unit"
     }
-  ]
+  ],
+  "meta": {
+    "currentPage": 1,
+    "perPage": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -420,7 +432,13 @@ Response:
       "label": "A-01-R1-L2-B3",
       "isBlocked": false
     }
-  ]
+  ],
+  "meta": {
+    "currentPage": 1,
+    "perPage": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -566,7 +584,13 @@ Response:
       "reportedBy": "user_001",
       "createdAt": "2026-03-27T12:30:00Z"
     }
-  ]
+  ],
+  "meta": {
+    "currentPage": 1,
+    "perPage": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -784,7 +808,13 @@ Response:
       "performedAt": "2026-03-27T14:00:00Z",
       "reference": "manual_relocation"
     }
-  ]
+  ],
+  "meta": {
+    "currentPage": 1,
+    "perPage": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -827,7 +857,8 @@ Request Body:
   "toLocationId": "loc_002",
   "type": "relocation",
   "quantity": 5,
-  "reference": "manual_relocation"
+  "reference": "manual_relocation",
+  "lotNumber": "LOT-2026-001"
 }
 ```
 

@@ -25,4 +25,5 @@ export interface InventoryMovement {
   performedBy: string;
   performedAt: string;
   reference?: string;
+  lotNumber?: string;
 }

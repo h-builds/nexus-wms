@@ -217,53 +217,22 @@ This prevents:
 
 ---
 
-## Offline Identity Attestation
+## Offline Identity Attestation (Deferred to Phase 2)
 
 > [!WARNING]
-> The offline-first mobile direction (ADR-003) conflicts with server-set actor identity. This section defines the resolution.
+> The offline-first mobile direction (ADR-003) conflicts with server-set actor identity. 
+> 
+> **MVP Resolution:** True offline-first operations producing state mutations (movements, incidents) are explicitly deferred to Phase 2. The MVP requires an active network session for field commands. Field agents must be connected to execute `POST` actions.
 
-When the Field-Agent Mobile app operates offline, it cannot establish a server session at the time of action. The following protocol applies:
+<!-- 
+FUTURE-AI-IMPLEMENTATION: Offline Identity Attestation
+When Phase 2 offline sync is implemented, this file must specify a Cryptographic Offline Token protocol.
+At authentication time (while online), the server will issue a signed offline token containing:
+- actorId, actorType, role, issuedAt, expiresAt, deviceId, signature (hmac_sha256).
+When the mobile app performs an action offline, it attaches this token locally. Upon reconnection, the `/api/sync` payload will include the array of actions, the device timestamp `performedAt` (recorded at action time, not sync time), and the attached Offline Token. The API layer MUST extract actor identity from this verified signature, NOT from the raw JSON payload.
+-->
 
-### Offline token
 
-At authentication time (while online), the server issues a **signed offline token** containing:
-
-```json
-{
-  "actorId": "user_001",
-  "actorType": "human",
-  "role": "operator",
-  "issuedAt": "2026-03-27T08:00:00Z",
-  "expiresAt": "2026-03-27T20:00:00Z",
-  "deviceId": "device_abc",
-  "signature": "hmac_sha256(...)"
-}
-```
-
-### Offline action recording
-
-When the mobile app creates a movement or incident while offline:
-
-1. The action is stored locally with the offline token attached.
-2. The `performedAt` / `createdAt` timestamp is recorded by the device at action time (not sync time).
-3. When connectivity resumes, the sync request includes the offline token and the device timestamp.
-
-### Server-side sync processing
-
-When the server receives a sync batch:
-
-1. Verify the offline token signature.
-2. Reject if the token has expired (max 12-hour window).
-3. Extract `actorId` from the **offline token**, not from the current session.
-4. Preserve the device-recorded timestamp as `performedAt`, but add a `syncedAt` server timestamp.
-5. Process each action through normal validation and domain logic.
-6. Flag any actions where `syncedAt - performedAt > 1 hour` for supervisor review.
-
-### Constraints
-
-- Offline tokens are device-bound and non-transferable.
-- The offline window is limited (default: 12 hours).
-- Sync conflicts (same stock modified by online and offline users) are resolved by optimistic locking — the later sync receives a `409 Conflict` and must be manually reconciled.
 
 ---
 
