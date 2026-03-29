@@ -150,7 +150,7 @@ Not included in this phase:
 
 - [x] implement Product domain
 - [x] implement Locations domain
-- [ ] implement Inventory domain
+- [x] implement Inventory domain
 - [ ] implement Incident flow (end-to-end)
 - [ ] implement Event emission layer
 - [ ] implement Audit logging

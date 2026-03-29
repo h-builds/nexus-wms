@@ -30,6 +30,7 @@ Current stage:
 - initial documentation completed
 - Product domain backend (API, entities, migration) completed
 - Locations domain backend (API, entities, migration, documentation alignment) completed
+- Inventory domain backend (read-only API, StockItem entity with invariants, migration with CHECK constraints, event contracts) completed
 
 Implemented documentation:
 
@@ -41,9 +42,11 @@ Implemented documentation:
 
 Not fully implemented yet:
 
-- remaining domain entities in Laravel (Inventory, Incidents, Movements, etc.)
-- remaining migrations
+- remaining domain entities in Laravel (Incidents, Movements, etc.)
+- remaining migrations (incidents, movements, audit_logs, event_outbox)
 - remaining API routes/controllers/resources
+- inventory mutation (comes through Movements domain)
+- event dispatch wiring
 - realtime events
 - mobile app
 - AI runtime logic
@@ -281,8 +284,8 @@ Design for them, but do not claim they are implemented unless they actually are.
 Near-term implementation order should be:
 
 1. products (completed)
-2. locations
-3. inventory
+2. locations (completed)
+3. inventory (completed — read-only, event contracts prepared, awaiting Movements for mutation)
 4. incidents
 5. movements
 6. audit log foundation

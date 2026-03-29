@@ -7,4 +7,5 @@ return [
     AppServiceProvider::class,
     ProductServiceProvider::class,
     App\Modules\Locations\Infrastructure\Providers\LocationsServiceProvider::class,
+    App\Modules\Inventory\Infrastructure\Providers\InventoryServiceProvider::class,
 ];
