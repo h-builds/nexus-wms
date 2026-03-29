@@ -20,7 +20,7 @@ It is a domain-structured logistics system with future AI governance requirement
 
 ## Current Project Stage
 
-**Current stage: Phase 1 / Field-Agent Mobile Core MVP (VALIDATED AND COMPLETE)**
+**Current stage: Phase 2 / Operational Visibility (IN PROGRESS)**
 
 ### Phase 0 / Foundation Core (VALIDATED AND COMPLETE)
 
@@ -72,6 +72,17 @@ Not implemented yet (deferred beyond Phase 1):
 - realtime websocket transport
 - AI runtime logic
 - digital twin engine
+
+### Phase 2 / Operational Visibility (IN PROGRESS)
+
+Current implementation focus:
+
+- `apps/vapor-monitor`
+- realtime dashboard foundation
+- Laravel Reverb integration
+- event-driven monitoring UI
+- KPI visibility for operational decision-making
+- occupancy visibility by zone
 
 ## Primary Mission for AI Assistants
 

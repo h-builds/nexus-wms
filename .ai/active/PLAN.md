@@ -135,6 +135,7 @@ This phase defined and validated the minimum system that can:
 **Completed:** 2026-03-29
 
 Phase 1 has been fully validated through manual end-to-end scenarios covering:
+
 - product lookup
 - stock visibility
 - incident reporting
@@ -194,14 +195,53 @@ Build the first operational execution surface of NexusWMS through a mobile-first
 
 ---
 
-## Phase 2 — Operational Expansion (PLANNED)
+## Phase 2 — Operational Visibility
 
-Will include:
+### Objective
 
-- picking flows (docs/FLOWS/picking-flow.md)
-- replenishment logic (docs/FLOWS/replenishment-flow.md)
-- warehouse optimization
-- agent-based automation (Vapor Monitor, Orchestrator Twin)
+Build the first realtime operational monitoring surface of NexusWMS through Vapor-Monitor.
+
+This phase demonstrates the ability to handle event-driven warehouse visibility at scale using a decision-oriented dashboard, not a presentation-only UI.
+
+### Scope (In)
+
+- realtime dashboard for inbound, outbound, and incidents
+- WebSocket integration via Laravel Reverb
+- basic KPIs (inventory, incidents, differences)
+- occupancy view by zone
+- event-aligned frontend monitoring state
+
+### Scope (Out)
+
+- purchasing / suppliers
+- forecasting / advanced analytics
+- digital twin simulation
+- multi-agent orchestration
+- high-polish UI work
+
+### Deliverables
+
+- [ ] realtime dashboard connected to real backend data
+- [ ] realtime incident updates via Reverb
+- [ ] realtime inventory-related updates via Reverb
+- [ ] KPI widgets for total inventory, open incidents, and differences
+- [ ] occupancy-by-zone view
+- [ ] domain-structured frontend monitoring state
+
+### Success Criteria
+
+- [ ] operator/supervisor can see inbound, outbound, and incident state in one dashboard
+- [ ] dashboard updates without manual refresh for supported events
+- [ ] KPI values stay aligned with backend state
+- [ ] occupancy can be understood quickly by zone
+- [ ] no fake realtime behavior is introduced
+
+### Exit Conditions
+
+- [ ] Vapor-Monitor provides real operational visibility
+- [ ] Reverb transport is working for the selected MVP events
+- [ ] frontend state remains aligned with event contracts
+- [ ] documentation updated to reflect monitoring architecture
 
 ---
 
@@ -257,9 +297,5 @@ This plan defines the system's backbone.
 Phase 0 / Foundation Core was validated and completed on 2026-03-29.
 
 Phase 1 / Field-Agent Mobile Core MVP was validated and completed on 2026-03-29.
-
-Phase 2 / Operational Expansion is PLANNED.
-
-Do not expand scope without updating this document.
 
 Every PR must align with this plan.
