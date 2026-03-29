@@ -8,12 +8,30 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 
 ## 🚀 Current Project State
 
-**Phase 1: Foundation Core MVP – (Status: Active Development)**
+**Phase 1: Field-Agent Mobile Core MVP — (Status: Active Development)**
 
-The project is currently focused on the backend implementation of its Foundation Core:
-- **Completed:** Deep architectural audit, API contract alignment, schema definition, and strict event envelope enforcement.
-- **In Progress:** Laravel 13 backend implementation for synchronous Inventory, Locations, Movements, and Incidents logic.
-- **Deferred:** Offline-first mobile syncing, Kafka/RabbitMQ event streaming, and Orchestrator Twin 3D simulation (all deferred to Phase 2+).
+| Phase | Description | Status |
+|-------|-------------|--------|
+| **Phase 0** | Foundation Core — Domain model, API contracts, event system, audit layer | ✅ Complete |
+| **Phase 1** | Field-Agent Mobile Core — Mobile-first field workflows, offline persistence | 🔵 In Progress |
+| **Phase 2** | Operational Expansion — Picking, replenishment, AI automation | ⬜ Planned |
+
+### Phase 0 Achievements (Foundation Core)
+
+- **7 domains** implemented: Product, Locations, Inventory, Movements, Incidents, Events, Audit
+- **49 automated tests**, 218 assertions, 8 end-to-end validation scenarios — 0 failures
+- Full API contract alignment with envelopes, pagination, error codes, camelCase, actor identity
+- Transactional Outbox for atomic event emission
+- Immutable audit trail for all state-changing operations
+- AI governance enforced from day one
+
+### Phase 1 Focus (Field-Agent Mobile Core)
+
+- Product lookup & stock lookup UI
+- Incident registration from the field
+- Simple movement execution (inbound, outbound, transfer)
+- Offline-first local persistence foundation
+- Sync queue for connectivity gap handling
 
 ---
 
@@ -44,46 +62,43 @@ The architectural layout of the NexusWMS portfolio, showing the relationship bet
 flowchart TD
     classDef backend fill:#f0f8ff,stroke:#00509E,stroke-width:2px,color:#000
     classDef currentFrontend fill:#f9f6f7,stroke:#333,stroke-width:1px,color:#000
+    classDef activeFrontend fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#000
     classDef futureFrontend fill:#f5f5f5,stroke:#999,stroke-width:1px,stroke-dasharray: 4 4,color:#444
 
     API["apps/api\n(Laravel 13 - Modular Monolith)"]:::backend
 
     subgraph Frontends ["Frontend Applications"]
+        Mobile["apps/field-agent-mobile\n(Vue 3.6 - Phase 1 🔵)"]:::activeFrontend
         Monitor["apps/vapor-monitor\n(Vue - Operational Dashboard)"]:::currentFrontend
-        Twin["apps/orchestrator-twin\n(Vue - Digital Twin Shell)"]:::currentFrontend
-        Mobile["apps/field-agent-mobile\n(Future Mobile App)"]:::futureFrontend
+        Twin["apps/orchestrator-twin\n(Vue - Digital Twin Shell)"]:::futureFrontend
     end
 
+    Mobile -->|REST / Sync| API
     Monitor -->|REST / JSON| API
     Twin -.->|REST / WS| API
-    Mobile -.->|Sync| API
 ```
 
 ### 2. Domain Model Overview
 
-The domain model emphasizes the division of responsibilities across the warehouse execution core.
+The domain model emphasizes the division of responsibilities across the warehouse execution core. All domains are implemented and validated.
 
 ```mermaid
 flowchart TD
     classDef implemented fill:#d4edda,stroke:#28a745,color:#000
-    classDef upcoming fill:#fff3cd,stroke:#ffc107,color:#000
-    classDef future fill:#e2e3e5,stroke:#6c757d,stroke-dasharray: 4 4,color:#000
 
     Product["📦 Product ✅\n(Master Data)"]:::implemented
     Location["🏗️ Location ✅\n(Defines Structure)"]:::implemented
-    
-    Inventory["📊 Inventory ⏳\n(Owns Stock)"]:::upcoming
-    Movement["🔄 Movement ⏳\n(Modifies Inventory)"]:::upcoming
-    Incident["⚠️ Incident ⏳\n(Registers Anomalies)"]:::upcoming
-    
-    Audit["📝 Audit 🔮\n(Traceability)"]:::future
+    Inventory["📊 Inventory ✅\n(Owns Stock)"]:::implemented
+    Movement["🔄 Movement ✅\n(Modifies Inventory)"]:::implemented
+    Incident["⚠️ Incident ✅\n(Registers Anomalies)"]:::implemented
+    Audit["📝 Audit ✅\n(Traceability)"]:::implemented
 
     Movement -->|Transitions| Inventory
     Incident -->|Flags Anomaly| Inventory
     Inventory -->|References| Product
     Inventory -->|Stored in| Location
-    Audit -.->|Records| Movement
-    Audit -.->|Records| Incident
+    Audit -->|Records| Movement
+    Audit -->|Records| Incident
 ```
 
 ### 3. Request Flow (Current State)
@@ -95,34 +110,39 @@ sequenceDiagram
     participant U as User
     participant F as Frontend App
     participant A as API Controller
-    participant D as Domain Action
+    participant S as Application Service
+    participant D as Domain Entity
+    participant O as Outbox
     participant DB as Database
 
     U->>F: Interacts with UI
     F->>A: HTTP Request
     A->>A: Validate Payload
-    A->>D: Invoke Application Action
-    D->>DB: Query / Mutate Entity
-    DB-->>D: Return Data
-    D-->>A: Domain Resource
-    A-->>F: JSON Response
+    A->>S: Invoke Application Action
+    S->>D: Execute Domain Logic
+    D->>DB: Mutate Entity
+    S->>O: Emit Event (Transactional)
+    S->>DB: Write Audit Log
+    DB-->>S: Confirm
+    S-->>A: Domain Resource
+    A-->>F: JSON Envelope Response
     F-->>U: Update View
 ```
 
-### 4. Event Flow (Conceptual)
+### 4. Event Flow
 
-The planned asynchronous architecture for event distribution. **Note: Event Relay and Message Broker are not yet implemented.**
+The Transactional Outbox pattern is implemented. Event Relay and Message Broker are planned for Phase 2+.
 
 ```mermaid
 flowchart LR
-    classDef current fill:#e3f2fd,stroke:#0d47a1,color:#000
+    classDef current fill:#d4edda,stroke:#28a745,color:#000
     classDef future fill:#f9f9f9,stroke:#999,stroke-dasharray: 4 4,color:#555
 
-    Action["Domain Action\n(Current)"]:::current
-    Outbox["Transactional Outbox\n(Database)"]:::current
-    Relay["Event Relay\n(Future)"]:::future
-    Bus["Message Broker\n(Kafka / RabbitMQ - Future)"]:::future
-    Consumers["Consumers\n(Twin, Audit, etc. - Future)"]:::future
+    Action["Domain Action\n(Implemented ✅)"]:::current
+    Outbox["Transactional Outbox\n(Implemented ✅)"]:::current
+    Relay["Event Relay\n(Phase 2+)"]:::future
+    Bus["Message Broker\n(Kafka / RabbitMQ - Phase 2+)"]:::future
+    Consumers["Consumers\n(Twin, Audit, etc. - Phase 2+)"]:::future
 
     Action -->|Transactional Insert| Outbox
     Outbox -.->|Tails / Polls| Relay
@@ -132,28 +152,41 @@ flowchart LR
 
 ### 5. MVP Scope Diagram
 
-A visual boundary of what is included in the initial MVP versus what is explicitly out of scope for Phase 1.
+A visual boundary of what was delivered in Phase 0 (Foundation Core) and what Phase 1 adds.
 
 ```mermaid
 flowchart TB
-    subgraph MVP ["🎯 Phase 1 MVP Scope"]
+    subgraph Phase0 ["✅ Phase 0 — Foundation Core (Complete)"]
         direction TB
-        P["Product Lookup"]
-        L["Location Lookup"]
+        P["Product Domain"]
+        L["Location Domain"]
         I["Inventory Tracking"]
-        IR["Incident Registration"]
+        IR["Incident Management"]
         MT["Movement Execution"]
+        EV["Event Outbox"]
+        AU["Audit Trail"]
     end
 
-    subgraph FutureScope ["🚫 Out of Scope (Phase 2+)"]
+    subgraph Phase1 ["🔵 Phase 1 — Field-Agent Mobile (In Progress)"]
+        direction TB
+        PL["Product Lookup UI"]
+        SL["Stock Lookup UI"]
+        IReg["Incident Registration UI"]
+        MReg["Movement Registration UI"]
+        OFF["Offline Persistence"]
+        SYN["Sync Queue"]
+    end
+
+    subgraph FutureScope ["⬜ Phase 2+ — Operational Expansion (Planned)"]
         direction TB
         AI["AI Automation & Routing"]
         DT["Digital Twin Simulation"]
         RE["Realtime Event Streaming"]
-        ROB["Robotics Fleet Control"]
+        PK["Picking & Replenishment"]
     end
 
-    MVP ~~~ FutureScope
+    Phase0 ~~~ Phase1
+    Phase1 ~~~ FutureScope
 ```
 
 ---
@@ -162,7 +195,7 @@ flowchart TB
 
 - [`apps/api`](apps/api): Laravel 13 backend (System of Record, Domain Logic).
 - [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6).
-- [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6).
+- [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6) — **Phase 1 active target**.
 - [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation layer (Vue 3.6).
 
 ## 🏗️ Architecture Principles
@@ -170,3 +203,4 @@ flowchart TB
 - **Transactional Outbox:** Guaranteed atomicity between state mutations and event emissions.
 - **Idempotency Store:** 24-hour Redis TTL to protect against duplicated network boundaries.
 - **Event-Driven State:** Immutable facts emitted after every successful domain mutation.
+- **Offline-First:** Local persistence with queue-based sync for field operations (Phase 1).

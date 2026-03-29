@@ -19,22 +19,20 @@ This phase prioritizes correctness, traceability, and structure over feature bre
 
 ---
 
-## Current Phase
+## Phase 0 — Foundation Core ✅ COMPLETE
 
-FOUNDATION CORE — **VALIDATED AND COMPLETE**
+**Completed:** 2026-03-29
 
-This phase defined the minimum system that can:
+This phase defined and validated the minimum system that can:
 
 - track inventory correctly
 - handle incidents safely
 - emit reliable events
 - support future AI agents without risk
 
----
+### Scope (In)
 
-## Scope (In)
-
-### Domains
+#### Domains
 
 - Product
 - Inventory
@@ -44,65 +42,16 @@ This phase defined the minimum system that can:
 - Events
 - Audit
 
----
+#### Core Capabilities
 
-### Core Capabilities
+1. **Inventory Integrity** — stock tracking per location, available vs blocked quantities, safe adjustments, no negative stock
+2. **Incident Management** — incident creation, classification (AI-assisted), inventory impact, resolution flow, audit trail
+3. **Event System** — event emission after domain actions, immutable event structure, correlation and causation tracking
+4. **API Layer** — clean REST endpoints, validated inputs, consistent response shape
+5. **Auditability** — actor tracking, timestamped changes, no silent mutations
+6. **AI Governance** — prompt injection protection, strict input sanitization, AI output validation, rule-based override of AI suggestions
 
-#### 1. Inventory Integrity
-
-- stock tracking per location
-- available vs blocked quantities
-- safe adjustments
-- no negative stock
-
----
-
-#### 2. Incident Management
-
-- incident creation
-- classification (AI-assisted)
-- inventory impact
-- resolution flow
-- audit trail
-
----
-
-#### 3. Event System
-
-- event emission after domain actions
-- immutable event structure
-- correlation and causation tracking
-
----
-
-#### 4. API Layer
-
-- clean REST endpoints
-- validated inputs
-- consistent response shape
-
----
-
-#### 5. Auditability
-
-- actor tracking
-- timestamped changes
-- no silent mutations
-
----
-
-#### 6. AI Governance (Critical)
-
-- prompt injection protection
-- strict input sanitization
-- AI output validation
-- rule-based override of AI suggestions
-
----
-
-## Scope (Out)
-
-Not included in this phase:
+#### Scope (Out — Deferred to Later Phases)
 
 - advanced picking logic
 - replenishment automation
@@ -112,11 +61,9 @@ Not included in this phase:
 - external integrations
 - real-time streaming dashboards
 
----
+### Deliverables
 
-## Deliverables
-
-### Documentation
+#### Documentation
 
 - [x] DOMAIN_MODEL.md
 - [x] API_SPEC.md
@@ -124,9 +71,7 @@ Not included in this phase:
 - [x] SECURITY_MODEL.md
 - [x] docs/FLOWS/incident-flow.md
 
----
-
-### AI Governance
+#### AI Governance
 
 - [x] .ai/CONTEXT.md
 - [x] .ai/RULES.md
@@ -135,18 +80,14 @@ Not included in this phase:
 - [x] .ai/PROMPT_LIBRARY.md
 - [x] .ai/AGENTS.md
 
----
-
-### Developer Governance
+#### Developer Governance
 
 - [x] .ai/PR_TEMPLATE.md
 - [x] .ai/COMMIT_GUIDE.md
 - [x] .ai/REVIEW_CHECKLIST.md
 - [x] .github/pull_request_template.md
 
----
-
-### Pending (Next Actions)
+#### Implementation
 
 - [x] implement Product domain
 - [x] implement Locations domain
@@ -158,11 +99,7 @@ Not included in this phase:
 - [x] align backend with API_SPEC
 - [x] validate flows against real scenarios (49 tests, 218 assertions, 8 scenarios, 0 failures)
 
----
-
-## Implementation Order
-
-Strict order:
+### Implementation Order (Completed)
 
 1. Product
 2. Locations
@@ -172,6 +109,89 @@ Strict order:
 6. Audit
 7. API alignment
 8. Validation scenarios
+
+### Success Criteria (All Met)
+
+- ✅ inventory is always consistent (verified: quantityOnHand = quantityAvailable + quantityBlocked, no negative stock)
+- ✅ incidents are fully traceable (verified: full lifecycle audit + events, status machine enforced)
+- ✅ events are emitted correctly (verified: transactional outbox for all state-changing operations)
+- ✅ audit trail is complete (verified: all movements, incidents, and location changes audited)
+- ✅ API matches documentation (verified: envelopes, pagination, error codes, camelCase, actor identity)
+- ✅ AI cannot corrupt system state (verified: RBAC enforcement, immutable fields rejected, actor identity server-derived)
+
+### Exit Conditions (All Met)
+
+- ✅ all core domains implemented
+- ✅ no critical validation gaps (5 gaps found and fixed during validation)
+- ✅ no silent mutations
+- ✅ all flows tested (49 automated tests across 8 validation scenarios)
+- ✅ documentation and implementation aligned
+
+---
+
+## Phase 1 — Field-Agent Mobile Core MVP (IN PROGRESS)
+
+**Started:** 2026-03-29
+
+### Objective
+
+Build the first operational execution surface of NexusWMS through a mobile-first field workflow. This phase delivers a working mobile application that warehouse operators can use to perform core tasks in the field, with an offline-first architecture to handle connectivity gaps.
+
+### Scope (In)
+
+- incident registration UI
+- product lookup UI
+- location selection UI
+- stock lookup UI
+- simple movement registration UI
+- offline-first local persistence foundation
+- sync queue foundation
+
+### Scope (Out — Deferred)
+
+- no Vapor Monitor work yet
+- no realtime dashboard
+- no advanced FIFO/FEFO
+- no full sync conflict resolution
+- no semantic search implementation unless already backed by real API capability
+- no production-grade voice pipeline unless grounded in actual backend support
+
+### Deliverables
+
+- [ ] product lookup flow
+- [ ] stock lookup flow
+- [ ] incident registration flow
+- [ ] simple movement registration flow
+- [ ] local offline persistence foundation
+- [ ] sync queue foundation
+
+### Success Criteria
+
+- [ ] operator can look up products and view stock levels on mobile
+- [ ] operator can register incidents from the field
+- [ ] operator can execute simple movements (inbound, outbound, transfer)
+- [ ] all operations persist locally when offline
+- [ ] queued operations sync when connectivity is restored
+- [ ] all UI flows consume the validated Phase 0 REST API
+
+### Exit Conditions
+
+- [ ] all deliverables completed and tested
+- [ ] offline persistence verified with simulated connectivity loss
+- [ ] sync queue correctly replays queued operations
+- [ ] no regressions in Phase 0 backend (test suite still green)
+- [ ] documentation updated to reflect mobile architecture
+
+---
+
+## Phase 2 — Operational Expansion (PLANNED)
+
+Will include:
+
+- picking flows (docs/FLOWS/picking-flow.md)
+- replenishment logic (docs/FLOWS/replenishment-flow.md)
+- warehouse optimization
+- agent-based automation (Vapor Monitor, Orchestrator Twin)
 
 ---
 
@@ -200,82 +220,23 @@ Strict order:
 
 ### 1. Overengineering too early
 
-Mitigation:
-
-- focus only on defined scope
-
----
+Mitigation: focus only on defined scope
 
 ### 2. AI misuse
 
-Mitigation:
-
-- strict RULES.md enforcement
-- DATA_GUARDRAILS.md validation
-
----
+Mitigation: strict RULES.md enforcement, DATA_GUARDRAILS.md validation
 
 ### 3. Domain leakage
 
-Mitigation:
-
-- REVIEW_CHECKLIST.md enforcement
-
----
+Mitigation: REVIEW_CHECKLIST.md enforcement
 
 ### 4. Event inconsistency
 
-Mitigation:
+Mitigation: EVENT_CATALOG.md as source of truth
 
-- EVENT_CATALOG.md as source of truth
+### 5. Offline data conflicts (Phase 1)
 
----
-
-## Success Criteria
-
-This phase is complete when:
-
-- ✅ inventory is always consistent (verified: quantityOnHand = quantityAvailable + quantityBlocked, no negative stock)
-- ✅ incidents are fully traceable (verified: full lifecycle audit + events, status machine enforced)
-- ✅ events are emitted correctly (verified: transactional outbox for all state-changing operations)
-- ✅ audit trail is complete (verified: all movements, incidents, and location changes audited)
-- ✅ API matches documentation (verified: envelopes, pagination, error codes, camelCase, actor identity)
-- ✅ AI cannot corrupt system state (verified: RBAC enforcement, immutable fields rejected, actor identity server-derived)
-
----
-
-## Exit Conditions
-
-Before moving to next phase:
-
-- ✅ all core domains implemented
-- ✅ no critical validation gaps (5 gaps found and fixed during validation)
-- ✅ no silent mutations
-- ✅ all flows tested (49 automated tests across 8 validation scenarios)
-- ✅ documentation and implementation aligned
-- [ ] deferred phase-2 flows explicitly promoted to active work
-
----
-
-## Next Phase (Preview)
-
-OPERATIONAL EXPANSION
-
-Will include:
-
-- picking flows
-- replenishment logic
-- warehouse optimization
-- agent-based automation (Vapor Monitor, Orchestrator Twin)
-
-### Deferred Flows
-
-The following flow documents are intentionally deferred until Phase 0 is complete:
-
-- docs/FLOWS/picking-flow.md
-- docs/FLOWS/replenishment-flow.md
-
-**Phase 0 exit conditions are now met.** These flows can be promoted to active work when the next phase begins.
+Mitigation: queue-based sync with server-side idempotency, conflict detection deferred to Phase 2
 
 ---
 
@@ -283,7 +244,9 @@ The following flow documents are intentionally deferred until Phase 0 is complet
 
 This plan defines the system's backbone.
 
-Phase 0 / Foundation Core has been validated and is complete as of 2026-03-29.
+Phase 0 / Foundation Core was validated and completed on 2026-03-29.
+
+Phase 1 / Field-Agent Mobile Core MVP is now in progress.
 
 Do not expand scope without updating this document.
 
