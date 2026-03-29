@@ -20,7 +20,7 @@ use InvalidArgumentException;
 
 final class LocationController extends Controller
 {
-    public function index(Request $request, ListLocationsAction $action): \Illuminate\Http\JsonResponse
+    public function index(Request $request, ListLocationsAction $action): JsonResponse
     {
         $page = (int) $request->query('page', '1');
         $perPage = (int) $request->query('per_page', '50');
