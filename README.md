@@ -8,13 +8,14 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 
 ## 🚀 Current Project State
 
-**Phase 1: Field-Agent Mobile Core MVP — (Status: Validated and Complete)**
+**Phase 2: Operational Visibility — (Status: In Progress)**
 
 | Phase | Description | Status |
 |-------|-------------|--------|
 | **Phase 0** | Foundation Core — Domain model, API contracts, event system, audit layer | ✅ Complete |
 | **Phase 1** | Field-Agent Mobile Core — Mobile-first field workflows, offline persistence | ✅ Complete |
-| **Phase 2** | Operational Expansion — Picking, replenishment, AI automation | ⬜ Planned |
+| **Phase 2** | Operational Visibility — Realtime dashboard, event monitoring | 🔄 In Progress |
+| **Phase 3** | Operational Expansion — Picking, replenishment, AI automation | ⬜ Planned |
 
 ### Phase 0 Achievements (Foundation Core)
 
@@ -25,13 +26,21 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 - Immutable audit trail for all state-changing operations
 - AI governance enforced from day one
 
-### Phase 1 Focus (Field-Agent Mobile Core)
+### Phase 1 Achievements (Field-Agent Mobile Core)
 
 - Product lookup & stock lookup UI
 - Incident registration from the field
 - Simple movement execution (inbound, outbound, transfer)
 - Offline-first local persistence foundation
 - Sync queue for connectivity gap handling
+
+### Phase 2 Focus (Operational Visibility)
+
+- Realtime dashboard foundation (`apps/vapor-monitor`)
+- WebSocket integration via Laravel Reverb
+- Event-driven monitoring UI for inbound, outbound, and incidents
+- KPI visibility for operational decision-making
+- Occupancy visibility by zone
 
 ---
 
@@ -69,7 +78,7 @@ flowchart TD
 
     subgraph Frontends ["Frontend Applications"]
         Mobile["apps/field-agent-mobile\n(Vue 3.6 - MVP ✅)"]:::currentFrontend
-        Monitor["apps/vapor-monitor\n(Vue - Operational Dashboard)"]:::currentFrontend
+        Monitor["apps/vapor-monitor\n(Vue - Operational Dashboard 🔵)"]:::activeFrontend
         Twin["apps/orchestrator-twin\n(Vue - Digital Twin Shell)"]:::futureFrontend
     end
 
@@ -167,7 +176,7 @@ flowchart TB
         AU["Audit Trail"]
     end
 
-    subgraph Phase1 ["🔵 Phase 1 — Field-Agent Mobile (In Progress)"]
+    subgraph Phase1 ["✅ Phase 1 — Field-Agent Mobile (Complete)"]
         direction TB
         PL["Product Lookup UI"]
         SL["Stock Lookup UI"]
@@ -177,16 +186,24 @@ flowchart TB
         SYN["Sync Queue"]
     end
 
-    subgraph FutureScope ["⬜ Phase 2+ — Operational Expansion (Planned)"]
+    subgraph Phase2 ["🔵 Phase 2 — Operational Visibility (In Progress)"]
+        direction TB
+        VM["Vapor Monitor Dashboard"]
+        REV["Reverb WebSocket Integration"]
+        KPI["Realtime KPI Cards"]
+        OCC["Zone Occupancy View"]
+    end
+
+    subgraph FutureScope ["⬜ Phase 3+ — Operational Expansion (Planned)"]
         direction TB
         AI["AI Automation & Routing"]
         DT["Digital Twin Simulation"]
-        RE["Realtime Event Streaming"]
         PK["Picking & Replenishment"]
     end
 
     Phase0 ~~~ Phase1
-    Phase1 ~~~ FutureScope
+    Phase1 ~~~ Phase2
+    Phase2 ~~~ FutureScope
 ```
 
 ---
@@ -194,8 +211,8 @@ flowchart TB
 ## 📦 App Surfaces
 
 - [`apps/api`](apps/api): Laravel 13 backend (System of Record, Domain Logic).
-- [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6).
-- [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6) — **Phase 1 active target**.
+- [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6) — **Phase 2 active target**.
+- [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6) — **Phase 1 complete**.
 - [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation layer (Vue 3.6).
 
 ## 🏗️ Architecture Principles
