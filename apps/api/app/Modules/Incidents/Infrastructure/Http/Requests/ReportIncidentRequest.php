@@ -18,8 +18,8 @@ final class ReportIncidentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'productId' => ['required', 'string', 'uuid'],
-            'locationId' => ['nullable', 'string', 'uuid'],
+            'productId' => ['required', 'string'],
+            'locationId' => ['nullable', 'string'],
             'type' => ['required', 'string', Rule::in([
                 'damage', 'shortage', 'overage', 'expiration', 'misplacement', 
                 'broken_packaging', 'nonconforming_product', 'picking_blocker', 'lot_error'

@@ -206,7 +206,7 @@ API commands requiring the `Idempotency-Key` header (e.g., `POST /api/movements`
 ### Storage Mechanism (MVP)
 
 - **Technology**: Redis.
-- **Data Structure**: Key-Value mapping `idempotency_key:{uuid} -> { status, response_body, status_code }`.
+- **Data Structure**: Key-Value mapping `idempotency_key:{unique_key} -> { status, response_body, status_code }`.
 - **TTL (Time to Live)**: 24 hours.
 
 ### Execution Flow

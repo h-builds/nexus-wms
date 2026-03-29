@@ -204,7 +204,7 @@ For the MVP, inbound operations are modeled as a movement of type `receipt`.
 **Example Request:**
 ```http
 POST /api/movements
-Idempotency-Key: req_124_uuid_here
+Idempotency-Key: req_124_unique_key
 
 {
   "productId": "prod_001",

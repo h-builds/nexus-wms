@@ -26,11 +26,11 @@ final class RegisterMovementRequest extends FormRequest
         $adjustmentReasons = array_map(fn($r) => $r->value, AdjustmentReason::cases());
 
         return [
-            'productId' => 'required|string|uuid|exists:products,id',
+            'productId' => 'required|string|exists:products,id',
             'type' => ['required', 'string', Rule::in($types)],
             'quantity' => 'required|integer|min:1',
-            'fromLocationId' => 'nullable|string|uuid|exists:locations,id',
-            'toLocationId' => 'nullable|string|uuid|exists:locations,id',
+            'fromLocationId' => 'nullable|string|exists:locations,id',
+            'toLocationId' => 'nullable|string|exists:locations,id',
             'reference' => 'nullable|string|max:255',
             'lotNumber' => 'nullable|string|max:255',
             'reason' => ['nullable', 'string', Rule::in($adjustmentReasons)],

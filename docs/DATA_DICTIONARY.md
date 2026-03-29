@@ -9,6 +9,20 @@ All documents, code, and events must use these canonical terms.
 
 ---
 
+## Identifier Format (MVP)
+
+All entity identifiers are opaque strings.
+
+Examples:
+- productId: "prod_001"
+- locationId: "loc_001"
+
+No UUID enforcement is applied in Phase 1.
+
+Future phases may standardize identifiers (e.g., UUID), but clients must treat IDs as opaque values.
+
+---
+
 ## Canonical Terms
 
 ### Stock Item

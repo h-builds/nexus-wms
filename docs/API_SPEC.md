@@ -20,6 +20,15 @@ It is the first controlled contract for implementation.
 
 ---
 
+## Identifiers (MVP Phase 1)
+
+> [!NOTE]
+> All entity identifiers (productId, locationId, incidentId, movementId, etc.) are treated as **opaque strings** in the MVP.
+> UUID format is **NOT** enforced at this stage.
+> Clients must not assume any structural format for IDs.
+
+---
+
 ## API Style
 
 - REST-first
@@ -183,9 +192,11 @@ These are last-resort safety nets. Application logic must prevent violations bef
 ## Idempotency
 
 All `POST` command endpoints accept an optional `Idempotency-Key` HTTP header.
+Idempotency-Key is a client-generated unique string.
+UUID format is allowed but not required.
 
 ```text
-Idempotency-Key: <client-generated-uuid>
+Idempotency-Key: <client-generated-unique-key>
 ```
 
 Behavior:

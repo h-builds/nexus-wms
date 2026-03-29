@@ -55,7 +55,7 @@ It ensures traceability, operational clarity, and AI-safe handling of incident d
 **Request:**
 ```http
 POST /api/incidents
-Idempotency-Key: req_123_uuid_here
+Idempotency-Key: req_123_unique_key
 
 {
   "type": "damage",
@@ -112,7 +112,7 @@ The system performs an automated analysis to assist the operator:
 **Entity:** `InventoryIncident`
 
 **Fields:**
-- `id`: Unique identifier (UUID).
+- `id`: Unique identifier (Opaque string).
 - `type`: Category of the incident.
 - `severity`: Severity level (low, medium, high).
 - `description`: Human-readable summary.

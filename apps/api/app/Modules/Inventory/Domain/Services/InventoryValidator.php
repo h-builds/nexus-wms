@@ -30,13 +30,13 @@ final class InventoryValidator
 
         if ($newAvailable < 0) {
             throw new InvalidArgumentException(
-                "Adjustment would result in negative quantityAvailable ({$newAvailable})."
+                "Insufficient available quantity at source location. Result would be negative ({$newAvailable})."
             );
         }
 
         if ($newBlocked < 0) {
             throw new InvalidArgumentException(
-                "Adjustment would result in negative quantityBlocked ({$newBlocked})."
+                "Insufficient blocked quantity at source location. Result would be negative ({$newBlocked})."
             );
         }
     }
