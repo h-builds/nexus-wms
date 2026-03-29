@@ -20,9 +20,10 @@ It is a domain-structured logistics system with future AI governance requirement
 
 ## Current Project Stage
 
-Current stage:
+**Current stage: Phase 1 / Field-Agent Mobile Core MVP (IN PROGRESS)**
 
-- **Phase 0 / Foundation Core: VALIDATED AND COMPLETE**
+### Phase 0 / Foundation Core (VALIDATED AND COMPLETE)
+
 - architectural foundation completed
 - monorepo structure completed
 - Laravel runtime working
@@ -48,14 +49,22 @@ Implemented documentation:
 - `docs/EVENT_CATALOG.md`
 - `docs/SECURITY_MODEL.md`
 
-Not implemented yet (deferred beyond Phase 0):
+### Phase 1 / Field-Agent Mobile Core MVP (IN PROGRESS)
+
+Current implementation focus:
+
+- `apps/field-agent-mobile`
+- operational execution UX
+- offline-first local persistence foundation
+- sync queue foundation
+- API consumption of existing inventory, incidents, locations, products, and movements endpoints
+
+Not implemented yet (deferred beyond Phase 1):
+
 - async event dispatch workers
 - realtime websocket transport
-- mobile app
 - AI runtime logic
 - digital twin engine
-
----
 
 ## Primary Mission for AI Assistants
 
