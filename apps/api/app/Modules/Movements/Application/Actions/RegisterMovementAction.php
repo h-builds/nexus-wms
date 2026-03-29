@@ -30,39 +30,37 @@ final class RegisterMovementAction
         private readonly AuditLogger $auditLogger,
     ) {}
 
-    public function execute(RegisterMovementDTO $dto): InventoryMovement
+    public function execute(RegisterMovementDTO $movementData): InventoryMovement
     {
-        if ($dto->idempotencyKey !== null) {
-            $existing = InventoryMovementModel::where('idempotency_key', $dto->idempotencyKey)->first();
+        if ($movementData->idempotencyKey !== null) {
+            // DB unique constraint on idempotency_key enforces 409 Conflict for duplicates.
+            $existing = InventoryMovementModel::where('idempotency_key', $movementData->idempotencyKey)->first();
             if ($existing) {
-                // To safely return the existing movement, we would map Model to Entity.
-                // In API_SPEC, duplicate idempotency key execution is either success return original or 409 depending on state.
-                // Relying on DB unique constraint to throw QueryException, mapping to 409 Conflict.
             }
         }
 
-        $product = $this->productRepository->findById($dto->productId);
+        $product = $this->productRepository->findById($movementData->productId);
         if (!$product) {
-            throw new InvalidArgumentException("Product {$dto->productId} not found.");
+            throw new InvalidArgumentException("Product {$movementData->productId} not found.");
         }
 
-        $type = MovementType::tryFrom($dto->type);
+        $type = MovementType::tryFrom($movementData->type);
         if (!$type) {
-            throw new InvalidArgumentException("Invalid movement type: {$dto->type}.");
+            throw new InvalidArgumentException("Invalid movement type: {$movementData->type}.");
         }
 
-        if ($dto->fromLocationId !== null) {
-            $fromLocation = $this->locationRepository->findById($dto->fromLocationId);
+        if ($movementData->fromLocationId !== null) {
+            $fromLocation = $this->locationRepository->findById($movementData->fromLocationId);
             if (!$fromLocation) {
-                throw new InvalidArgumentException("Location {$dto->fromLocationId} not found.");
+                throw new InvalidArgumentException("Location {$movementData->fromLocationId} not found.");
             }
             $this->movementValidator->assertLocationNotBlocked($fromLocation->id(), $fromLocation->isBlocked());
         }
 
-        if ($dto->toLocationId !== null) {
-            $toLocation = $this->locationRepository->findById($dto->toLocationId);
+        if ($movementData->toLocationId !== null) {
+            $toLocation = $this->locationRepository->findById($movementData->toLocationId);
             if (!$toLocation) {
-                throw new InvalidArgumentException("Location {$dto->toLocationId} not found.");
+                throw new InvalidArgumentException("Location {$movementData->toLocationId} not found.");
             }
             $this->movementValidator->assertLocationNotBlocked($toLocation->id(), $toLocation->isBlocked());
         }
@@ -70,17 +68,17 @@ final class RegisterMovementAction
         $movementId = Str::uuid()->toString();
         $movement = new InventoryMovement(
             id: $movementId,
-            productId: $dto->productId,
-            fromLocationId: $dto->fromLocationId,
-            toLocationId: $dto->toLocationId,
+            productId: $movementData->productId,
+            fromLocationId: $movementData->fromLocationId,
+            toLocationId: $movementData->toLocationId,
             type: $type,
-            quantity: $dto->quantity,
-            reference: $dto->reference,
-            lotNumber: $dto->lotNumber,
-            reason: $dto->reason,
-            performedBy: $dto->performedBy,
-            performedAt: $dto->performedAt,
-            idempotencyKey: $dto->idempotencyKey,
+            quantity: $movementData->quantity,
+            reference: $movementData->reference,
+            lotNumber: $movementData->lotNumber,
+            reason: $movementData->reason,
+            performedBy: $movementData->performedBy,
+            performedAt: $movementData->performedAt,
+            idempotencyKey: $movementData->idempotencyKey,
             createdAt: now()->toIso8601String(),
             updatedAt: now()->toIso8601String(),
         );
@@ -143,8 +141,8 @@ final class RegisterMovementAction
                 'dispatched' => false,
             ]);
             
-            $specificEventId = Str::uuid()->toString();
-            $specificEventType = match ($movement->type()) {
+            $stockEventId = Str::uuid()->toString();
+            $stockEventType = match ($movement->type()) {
                 MovementType::RECEIPT => 'inventory.stock.received',
                 MovementType::PUTAWAY => 'inventory.stock.putaway',
                 MovementType::RELOCATION => 'inventory.stock.relocated',
@@ -153,7 +151,7 @@ final class RegisterMovementAction
                 MovementType::RETURN_INTERNAL => 'inventory.stock.returned',
             };
             
-            $specificPayload = match ($movement->type()) {
+            $stockEventPayload = match ($movement->type()) {
                 MovementType::RECEIPT => [
                     'movementId' => $movement->id(), 'productId' => $movement->productId(), 'locationId' => $movement->toLocationId(), 'quantity' => $movement->quantity(), 'lotNumber' => $movement->lotNumber()
                 ],
@@ -169,14 +167,14 @@ final class RegisterMovementAction
             };
 
             EventOutboxModel::create([
-                'event_id' => $specificEventId,
-                'event_type' => $specificEventType,
+                'event_id' => $stockEventId,
+                'event_type' => $stockEventType,
                 'event_version' => 1,
                 'occurred_at' => now(),
                 'actor_id' => $movement->performedBy(),
                 'correlation_id' => $correlationId,
-                'causation_id' => $specificEventId,
-                'payload' => $specificPayload,
+                'causation_id' => $stockEventId,
+                'payload' => $stockEventPayload,
                 'dispatched' => false,
             ]);
 

@@ -40,13 +40,27 @@ final class EloquentProductRepository implements ProductRepository
         return $model ? $this->toDomain($model) : null;
     }
 
-    public function all(): array
+    public function paginate(int $page = 1, int $perPage = 50, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return ProductModel::query()
-            ->orderBy('name')
-            ->get()
-            ->map(fn (ProductModel $model): Product => $this->toDomain($model))
-            ->all();
+        $query = ProductModel::query();
+
+        if (isset($filters['sku'])) {
+            $query->where('sku', $filters['sku']);
+        }
+
+        if (isset($filters['q'])) {
+            $q = $filters['q'];
+            $query->where(function ($qBuilder) use ($q) {
+                $qBuilder->where('sku', 'like', "%{$q}%")
+                      ->orWhere('name', 'like', "%{$q}%");
+            });
+        }
+
+        $paginator = $query->orderBy('name')->paginate(perPage: $perPage, page: $page);
+
+        $paginator->getCollection()->transform(fn (ProductModel $model): Product => $this->toDomain($model));
+
+        return $paginator;
     }
 
     private function toDomain(ProductModel $model): Product

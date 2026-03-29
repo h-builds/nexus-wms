@@ -29,35 +29,35 @@ final class ReportIncidentAction
         private readonly \App\Modules\Audit\Application\Services\AuditLogger $auditLogger,
     ) {}
 
-    public function execute(ReportIncidentDTO $dto): InventoryIncident
+    public function execute(ReportIncidentDTO $incidentData): InventoryIncident
     {
-        if ($dto->idempotencyKey !== null) {
-            $existing = $this->incidentRepository->findByIdempotencyKey($dto->idempotencyKey);
+        if ($incidentData->idempotencyKey !== null) {
+            // DB unique constraint on idempotency_key enforces 409 Conflict for duplicates.
+            $existing = $this->incidentRepository->findByIdempotencyKey($incidentData->idempotencyKey);
             if ($existing) {
-                // TODO: Return gracefully or let db handle it; intentionally empty for now
             }
         }
 
-        $product = $this->productRepository->findById($dto->productId);
+        $product = $this->productRepository->findById($incidentData->productId);
         if (!$product) {
-            throw new InvalidArgumentException("Product {$dto->productId} not found.");
+            throw new InvalidArgumentException("Product {$incidentData->productId} not found.");
         }
 
-        if ($dto->locationId !== null) {
-            $location = $this->locationRepository->findById($dto->locationId);
+        if ($incidentData->locationId !== null) {
+            $location = $this->locationRepository->findById($incidentData->locationId);
             if (!$location) {
-                throw new InvalidArgumentException("Location {$dto->locationId} not found.");
+                throw new InvalidArgumentException("Location {$incidentData->locationId} not found.");
             }
         }
 
-        $type = IncidentType::tryFrom($dto->type);
+        $type = IncidentType::tryFrom($incidentData->type);
         if (!$type) {
-            throw new InvalidArgumentException("Invalid incident type: {$dto->type}.");
+            throw new InvalidArgumentException("Invalid incident type: {$incidentData->type}.");
         }
 
-        $severity = IncidentSeverity::tryFrom($dto->severity);
+        $severity = IncidentSeverity::tryFrom($incidentData->severity);
         if (!$severity) {
-            throw new InvalidArgumentException("Invalid incident severity: {$dto->severity}.");
+            throw new InvalidArgumentException("Invalid incident severity: {$incidentData->severity}.");
         }
 
         $incidentId = Str::uuid()->toString();
@@ -65,17 +65,17 @@ final class ReportIncidentAction
 
         $incident = new InventoryIncident(
             id: $incidentId,
-            productId: $dto->productId,
-            locationId: $dto->locationId,
+            productId: $incidentData->productId,
+            locationId: $incidentData->locationId,
             type: $type,
             severity: $severity,
             status: IncidentStatus::OPEN,
-            description: $dto->description,
-            quantityAffected: $dto->quantityAffected,
-            reportedBy: $dto->reportedBy,
+            description: $incidentData->description,
+            quantityAffected: $incidentData->quantityAffected,
+            reportedBy: $incidentData->reportedBy,
             createdAt: $now,
             updatedAt: $now,
-            idempotencyKey: $dto->idempotencyKey
+            idempotencyKey: $incidentData->idempotencyKey
         );
 
         $outboxEventId = Str::uuid()->toString();

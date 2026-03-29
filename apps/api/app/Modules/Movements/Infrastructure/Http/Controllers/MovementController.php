@@ -31,15 +31,7 @@ final class MovementController
 
         $paginator = $action->execute($page, $perPage, array_filter($filters));
 
-        return response()->json([
-            'data' => MovementResource::collection($paginator->items()),
-            'meta' => [
-                'currentPage' => $paginator->currentPage(),
-                'perPage' => $paginator->perPage(),
-                'totalItems' => $paginator->total(),
-                'totalPages' => $paginator->lastPage(),
-            ],
-        ]);
+        return \App\Http\Responses\PaginatedResponse::make($paginator, MovementResource::class);
     }
 
     public function show(string $id, GetMovementByIdAction $action): JsonResponse
@@ -63,10 +55,10 @@ final class MovementController
     public function store(RegisterMovementRequest $request, RegisterMovementAction $action): JsonResponse
     {
         try {
-            // Spec: reportedBy is server-set from authenticated actor. Default to system_user for MVP.
+            // Actor identity must come from session, never from request payload.
             $userId = $request->user()?->id ?? 'system_user';
             
-            $dto = new RegisterMovementDTO(
+            $movementRegistration = new RegisterMovementDTO(
                 productId: $request->validated('productId'),
                 fromLocationId: $request->validated('fromLocationId'),
                 toLocationId: $request->validated('toLocationId'),
@@ -80,7 +72,7 @@ final class MovementController
                 idempotencyKey: $request->header('Idempotency-Key')
             );
 
-            $movement = $action->execute($dto);
+            $movement = $action->execute($movementRegistration);
 
             return response()->json([
                 'data' => new MovementResource($movement)

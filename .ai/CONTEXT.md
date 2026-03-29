@@ -35,6 +35,7 @@ Current stage:
 - Incidents domain backend (API, entities, mutation orchestration, Outbox validation) completed
 - Event outbox tracking (EventOutbox abstraction, sync dispatcher) completed
 - Audit domain foundation (AuditLog entity, persistence, synchronous trace integration) completed
+- API Alignment (global exception formatting, pagination standards, idempotency infrastructure) completed
 
 Implemented documentation:
 

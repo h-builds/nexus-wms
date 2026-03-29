@@ -43,13 +43,28 @@ final class EloquentLocationRepository implements LocationRepository
         return $model ? $this->toDomain($model) : null;
     }
 
-    public function paginate(int $page = 1, int $perPage = 50): LengthAwarePaginator
+    public function paginate(int $page = 1, int $perPage = 50, array $filters = []): LengthAwarePaginator
     {
-        $paginator = LocationModel::query()
+        $query = LocationModel::query();
+
+        $filterMap = [
+            'warehouseCode' => 'warehouse_code',
+            'zone' => 'zone',
+            'aisle' => 'aisle',
+            'rack' => 'rack',
+            'bin' => 'bin',
+        ];
+
+        foreach ($filterMap as $filterKey => $column) {
+            if (isset($filters[$filterKey])) {
+                $query->where($column, $filters[$filterKey]);
+            }
+        }
+
+        $paginator = $query
             ->orderBy('label')
             ->paginate(perPage: $perPage, page: $page);
 
-        // Transform internal models to domain entities
         $paginator->getCollection()->transform(fn (LocationModel $model): Location => $this->toDomain($model));
 
         return $paginator;

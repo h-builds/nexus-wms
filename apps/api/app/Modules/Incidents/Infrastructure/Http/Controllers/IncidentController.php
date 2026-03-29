@@ -33,15 +33,7 @@ final class IncidentController
 
         $paginator = $action->execute($page, $perPage, array_filter($filters));
 
-        return response()->json([
-            'data' => IncidentResource::collection($paginator->items()),
-            'meta' => [
-                'currentPage' => $paginator->currentPage(),
-                'perPage' => $paginator->perPage(),
-                'totalItems' => $paginator->total(),
-                'totalPages' => $paginator->lastPage(),
-            ],
-        ]);
+        return \App\Http\Responses\PaginatedResponse::make($paginator, IncidentResource::class);
     }
 
     public function show(string $id, GetIncidentByIdAction $action): JsonResponse
@@ -67,7 +59,7 @@ final class IncidentController
         try {
             $userId = $request->user() ? (string) $request->user()->id : 'system_user';
             
-            $dto = new ReportIncidentDTO(
+            $incidentReport = new ReportIncidentDTO(
                 productId: $request->validated('productId'),
                 locationId: $request->validated('locationId'),
                 type: $request->validated('type'),
@@ -78,7 +70,7 @@ final class IncidentController
                 idempotencyKey: $request->header('Idempotency-Key')
             );
 
-            $incident = $action->execute($dto);
+            $incident = $action->execute($incidentReport);
 
             return response()->json([
                 'data' => new IncidentResource($incident)
@@ -109,13 +101,13 @@ final class IncidentController
         try {
             $userId = $request->user() ? (string) $request->user()->id : 'system_user';
             
-            $dto = new UpdateIncidentStatusDTO(
+            $statusTransition = new UpdateIncidentStatusDTO(
                 incidentId: $id,
                 status: $request->validated('status'),
                 performedBy: $userId
             );
 
-            $incident = $action->execute($dto);
+            $incident = $action->execute($statusTransition);
 
             return response()->json([
                 'data' => new IncidentResource($incident)

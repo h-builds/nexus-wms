@@ -16,22 +16,22 @@ use Illuminate\Http\Request;
 
 final class LocationController extends Controller
 {
-    public function index(Request $request, ListLocationsAction $action): JsonResponse
+    public function index(Request $request, ListLocationsAction $action): \Illuminate\Http\JsonResponse
     {
         $page = (int) $request->query('page', '1');
         $perPage = (int) $request->query('per_page', '50');
 
-        $paginator = $action->execute($page, $perPage);
-
-        return response()->json([
-            'data' => LocationResource::collection($paginator->items()),
-            'meta' => [
-                'currentPage' => $paginator->currentPage(),
-                'perPage' => $paginator->perPage(),
-                'totalItems' => $paginator->total(),
-                'totalPages' => $paginator->lastPage(),
-            ],
+        $filters = array_filter([
+            'warehouseCode' => $request->query('warehouseCode'),
+            'zone' => $request->query('zone'),
+            'aisle' => $request->query('aisle'),
+            'rack' => $request->query('rack'),
+            'bin' => $request->query('bin'),
         ]);
+
+        $paginator = $action->execute($page, $perPage, $filters);
+
+        return \App\Http\Responses\PaginatedResponse::make($paginator, LocationResource::class);
     }
 
     public function show(string $id, GetLocationByIdAction $action): JsonResponse

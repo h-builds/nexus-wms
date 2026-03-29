@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Product\Domain\Repositories;
 
 use App\Modules\Product\Domain\Entities\Product;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ProductRepository
 {
@@ -14,8 +15,5 @@ interface ProductRepository
 
     public function findBySku(string $sku): ?Product;
 
-    /**
-     * @return array<Product>
-     */
-    public function all(): array;
+    public function paginate(int $page = 1, int $perPage = 50, array $filters = []): LengthAwarePaginator;
 }

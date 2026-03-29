@@ -26,15 +26,7 @@ final class InventoryController extends Controller
 
         $paginator = $action->execute($page, $perPage, $filters);
 
-        return response()->json([
-            'data' => StockItemResource::collection($paginator->items()),
-            'meta' => [
-                'currentPage' => $paginator->currentPage(),
-                'perPage' => $paginator->perPage(),
-                'totalItems' => $paginator->total(),
-                'totalPages' => $paginator->lastPage(),
-            ],
-        ]);
+        return \App\Http\Responses\PaginatedResponse::make($paginator, StockItemResource::class);
     }
 
     public function show(string $id, GetStockItemByIdAction $action): JsonResponse

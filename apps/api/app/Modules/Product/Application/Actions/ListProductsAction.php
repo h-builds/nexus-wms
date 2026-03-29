@@ -13,8 +13,8 @@ final class ListProductsAction
     ) {
     }
 
-    public function execute(): array
+    public function execute(int $page = 1, int $perPage = 50, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->products->all();
+        return $this->products->paginate($page, $perPage, $filters);
     }
 }

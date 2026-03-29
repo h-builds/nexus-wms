@@ -18,5 +18,5 @@ interface LocationRepository
     /**
      * @return LengthAwarePaginator
      */
-    public function paginate(int $page = 1, int $perPage = 50): LengthAwarePaginator;
+    public function paginate(int $page = 1, int $perPage = 50, array $filters = []): LengthAwarePaginator;
 }

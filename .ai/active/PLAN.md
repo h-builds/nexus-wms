@@ -155,7 +155,7 @@ Not included in this phase:
 - [x] implement Incident flow (end-to-end)
 - [x] implement Event emission layer (Transactional Outbox)
 - [x] implement Audit logging
-- [ ] align backend with API_SPEC
+- [x] align backend with API_SPEC
 - [ ] validate flows against real scenarios
 
 ---

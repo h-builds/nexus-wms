@@ -24,21 +24,21 @@ final class UpdateIncidentStatusAction
         private readonly AuditLogger $auditLogger,
     ) {}
 
-    public function execute(UpdateIncidentStatusDTO $dto): InventoryIncident
+    public function execute(UpdateIncidentStatusDTO $statusTransition): InventoryIncident
     {
-        $newStatus = IncidentStatus::tryFrom($dto->status);
+        $newStatus = IncidentStatus::tryFrom($statusTransition->status);
         if (!$newStatus) {
-            throw new InvalidArgumentException("Invalid incident status: {$dto->status}.");
+            throw new InvalidArgumentException("Invalid incident status: {$statusTransition->status}.");
         }
 
-        $incident = $this->incidentRepository->findById($dto->incidentId);
+        $incident = $this->incidentRepository->findById($statusTransition->incidentId);
         if (!$incident) {
-            throw new InvalidArgumentException("Incident {$dto->incidentId} not found.");
+            throw new InvalidArgumentException("Incident {$statusTransition->incidentId} not found.");
         }
 
         $previousStatus = $incident->status();
 
-        DB::transaction(function () use ($incident, $newStatus, $dto, $previousStatus, &$outboxEventId) {
+        DB::transaction(function () use ($incident, $newStatus, $statusTransition, $previousStatus, &$outboxEventId) {
             $incident->transitionTo($newStatus, now()->toIso8601String());
 
             $this->incidentRepository->save($incident);
@@ -54,7 +54,7 @@ final class UpdateIncidentStatusAction
                     'previous_status' => $previousStatus->value,
                     'new_status' => $newStatus->value,
                 ],
-                actorId: $dto->performedBy,
+                actorId: $statusTransition->performedBy,
                 correlationId: $correlationId
             );
 
@@ -69,7 +69,7 @@ final class UpdateIncidentStatusAction
                 'event_type' => 'incident.status.updated',
                 'event_version' => 1,
                 'occurred_at' => now(),
-                'actor_id' => $dto->performedBy,
+                'actor_id' => $statusTransition->performedBy,
                 'correlation_id' => $correlationId,
                 'causation_id' => $outboxEventId,
                 'payload' => $eventPayload,

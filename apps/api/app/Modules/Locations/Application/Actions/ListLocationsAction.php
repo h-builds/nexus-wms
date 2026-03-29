@@ -14,8 +14,8 @@ final class ListLocationsAction
     ) {
     }
 
-    public function execute(int $page = 1, int $perPage = 50): LengthAwarePaginator
+    public function execute(int $page = 1, int $perPage = 50, array $filters = []): LengthAwarePaginator
     {
-        return $this->locations->paginate($page, $perPage);
+        return $this->locations->paginate($page, $perPage, $filters);
     }
 }
