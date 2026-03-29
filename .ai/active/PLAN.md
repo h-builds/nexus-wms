@@ -151,8 +151,9 @@ Not included in this phase:
 - [x] implement Product domain
 - [x] implement Locations domain
 - [x] implement Inventory domain
+- [x] implement Movements domain
 - [ ] implement Incident flow (end-to-end)
-- [ ] implement Event emission layer
+- [x] implement Event emission layer (Transactional Outbox)
 - [ ] implement Audit logging
 - [ ] align backend with API_SPEC
 - [ ] validate flows against real scenarios
