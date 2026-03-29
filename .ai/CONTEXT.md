@@ -34,6 +34,7 @@ Current stage:
 - Movements domain backend (API, entities, mutation orchestration, Outbox validation) completed
 - Incidents domain backend (API, entities, mutation orchestration, Outbox validation) completed
 - Event outbox tracking (EventOutbox abstraction, sync dispatcher) completed
+- Audit domain foundation (AuditLog entity, persistence, synchronous trace integration) completed
 
 Implemented documentation:
 
@@ -44,9 +45,6 @@ Implemented documentation:
 - `docs/EVENT_CATALOG.md`
 
 Not fully implemented yet:
-
-- remaining domain entities in Laravel (audit_logs, etc.)
-- remaining migrations (audit_logs)
 - remaining API routes/controllers/resources
 - inventory mutation (comes through Movements domain)
 - event dispatch wiring
@@ -274,7 +272,6 @@ AI must assume:
 - realtime transport is not implemented yet
 - semantic search is not implemented yet
 - event bus is not implemented yet
-- audit persistence is not implemented yet
 
 Do not pretend features already exist.
 
@@ -291,7 +288,7 @@ Near-term implementation order should be:
 3. inventory (completed — fully integrated with Movements for mutation)
 4. incidents (completed)
 5. movements (completed)
-6. audit log foundation
+6. audit log foundation (completed)
 7. event emission foundation (completed — Outbox dispatcher in place, pending async workers)
 8. vapor-monitor integration
 9. AI governance extensions

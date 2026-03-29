@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Movements\Application\Actions;
 
+use App\Modules\Audit\Application\Services\AuditLogger;
 use App\Modules\Events\Application\Services\OutboxDispatcher;
 use App\Modules\Events\Infrastructure\Persistence\Eloquent\EventOutboxModel;
 use App\Modules\Inventory\Application\Services\InternalStockMutationService;
@@ -26,6 +27,7 @@ final class RegisterMovementAction
         private readonly MovementValidator $movementValidator,
         private readonly InternalStockMutationService $stockMutationService,
         private readonly OutboxDispatcher $outboxDispatcher,
+        private readonly AuditLogger $auditLogger,
     ) {}
 
     public function execute(RegisterMovementDTO $dto): InventoryMovement
@@ -103,6 +105,21 @@ final class RegisterMovementAction
             ]);
 
             $this->stockMutationService->applyMovement($movement);
+
+            $this->auditLogger->log(
+                action: 'movement.registered',
+                entityType: 'InventoryMovement',
+                entityId: $movement->id(),
+                changeset: [
+                    'type' => $movement->type()->value,
+                    'quantity' => $movement->quantity(),
+                    'fromLocationId' => $movement->fromLocationId(),
+                    'toLocationId' => $movement->toLocationId(),
+                    'reference' => $movement->reference(),
+                ],
+                actorId: $movement->performedBy(),
+                correlationId: $correlationId
+            );
 
             $eventId = Str::uuid()->toString();
             $eventPayload = [

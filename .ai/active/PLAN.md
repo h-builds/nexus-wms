@@ -154,7 +154,7 @@ Not included in this phase:
 - [x] implement Movements domain
 - [x] implement Incident flow (end-to-end)
 - [x] implement Event emission layer (Transactional Outbox)
-- [ ] implement Audit logging
+- [x] implement Audit logging
 - [ ] align backend with API_SPEC
 - [ ] validate flows against real scenarios
 

@@ -26,6 +26,7 @@ final class ReportIncidentAction
         private readonly LocationRepository $locationRepository,
         private readonly IncidentRepository $incidentRepository,
         private readonly OutboxDispatcher $outboxDispatcher,
+        private readonly \App\Modules\Audit\Application\Services\AuditLogger $auditLogger,
     ) {}
 
     public function execute(ReportIncidentDTO $dto): InventoryIncident
@@ -82,6 +83,21 @@ final class ReportIncidentAction
 
         DB::transaction(function () use ($incident, $outboxEventId, $correlationId) {
             $this->incidentRepository->save($incident);
+
+            $this->auditLogger->log(
+                action: 'incident.reported',
+                entityType: 'InventoryIncident',
+                entityId: $incident->id(),
+                changeset: [
+                    'status' => $incident->status()->value,
+                    'type' => $incident->type()->value,
+                    'severity' => $incident->severity()->value,
+                    'quantityAffected' => $incident->quantityAffected(),
+                    'locationId' => $incident->locationId(),
+                ],
+                actorId: $incident->reportedBy(),
+                correlationId: $correlationId
+            );
 
             $eventPayload = [
                 'incidentId' => $incident->id(),

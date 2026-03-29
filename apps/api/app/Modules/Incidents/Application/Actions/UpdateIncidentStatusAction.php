@@ -14,11 +14,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
+use App\Modules\Audit\Application\Services\AuditLogger;
+
 final class UpdateIncidentStatusAction
 {
     public function __construct(
         private readonly IncidentRepository $incidentRepository,
         private readonly OutboxDispatcher $outboxDispatcher,
+        private readonly AuditLogger $auditLogger,
     ) {}
 
     public function execute(UpdateIncidentStatusDTO $dto): InventoryIncident
@@ -42,6 +45,18 @@ final class UpdateIncidentStatusAction
 
             $outboxEventId = Str::uuid()->toString();
             $correlationId = request()->header('X-Correlation-ID', Str::uuid()->toString());
+
+            $this->auditLogger->log(
+                action: 'incident.status_updated',
+                entityType: 'InventoryIncident',
+                entityId: $incident->id(),
+                changeset: [
+                    'previous_status' => $previousStatus->value,
+                    'new_status' => $newStatus->value,
+                ],
+                actorId: $dto->performedBy,
+                correlationId: $correlationId
+            );
 
             $eventPayload = [
                 'incidentId' => $incident->id(),
