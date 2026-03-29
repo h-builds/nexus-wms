@@ -32,6 +32,7 @@ Current stage:
 - Locations domain backend (API, entities, migration, documentation alignment) completed
 - Inventory domain backend (API, StockItem entity with invariants, optimistic locking, internal mutation service) completed
 - Movements domain backend (API, entities, mutation orchestration, Outbox validation) completed
+- Incidents domain backend (API, entities, mutation orchestration, Outbox validation) completed
 - Event outbox tracking (EventOutbox abstraction, sync dispatcher) completed
 
 Implemented documentation:
@@ -44,8 +45,8 @@ Implemented documentation:
 
 Not fully implemented yet:
 
-- remaining domain entities in Laravel (Incidents, etc.)
-- remaining migrations (incidents, audit_logs)
+- remaining domain entities in Laravel (audit_logs, etc.)
+- remaining migrations (audit_logs)
 - remaining API routes/controllers/resources
 - inventory mutation (comes through Movements domain)
 - event dispatch wiring
@@ -288,7 +289,7 @@ Near-term implementation order should be:
 1. products (completed)
 2. locations (completed)
 3. inventory (completed — fully integrated with Movements for mutation)
-4. incidents
+4. incidents (completed)
 5. movements (completed)
 6. audit log foundation
 7. event emission foundation (completed — Outbox dispatcher in place, pending async workers)
