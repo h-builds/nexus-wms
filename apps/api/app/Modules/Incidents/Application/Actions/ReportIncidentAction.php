@@ -32,9 +32,9 @@ final class ReportIncidentAction
     public function execute(ReportIncidentDTO $incidentData): InventoryIncident
     {
         if ($incidentData->idempotencyKey !== null) {
-            // DB unique constraint on idempotency_key enforces 409 Conflict for duplicates.
             $existing = $this->incidentRepository->findByIdempotencyKey($incidentData->idempotencyKey);
             if ($existing) {
+                return $existing;
             }
         }
 

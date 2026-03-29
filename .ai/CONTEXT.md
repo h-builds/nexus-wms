@@ -22,6 +22,7 @@ It is a domain-structured logistics system with future AI governance requirement
 
 Current stage:
 
+- **Phase 0 / Foundation Core: VALIDATED AND COMPLETE**
 - architectural foundation completed
 - monorepo structure completed
 - Laravel runtime working
@@ -29,13 +30,14 @@ Current stage:
 - Orchestrator Twin shell working
 - initial documentation completed
 - Product domain backend (API, entities, migration) completed
-- Locations domain backend (API, entities, migration, documentation alignment) completed
+- Locations domain backend (API, entities, migration, block/unblock endpoint, RBAC enforcement) completed
 - Inventory domain backend (API, StockItem entity with invariants, optimistic locking, internal mutation service) completed
-- Movements domain backend (API, entities, mutation orchestration, Outbox validation) completed
-- Incidents domain backend (API, entities, mutation orchestration, Outbox validation) completed
+- Movements domain backend (API, entities, mutation orchestration, Outbox validation, idempotency early-return) completed
+- Incidents domain backend (API, entities, lifecycle management, metadata update endpoint, Outbox validation, idempotency early-return) completed
 - Event outbox tracking (EventOutbox abstraction, sync dispatcher) completed
 - Audit domain foundation (AuditLog entity, persistence, synchronous trace integration) completed
-- API Alignment (global exception formatting, pagination standards, idempotency infrastructure) completed
+- API Alignment (global exception formatting, pagination standards, idempotency infrastructure on all POST commands) completed
+- Phase 0 real-scenario validation (49 tests, 218 assertions, 8 validation areas) completed
 
 Implemented documentation:
 
@@ -44,12 +46,11 @@ Implemented documentation:
 - `docs/DATA_DICTIONARY.md`
 - `docs/API_SPEC.md`
 - `docs/EVENT_CATALOG.md`
+- `docs/SECURITY_MODEL.md`
 
-Not fully implemented yet:
-- remaining API routes/controllers/resources
-- inventory mutation (comes through Movements domain)
-- event dispatch wiring
-- realtime events
+Not implemented yet (deferred beyond Phase 0):
+- async event dispatch workers
+- realtime websocket transport
 - mobile app
 - AI runtime logic
 - digital twin engine
@@ -285,14 +286,15 @@ Design for them, but do not claim they are implemented unless they actually are.
 Near-term implementation order should be:
 
 1. products (completed)
-2. locations (completed)
+2. locations (completed — including block/unblock endpoint)
 3. inventory (completed — fully integrated with Movements for mutation)
-4. incidents (completed)
-5. movements (completed)
+4. incidents (completed — including metadata update endpoint)
+5. movements (completed — including idempotency early-return)
 6. audit log foundation (completed)
 7. event emission foundation (completed — Outbox dispatcher in place, pending async workers)
-8. vapor-monitor integration
-9. AI governance extensions
+8. Phase 0 real-scenario validation (completed — 49 tests, 218 assertions)
+9. vapor-monitor integration
+10. AI governance extensions
 
 ---
 

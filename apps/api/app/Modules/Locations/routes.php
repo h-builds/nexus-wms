@@ -9,4 +9,5 @@ Route::prefix('locations')->group(function (): void {
     Route::get('/', [LocationController::class, 'index']);
     Route::get('/{id}', [LocationController::class, 'show']);
     Route::post('/', [LocationController::class, 'store'])->middleware('idempotent');
+    Route::patch('/{id}/status', [LocationController::class, 'updateStatus']);
 });

@@ -33,9 +33,24 @@ final class RegisterMovementAction
     public function execute(RegisterMovementDTO $movementData): InventoryMovement
     {
         if ($movementData->idempotencyKey !== null) {
-            // DB unique constraint on idempotency_key enforces 409 Conflict for duplicates.
             $existing = InventoryMovementModel::where('idempotency_key', $movementData->idempotencyKey)->first();
             if ($existing) {
+                return new InventoryMovement(
+                    id: $existing->id,
+                    productId: $existing->product_id,
+                    fromLocationId: $existing->from_location_id,
+                    toLocationId: $existing->to_location_id,
+                    type: MovementType::from($existing->type),
+                    quantity: (int) $existing->quantity,
+                    reference: $existing->reference,
+                    lotNumber: $existing->lot_number,
+                    reason: $existing->reason,
+                    performedBy: $existing->performed_by,
+                    performedAt: is_object($existing->performed_at) ? $existing->performed_at->toIso8601String() : (string) $existing->performed_at,
+                    idempotencyKey: $existing->idempotency_key,
+                    createdAt: $existing->created_at?->toIso8601String(),
+                    updatedAt: $existing->updated_at?->toIso8601String(),
+                );
             }
         }
 

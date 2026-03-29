@@ -7,10 +7,13 @@ namespace App\Modules\Incidents\Infrastructure\Http\Controllers;
 use App\Modules\Incidents\Application\Actions\GetIncidentByIdAction;
 use App\Modules\Incidents\Application\Actions\GetIncidentsAction;
 use App\Modules\Incidents\Application\Actions\ReportIncidentAction;
+use App\Modules\Incidents\Application\Actions\UpdateIncidentMetadataAction;
 use App\Modules\Incidents\Application\Actions\UpdateIncidentStatusAction;
 use App\Modules\Incidents\Application\DTOs\ReportIncidentDTO;
+use App\Modules\Incidents\Application\DTOs\UpdateIncidentMetadataDTO;
 use App\Modules\Incidents\Application\DTOs\UpdateIncidentStatusDTO;
 use App\Modules\Incidents\Infrastructure\Http\Requests\ReportIncidentRequest;
+use App\Modules\Incidents\Infrastructure\Http\Requests\UpdateIncidentMetadataRequest;
 use App\Modules\Incidents\Infrastructure\Http\Requests\UpdateIncidentStatusRequest;
 use App\Modules\Incidents\Infrastructure\Http\Resources\IncidentResource;
 use Illuminate\Http\JsonResponse;
@@ -127,6 +130,47 @@ final class IncidentController
                 'error' => [
                     'code' => 'validation_failed',
                     'message' => $e->getMessage()
+                ]
+            ], 422);
+        }
+    }
+
+    public function update(string $id, UpdateIncidentMetadataRequest $request, UpdateIncidentMetadataAction $action): JsonResponse
+    {
+        try {
+            $userId = $request->user() ? (string) $request->user()->id : 'system_user';
+
+            $metadataUpdate = new UpdateIncidentMetadataDTO(
+                incidentId: $id,
+                notes: $request->validated('notes'),
+                assignedTo: $request->validated('assignedTo'),
+                performedBy: $userId,
+            );
+
+            $incident = $action->execute($metadataUpdate);
+
+            return response()->json([
+                'data' => [
+                    'id' => $incident->id(),
+                    'notes' => $incident->notes(),
+                    'updatedAt' => $incident->updatedAt(),
+                ],
+            ]);
+
+        } catch (InvalidArgumentException $e) {
+            if (str_contains($e->getMessage(), 'not found')) {
+                return response()->json([
+                    'error' => [
+                        'code' => 'not_found',
+                        'message' => $e->getMessage(),
+                    ]
+                ], 404);
+            }
+
+            return response()->json([
+                'error' => [
+                    'code' => 'validation_failed',
+                    'message' => $e->getMessage(),
                 ]
             ], 422);
         }

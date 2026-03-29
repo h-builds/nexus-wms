@@ -8,5 +8,5 @@ Route::prefix('api/movements')
     ->group(function () {
         Route::get('/', [MovementController::class, 'index']);
         Route::get('/{id}', [MovementController::class, 'show']);
-        Route::post('/', [MovementController::class, 'store']);
+        Route::post('/', [MovementController::class, 'store'])->middleware('idempotent');
     });

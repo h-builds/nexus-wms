@@ -75,11 +75,13 @@ final class AuditLoggerTest extends TestCase
     {
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Failed to persist audit log:');
-        
-        $longString = str_repeat('A', 255);
+
+        // entity_type has a max length of 100 — but SQLite TEXT accepts it.
+        // Instead, force a DB error by replacing the AuditLogModel table with a missing table.
+        \Illuminate\Support\Facades\Schema::drop('audit_logs');
 
         $this->logger->log(
-            action: $longString,
+            action: 'test.action',
             entityType: 'TestEntity',
             entityId: 'id',
             changeset: []

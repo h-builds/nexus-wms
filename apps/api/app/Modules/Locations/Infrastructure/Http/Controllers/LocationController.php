@@ -8,11 +8,15 @@ use App\Http\Controllers\Controller;
 use App\Modules\Locations\Application\Actions\CreateLocationAction;
 use App\Modules\Locations\Application\Actions\GetLocationByIdAction;
 use App\Modules\Locations\Application\Actions\ListLocationsAction;
+use App\Modules\Locations\Application\Actions\UpdateLocationStatusAction;
 use App\Modules\Locations\Application\DTOs\CreateLocationData;
+use App\Modules\Locations\Application\DTOs\UpdateLocationStatusData;
 use App\Modules\Locations\Infrastructure\Http\Requests\StoreLocationRequest;
+use App\Modules\Locations\Infrastructure\Http\Requests\UpdateLocationStatusRequest;
 use App\Modules\Locations\Infrastructure\Http\Resources\LocationResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 final class LocationController extends Controller
 {
@@ -53,4 +57,45 @@ final class LocationController extends Controller
             'data' => new LocationResource($location),
         ], 201);
     }
+
+    public function updateStatus(string $id, UpdateLocationStatusRequest $request, UpdateLocationStatusAction $action): JsonResponse
+    {
+        try {
+            $userId = $request->user() ? (string) $request->user()->id : 'system_user';
+
+            $statusUpdate = new UpdateLocationStatusData(
+                locationId: $id,
+                isBlocked: (bool) $request->validated('isBlocked'),
+                reason: $request->validated('reason'),
+                performedBy: $userId,
+            );
+
+            $location = $action->execute($statusUpdate);
+
+            return response()->json([
+                'data' => [
+                    'id' => $location->id(),
+                    'isBlocked' => $location->isBlocked(),
+                ],
+            ]);
+
+        } catch (InvalidArgumentException $e) {
+            if (str_contains($e->getMessage(), 'not found')) {
+                return response()->json([
+                    'error' => [
+                        'code' => 'not_found',
+                        'message' => $e->getMessage(),
+                    ]
+                ], 404);
+            }
+
+            return response()->json([
+                'error' => [
+                    'code' => 'validation_failed',
+                    'message' => $e->getMessage(),
+                ]
+            ], 422);
+        }
+    }
 }
+
