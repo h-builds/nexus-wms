@@ -20,7 +20,7 @@ It is a domain-structured logistics system with future AI governance requirement
 
 ## Current Project Stage
 
-**Current stage: Phase 3 / Orchestrator Twin Lite (IN PROGRESS)**
+**Current stage: Phase 3 / Orchestrator Twin Lite (VALIDATED AND COMPLETE)**
 
 ### Phase 0 / Foundation Core (VALIDATED AND COMPLETE)
 
@@ -94,9 +94,34 @@ Not implemented yet (deferred beyond Phase 2):
 - multi-agent orchestration
 - digital twin engine
 
-### Phase 3 / Orchestrator Twin Lite (IN PROGRESS)
+### Phase 3 / Orchestrator Twin Lite (VALIDATED AND COMPLETE)
 
-Next focus area according to build order.
+Phase 3 implements a read-only tactical interpretation layer over the existing warehouse data, running as a standalone spatial interface (`orchestrator-twin`). It has been successfully completed and verified.
+
+Current implementation:
+
+- `apps/orchestrator-twin/src/domains/` — pure domain layer (layout, occupancy, incidents, heatmap, simulation, recommendations)
+- `apps/orchestrator-twin/src/components/layout/` — spatial rendering components with 2.5D depth mapping (WarehouseGrid, ZoneView, RackView, BinCell)
+- layout domain consumes GET /api/locations and builds Warehouse → Zone → Aisle → Rack → Bin hierarchy
+- occupancy domain consumes GET /api/inventory and derives per-location and per-zone density
+- incidents domain consumes GET /api/incidents and maps active incidents to locations and zones
+- recommendations domain provides deterministic rule-based engine outputting explicit, actionable operations, with priority sorting.
+- 2.5D rendering maps density and incidents directly to visual volume, stacking layers, and structural anomalies via CSS transforms.
+
+Completed sub-phases:
+
+- Phase 3.0 — Domain Foundation
+- Phase 3.1 — Spatial Rendering
+- Phase 3.2 — Operational Layers
+- Phase 3.3 — Intelligence Layer (Simulation & Rule Engine)
+- Phase 3.4 — UX Hardening (Priority, Targets, Controls)
+- Phase 3.5 — Spatial Depth (2.5D Height Mapping & Volume Perception)
+
+Not implemented yet (deferred beyond Phase 3):
+
+- real-time 3D physics rendering (WebGL/Three.js)
+- autonomous multi-agent operational dispatch
+- AI-generative layout modification
 
 ## Primary Mission for AI Assistants
 
@@ -335,7 +360,7 @@ Near-term implementation order should be:
 8. Phase 0 real-scenario validation (completed — 49 tests, 218 assertions)
 9. Phase 1 field-agent-mobile core MVP (completed offline foundation & UI flows)
 10. Phase 2 vapor-monitor operational visibility (completed realtime foundation & KPI dashboard)
-11. Phase 3 orchestrator-twin-lite integration (IN PROGRESS)
+11. Phase 3 orchestrator-twin-lite integration (completed — 2.5D spatial depth, simulation, rule-engine)
 12. AI governance extensions
 
 ---
@@ -350,7 +375,7 @@ This file must be updated when one of the following changes:
 - implementation stage changes
 - a previously planned feature becomes real
 
-### Phase 3 / Orchestrator Twin Lite (IN PROGRESS)
+### Phase 3 / Orchestrator Twin Lite (VALIDATED AND COMPLETE)
 
 Focus:
 

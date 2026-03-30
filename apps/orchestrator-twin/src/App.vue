@@ -1,45 +1,47 @@
 <template>
   <div class="app-shell">
     <header class="topbar">
-      <div>
+      <div class="topbar-left">
         <p class="eyebrow">NexusWMS</p>
         <h1>Orchestrator Twin</h1>
       </div>
-
-      <div class="status-pill">Tactical Simulation Layer</div>
+      <div class="topbar-right">
+        <div class="status-pill">Phase 3 · Live</div>
+      </div>
     </header>
 
     <main class="layout">
       <section class="scene-panel">
-        <div class="scene-placeholder">
-          <span>3D / 2.5D Warehouse Scene Placeholder</span>
-        </div>
+        <WarehouseGrid ref="gridRef" />
       </section>
 
       <aside class="insights-panel">
-        <article class="card">
-          <p class="label">Congestion Risk</p>
-          <strong>Low</strong>
-        </article>
-
-        <article class="card">
-          <p class="label">Slotting Recommendation</p>
-          <strong>Pending</strong>
-        </article>
-
-        <article class="card">
-          <p class="label">Workforce Balance</p>
-          <strong>50 / 50</strong>
-        </article>
-
-        <article class="card">
-          <p class="label">Next Simulation</p>
-          <strong>Not configured</strong>
-        </article>
+        <SimulationPanel :on-simulate="runWarehouseSimulation" />
+        <RecommendationsPanel :recommendations="activeRecommendations" />
       </aside>
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import type { SimulationResult } from './domains/simulation/types';
+import type { Recommendation } from './domains/recommendations/types';
+import WarehouseGrid from './components/layout/WarehouseGrid.vue';
+import SimulationPanel from './components/panels/SimulationPanel.vue';
+import RecommendationsPanel from './components/panels/RecommendationsPanel.vue';
+
+const gridRef = ref<InstanceType<typeof WarehouseGrid> | null>(null);
+
+const activeRecommendations = computed<Recommendation[]>(() => {
+  return gridRef.value?.recommendations ?? [];
+});
+
+function runWarehouseSimulation(units: number): SimulationResult | null {
+  if (!gridRef.value) return null;
+  return gridRef.value.runSimulation(units);
+}
+</script>
 
 <style scoped>
 :global(*) {
@@ -58,6 +60,8 @@
     sans-serif;
   background: #020617;
   color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 :global(#app) {
@@ -66,93 +70,91 @@
 
 .app-shell {
   min-height: 100vh;
-  padding: 24px;
+  padding: 20px 24px 32px;
 }
+
+/* --- Topbar --- */
 
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.topbar-left {
+  display: flex;
+  flex-direction: column;
 }
 
 .eyebrow {
-  margin: 0 0 6px;
-  font-size: 12px;
+  margin: 0 0 4px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #94a3b8;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  font-weight: 600;
 }
 
 h1 {
   margin: 0;
-  font-size: 32px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .status-pill {
-  padding: 10px 14px;
-  border: 1px solid #334155;
+  padding: 6px 14px;
+  border: 1px solid #166534;
   border-radius: 999px;
-  background: #0f172a;
-  color: #cbd5e1;
-  font-size: 14px;
+  background: rgba(22, 101, 52, 0.15);
+  color: #4ade80;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
+
+/* --- Main layout --- */
 
 .layout {
   display: grid;
-  grid-template-columns: 1.5fr 380px;
-  gap: 24px;
-}
-
-.scene-panel,
-.card {
-  border: 1px solid #1e293b;
-  background: #0f172a;
-  border-radius: 16px;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
 }
 
 .scene-panel {
-  padding: 20px;
-  min-height: 70vh;
-}
-
-.scene-placeholder {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  min-height: 100%;
-  border: 1px dashed #334155;
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.35), rgba(15, 23, 42, 0.9));
-  color: #94a3b8;
-  text-align: center;
-  padding: 24px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  border-radius: 14px;
+  padding: 16px;
+  min-height: 72vh;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .insights-panel {
-  display: grid;
-  gap: 16px;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 20px;
 }
 
-.card {
-  padding: 18px;
-}
-
-.label {
-  margin: 0 0 8px;
-  font-size: 13px;
-  color: #94a3b8;
-}
-
-.card strong {
-  font-size: 24px;
-}
+/* --- Responsive --- */
 
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;
+  }
+
+  .insights-panel {
+    position: static;
   }
 
   .scene-panel {
@@ -164,6 +166,10 @@ h1 {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .app-shell {
+    padding: 16px;
   }
 }
 </style>
