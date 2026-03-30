@@ -20,7 +20,7 @@ It is a domain-structured logistics system with future AI governance requirement
 
 ## Current Project Stage
 
-**Current stage: Phase 3 / System Hardening & AI Governance (IN PROGRESS)**
+**Current stage: Phase 3 / Orchestrator Twin Lite (IN PROGRESS)**
 
 ### Phase 0 / Foundation Core (VALIDATED AND COMPLETE)
 
@@ -88,12 +88,13 @@ Current implementation focus:
 - structural occupancy visibility by zone (completed)
 
 Not implemented yet (deferred beyond Phase 2):
+
 - automatic sync replay for offline actions
 - background retry engine for sync resolution
 - multi-agent orchestration
 - digital twin engine
 
-### Phase 3 / System Hardening & AI Governance (IN PROGRESS)
+### Phase 3 / Orchestrator Twin Lite (IN PROGRESS)
 
 Next focus area according to build order.
 
@@ -333,8 +334,9 @@ Near-term implementation order should be:
 7. event emission foundation (completed — Outbox dispatcher in place, pending async workers)
 8. Phase 0 real-scenario validation (completed — 49 tests, 218 assertions)
 9. Phase 1 field-agent-mobile core MVP (completed offline foundation & UI flows)
-10. vapor-monitor integration
-11. AI governance extensions
+10. Phase 2 vapor-monitor operational visibility (completed realtime foundation & KPI dashboard)
+11. Phase 3 orchestrator-twin-lite integration (IN PROGRESS)
+12. AI governance extensions
 
 ---
 
@@ -347,3 +349,29 @@ This file must be updated when one of the following changes:
 - ownership rules change
 - implementation stage changes
 - a previously planned feature becomes real
+
+### Phase 3 / Orchestrator Twin Lite (IN PROGRESS)
+
+Focus:
+
+- spatial interpretation of warehouse data
+- transformation of events into visual insights
+- early-stage decision support
+
+This phase does NOT implement a full digital twin.
+It establishes the foundation for:
+
+- simulation
+- orchestration
+- AI-assisted decision systems
+
+The system remains:
+
+- read-heavy
+- suggestion-only
+- non-executing (no autonomous actions)
+
+Key principle:
+
+The Twin does not mutate the system.
+It interprets it.

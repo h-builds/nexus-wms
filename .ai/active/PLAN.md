@@ -249,6 +249,77 @@ This phase demonstrates the ability to handle event-driven warehouse visibility 
 - [x] documentation updated to reflect monitoring architecture
 
 ---
+## Phase 3 — Orchestrator Twin Lite (IN PROGRESS)
+
+### Objective
+
+Demonstrate tactical orchestration capability by transforming operational data into spatial intelligence and decision support.
+
+### Scope (In)
+
+- warehouse layout representation (zones, racks, bins)
+- occupancy visualization (per location / zone)
+- incident spatial mapping
+- blocked location visibility
+- simple heatmap (activity or anomalies)
+- simulation input (hypothetical inbound load)
+- rule-based recommendation engine (basic)
+
+### Scope (Out)
+
+- no real-time physics simulation
+- no multi-agent orchestration
+- no optimization algorithms
+- no full digital twin engine
+
+### Deliverables
+
+- [ ] layout rendering engine (2.5D)
+- [ ] occupancy mapping from inventory API
+- [ ] incident + blocked location overlays
+- [ ] heatmap visualization (simple aggregation)
+- [ ] simulation input panel (manual scenario)
+- [ ] recommendation output (rule-based)
+
+### Success Criteria
+
+- [ ] user can identify high-density zones visually
+- [ ] user can detect problem areas without reading tables
+- [ ] system provides at least one actionable suggestion
+- [ ] visualization reflects real backend state (no mock drift)
+
+### Exit Conditions
+
+- [ ] layout + occupancy working end-to-end
+- [ ] incidents mapped spatially
+- [ ] basic simulation working
+- [ ] recommendation logic visible in UI
+
+### Phase 3.1 — Spatial Rendering
+
+- [ ] grid renderer
+- [ ] zones visualized
+- [ ] no business logic in UI
+
+### Phase 3.2 — Operational Layers
+
+- [ ] occupancy
+- [ ] incidents
+- [ ] blocked
+
+### Phase 3.3 — Intelligence Layer
+
+- [ ] heatmap
+- [ ] simulation
+- [ ] recommendations
+
+### Phase 3.4 — UX Hardening
+
+- [ ] toggles
+- [ ] panels
+- [ ] clarity
+---
+
 
 ## Architectural Principles
 
@@ -304,3 +375,4 @@ Phase 0 / Foundation Core was validated and completed on 2026-03-29.
 Phase 1 / Field-Agent Mobile Core MVP was validated and completed on 2026-03-29.
 
 Every PR must align with this plan.
+

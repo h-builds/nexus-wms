@@ -8,14 +8,14 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 
 ## 🚀 Current Project State
 
-**Phase 2: Operational Visibility — (Status: In Progress)**
+**Phase 3: Orchestrator Twin Lite — (Status: In Progress)**
 
 | Phase | Description | Status |
 |-------|-------------|--------|
 | **Phase 0** | Foundation Core — Domain model, API contracts, event system, audit layer | ✅ Complete |
 | **Phase 1** | Field-Agent Mobile Core — Mobile-first field workflows, offline persistence | ✅ Complete |
-| **Phase 2** | Operational Visibility — Realtime dashboard, event monitoring | 🔄 In Progress |
-| **Phase 3** | Operational Expansion — Picking, replenishment, AI automation | ⬜ Planned |
+| **Phase 2** | Operational Visibility — Realtime dashboard, event monitoring | ✅ Complete |
+| **Phase 3** | Orchestrator Twin Lite — Tactical interpretation, spatial mapping, basic simulation | 🔄 In Progress |
 
 ### Phase 0 Achievements (Foundation Core)
 
@@ -34,13 +34,22 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 - Offline-first local persistence foundation
 - Sync queue for connectivity gap handling
 
-### Phase 2 Focus (Operational Visibility)
+### Phase 2 Achievements (Operational Visibility)
 
 - Realtime dashboard foundation (`apps/vapor-monitor`)
 - WebSocket integration via Laravel Reverb
 - Event-driven monitoring UI for inbound, outbound, and incidents
 - KPI visibility for operational decision-making
 - Occupancy visibility by zone
+
+### Phase 3 Focus (Orchestrator Twin Lite)
+
+- Warehouse layout representation (zones, racks, bins)
+- Occupancy and incident spatial mapping
+- Blocked location visibility
+- Layout rendering engine (2.5D)
+- Heatmap visualization (simple aggregation)
+- Rule-based recommendation engine
 
 ---
 
@@ -78,8 +87,8 @@ flowchart TD
 
     subgraph Frontends ["Frontend Applications"]
         Mobile["apps/field-agent-mobile\n(Vue 3.6 - MVP ✅)"]:::currentFrontend
-        Monitor["apps/vapor-monitor\n(Vue - Operational Dashboard 🔵)"]:::activeFrontend
-        Twin["apps/orchestrator-twin\n(Vue - Digital Twin Shell)"]:::futureFrontend
+        Monitor["apps/vapor-monitor\n(Vue 3.6 - Operational Dashboard ✅)"]:::currentFrontend
+        Twin["apps/orchestrator-twin\n(Vue 3.6 - Digital Twin Shell 🔵)"]:::activeFrontend
     end
 
     Mobile -->|REST / Sync| API
@@ -186,7 +195,7 @@ flowchart TB
         SYN["Sync Queue"]
     end
 
-    subgraph Phase2 ["🔵 Phase 2 — Operational Visibility (In Progress)"]
+    subgraph Phase2 ["✅ Phase 2 — Operational Visibility (Complete)"]
         direction TB
         VM["Vapor Monitor Dashboard"]
         REV["Reverb WebSocket Integration"]
@@ -194,16 +203,18 @@ flowchart TB
         OCC["Zone Occupancy View"]
     end
 
-    subgraph FutureScope ["⬜ Phase 3+ — Operational Expansion (Planned)"]
+    subgraph Phase3 ["🔵 Phase 3 — Orchestrator Twin Lite (In Progress)"]
         direction TB
-        AI["AI Automation & Routing"]
-        DT["Digital Twin Simulation"]
-        PK["Picking & Replenishment"]
+        SP["Spatial Layout Engine"]
+        OM["Occupancy Mapping"]
+        IM["Incident Spatial Overlays"]
+        HM["Heatmap Visualization"]
+        RS["Rule-based Suggestions"]
     end
 
     Phase0 ~~~ Phase1
     Phase1 ~~~ Phase2
-    Phase2 ~~~ FutureScope
+    Phase2 ~~~ Phase3
 ```
 
 ---
@@ -211,9 +222,9 @@ flowchart TB
 ## 📦 App Surfaces
 
 - [`apps/api`](apps/api): Laravel 13 backend (System of Record, Domain Logic).
-- [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6) — **Phase 2 active target**.
+- [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6) — **Phase 2 complete**.
 - [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6) — **Phase 1 complete**.
-- [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation layer (Vue 3.6).
+- [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation layer (Vue 3.6) — **Phase 3 active target**.
 
 ## 🏗️ Architecture Principles
 - **Modular Monolith:** Event-driven internal communication, zero circular dependencies.
