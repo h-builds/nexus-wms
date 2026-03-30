@@ -61,14 +61,18 @@ Location: `apps/vapor-monitor`
 
 Purpose:
 - operational monitoring
-- real-time inventory visibility
+- real-time inventory visibility via Laravel Reverb
 - incident visibility
-- warehouse KPI surface
+- warehouse KPI surface (Total Inventory, Open Incidents, Differences)
+- zone occupancy visibility (Relative Location Fill Rate)
 - control center UI
+
+Status: **Active** (Phase 2 completed)
 
 Style:
 - Vue 3.6
 - Vite
+- Pinia stores with Laravel Echo
 - domain-separated frontend folders
 
 ---
@@ -100,9 +104,9 @@ Purpose:
 - incident registration
 - offline-first warehouse operations
 
-Status:
-- workspace placeholder created
-- implementation pending
+Status: **Active** (Phase 1 completed)
+- IndexedDB-backed offline persistence
+- sync queue foundation implemented
 
 ---
 
@@ -265,15 +269,22 @@ Reserved for future AI prompt versioning and governance.
 
 ## Communication Model
 
-### Current
-- each app runs independently
-- no live API integration yet
-- no realtime events connected yet
+### Current (Phase 2 Completed)
+- REST API acts as the primary command interface and initialization query layer
+- WebSockets provide live state propagation via Laravel Reverb
+- Frontend apps (Vapor-Monitor) strictly separate domain contexts on incoming events
+- Mobile apps (Field-Agent) utilize IndexedDB for offline persistence and sync queues
 
-### Planned
-- REST API for commands and queries
-- WebSockets for live state propagation
-- event-driven updates across UI surfaces
+### Realtime Operational Data Flow Loop
+The `vapor-monitor` realtime architecture is intentionally unidirectional and strictly decoupled from the core warehouse execution path:
+
+1. **Mutation**: A REST command mutates system state (e.g., `POST /api/movements`).
+2. **Outbox**: The domain service persists the change and writes an event to the `Outbox` table atomically.
+3. **Dispatch**: The backend `OutboxDispatcher` reads the event and broadcasts a `BroadcastableOutboxEvent` to the `warehouse.monitoring` channel.
+4. **Transport**: Laravel Reverb pushes the WebSocket payload to subscribed clients.
+5. **Consumption**: Vue/Pinia (via Laravel Echo) intercepts the event, filtering payloads into strict domain subsets (e.g. `inventory.*` strictly controls numerical KPIs, `movement.*` controls visual feeds), applying deterministic math without re-polling the database.
+
+If the WebSocket server dies, operations continue seamlessly. The dashboard gracefully stops updating until reconnection but never breaks core warehouse execution.
 
 ---
 
@@ -291,18 +302,19 @@ Reserved for future AI prompt versioning and governance.
 ## Current Status
 
 ### Implemented
-- monorepo
-- Laravel app
-- Vapor Monitor shell
+- monorepo structure
+- Laravel 13 modular monolith (Product, Inventory, Locations, Movements, Incidents, Events, Audit)
+- Full REST API with pagination, idempotency, and global error handling
+- Transactional Outbox for atomic event emission
+- Vapor Monitor operational dashboard with realtime WebSocket transport (Laravel Reverb)
+- Field-Agent Mobile MVP with offline-first persistence (IndexedDB)
 - Orchestrator Twin shell
 - shared package structure
-- initial documentation structure
 - AI governance folder scaffold
+- Phase 0, 1, and 2 validated and complete
 
 ### Pending
-- mobile app implementation
-- domain entities and migrations
-- API endpoints
-- realtime integration
+- automatic sync replay and conflict resolution
 - digital twin engine
 - AI governance rules grounded in real domain flows
+- multi-agent orchestration

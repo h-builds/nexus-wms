@@ -20,7 +20,7 @@ It is a domain-structured logistics system with future AI governance requirement
 
 ## Current Project Stage
 
-**Current stage: Phase 2 / Operational Visibility (IN PROGRESS)**
+**Current stage: Phase 3 / System Hardening & AI Governance (IN PROGRESS)**
 
 ### Phase 0 / Foundation Core (VALIDATED AND COMPLETE)
 
@@ -73,16 +73,29 @@ Not implemented yet (deferred beyond Phase 1):
 - AI runtime logic
 - digital twin engine
 
-### Phase 2 / Operational Visibility (IN PROGRESS)
+### Phase 2 / Operational Visibility (VALIDATED AND COMPLETE)
+
+Phase 2 completed with successful integration of real-time monitoring via Vapor-Monitor.
+WebSocket connectivity via Laravel Reverb provides zero-polling event streams for operations context.
 
 Current implementation focus:
 
-- `apps/vapor-monitor`
-- realtime dashboard foundation
-- Laravel Reverb integration
-- event-driven monitoring UI
-- KPI visibility for operational decision-making
-- occupancy visibility by zone
+- `apps/vapor-monitor` (scaffolded and active)
+- realtime dashboard foundation (completed)
+- Laravel Reverb integration (completed)
+- event-driven monitoring UI (completed)
+- KPI visibility for operational decision-making (completed)
+- structural occupancy visibility by zone (completed)
+
+Not implemented yet (deferred beyond Phase 2):
+- automatic sync replay for offline actions
+- background retry engine for sync resolution
+- multi-agent orchestration
+- digital twin engine
+
+### Phase 3 / System Hardening & AI Governance (IN PROGRESS)
+
+Next focus area according to build order.
 
 ## Primary Mission for AI Assistants
 
@@ -122,7 +135,6 @@ Out of scope for current MVP:
 - supplier evaluation
 - forecasting
 - passkeys
-- realtime websocket transport
 - semantic search implementation
 - AI decision automation
 - digital twin simulation engine
@@ -297,10 +309,10 @@ Avoid:
 
 AI must assume:
 
-- mobile offline execution foundation is implemented (IndexedDB sync queue), but true sync conflict resolution is deferred to Phase 2
-- realtime transport is not implemented yet
+- mobile offline execution foundation is implemented (IndexedDB sync queue), but true sync conflict resolution is deferred
+- realtime WebSocket transport is implemented via Laravel Reverb (vapor-monitor consumes events from the `warehouse.monitoring` channel)
 - semantic search is not implemented yet
-- event bus is not implemented yet
+- event bus is partially implemented (Transactional Outbox dispatches synchronously; async workers are deferred)
 
 Do not pretend features already exist.
 

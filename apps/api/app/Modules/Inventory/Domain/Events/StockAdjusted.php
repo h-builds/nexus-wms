@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Inventory\Domain\Events;
 
-/**
- * Event contract: inventory.stock.adjusted
- *
- * Emitted when stock quantity is modified via an adjustment movement.
- * Not dispatched in the Inventory-only phase — prepared for Movements integration.
- */
 final class StockAdjusted
 {
     public function __construct(
