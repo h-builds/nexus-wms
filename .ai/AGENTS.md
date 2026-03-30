@@ -79,9 +79,10 @@ Every agent output must include:
 - why it matters
 - what it suggests
 - what data it used
+- **Decision Trace**: A formal log capturing the analytical path. It must include the exact `causationId` (the event that triggered the analysis), the intermediate facts considered, and the final deterministic output.
 
 > [!TIP]
-> No black-box decisions are allowed.
+> No black-box decisions are allowed. All agent decisions and their execution context (decision traces) will later be formally persisted to enable retroactive auditing, debugging, and continuous evaluation of AI-driven suggestions.
 
 ---
 

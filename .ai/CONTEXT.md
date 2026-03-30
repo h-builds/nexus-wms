@@ -20,7 +20,7 @@ It is a domain-structured logistics system with future AI governance requirement
 
 ## Current Project Stage
 
-**Current stage: Phase 3 / Orchestrator Twin Lite (VALIDATED AND COMPLETE)**
+**Current stage: Phase 4.1 / Integration Backbone Definition (ACTIVE)**
 
 ### Phase 0 / Foundation Core (VALIDATED AND COMPLETE)
 
@@ -122,6 +122,23 @@ Not implemented yet (deferred beyond Phase 3):
 - real-time 3D physics rendering (WebGL/Three.js)
 - autonomous multi-agent operational dispatch
 - AI-generative layout modification
+
+### Phase 4.1 / Integration Backbone Definition (ACTIVE)
+
+Phase 4 defines the end-to-end event-driven architecture that connects all independent surfaces (API, Field-Agent, Vapor Monitor, Orchestrator Twin, AI Agents).
+This sub-phase is exclusively focused on architectural alignment and documentation, preparing the system for safe implementation.
+
+Current implementation focus (Documentation only):
+
+- `docs/ARCHITECTURE.md` (Integration backbone and Correlation model defined)
+- `docs/FLOWS/integration-flow.md` (Cross-surface data lifecycle mapped)
+- `docs/EVENT_CATALOG.md` (Consumer clarity established)
+- `.ai/AGENTS.md` (Decision trace requirements set)
+
+Not implemented yet (deferred beyond Phase 4.1):
+
+- actual coding of backend asynchronous workers
+- actual coding of AI agent logic
 
 ## Primary Mission for AI Assistants
 
@@ -361,7 +378,8 @@ Near-term implementation order should be:
 9. Phase 1 field-agent-mobile core MVP (completed offline foundation & UI flows)
 10. Phase 2 vapor-monitor operational visibility (completed realtime foundation & KPI dashboard)
 11. Phase 3 orchestrator-twin-lite integration (completed — 2.5D spatial depth, simulation, rule-engine)
-12. AI governance extensions
+12. Phase 4.1 integration backbone definition (active — architectural alignment)
+13. AI governance extensions
 
 ---
 

@@ -1,98 +1,89 @@
-# CURRENT TASK
+# CURRENT TASK — Phase 4.1: Integration Backbone Definition
 
-## Phase 3.5 — Spatial Depth (2.5D Enhancement)
+## Objective
 
-### Objective
+Define and align the system architecture for full cross-module integration using a unified event-driven backbone.
 
-Enhance the Orchestrator Twin visual layer to create a stronger spatial perception.
+## Context
 
-The current Twin is structurally correct but visually flat.
-This phase must introduce a 2.5D feel without adding full 3D complexity.
+Phase 3 delivered three independent but functional surfaces:
 
----
+- Field-Agent Mobile (data capture)
+- Vapor Monitor (real-time visualization)
+- Orchestrator Twin (read-only tactical intelligence)
 
-### Scope
+However, these modules are not yet fully integrated through a shared event pipeline.
 
-Improve the rendering of the warehouse layout using lightweight visual depth techniques:
+## Problem
 
-- perspective illusion
-- stacked inventory feel
-- height/depth cues
-- stronger spatial separation
+The system currently behaves as partially connected components instead of a coordinated distributed system.
 
----
+There is no:
 
-### What Must Improve
+- unified event flow across all modules
+- cross-surface correlation model
+- persistent decision trace
+- defined integration architecture
 
-#### 1. Bin Perception
+## Scope of this task
 
-Bins must no longer feel like flat boxes only.
-They should feel like physical storage units.
+This phase is strictly architectural and documentation-focused.
 
----
+DO NOT implement:
 
-#### 2. Rack / Lane Structure
+- UI changes
+- AI decision engines
+- new endpoints
 
-Racks and aisles should feel more spatially organized,
-not just vertically listed sections.
+## Required Outcomes
 
----
+### 1. Integration Backbone Definition
 
-#### 3. Occupancy as Physical Presence
+- Define how events flow from API → Event Bus → Consumers
+- Establish canonical event lifecycle
 
-Occupancy should be represented not only by color,
-but by visual mass / depth / stack feeling.
+### 2. Correlation Model
 
----
+- Standardize usage of:
+  - correlationId
+  - causationId
+- Ensure traceability across all modules
 
-### Allowed Techniques
+### 3. Cross-Surface Integration Model
 
-- CSS transforms
-- layered shadows
-- pseudo-3D faces
-- stacked blocks
-- subtle perspective
-- elevation through spacing and shadows
+Define how each module participates:
 
----
+- Field-Agent → emits domain actions
+- API → persists + emits events
+- Vapor Monitor → subscribes for visibility
+- Orchestrator → consumes for analysis
 
-### Constraints
+### 4. Decision Logging (Conceptual Only)
 
-- NO Three.js
-- NO WebGL
-- NO canvas engine
-- NO backend changes
-- NO domain changes
-- NO simulation logic changes
-- NO recommendation logic changes
+Define:
 
----
+- what a decision log is
+- when it should be created
+- relationship with events
 
-### Principles
+(NO persistence yet)
 
-- visual enhancement only
-- preserve current architecture
-- keep UI readable
-- use data to reinforce spatial perception
+## Files to update
 
----
+- docs/ARCHITECTURE.md
+- docs/EVENT_CATALOG.md (only if needed)
+- docs/FLOWS/integration-flow.md (create if missing)
+- .ai/AGENTS.md (extend for decision trace concept)
 
-### Target Result
+## Success Criteria
 
-The Twin should now feel like:
+- Clear event-driven architecture defined
+- Cross-module integration explicitly documented
+- Correlation model standardized
+- No implementation performed
 
-- a warehouse surface
-- a lightweight spatial system
-- an operational map with depth
+## Constraints
 
-Not just a flat admin panel.
-
----
-
-### Definition of Done
-
-- bins feel spatial, not flat
-- occupancy has visible physical presence
-- layout is more visually immersive
-- hierarchy remains readable
-- no architecture regression introduced
+- Follow existing API_SPEC and EVENT_CATALOG conventions
+- Do not introduce breaking changes
+- Maintain suggestion-first agent model (SECURITY_MODEL)

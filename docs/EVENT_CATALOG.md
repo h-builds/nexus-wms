@@ -372,15 +372,15 @@ Triggered when a new product is created.
 
 ---
 
-## Event Consumers (Future)
+## Event Consumers (Phase 4 and Beyond)
 
-These events may be consumed by:
+These events are/will be consumed by:
 
-1. **Audit System**: Persists all events for traceability.
-2. **Realtime UI**: Updates dashboards and views.
-3. **AI Monitoring Agent**: Detects anomalies and suggests actions.
-4. **Digital Twin**: Simulates warehouse state.
-5. **Analytics / BI**: Builds reports and KPIs.
+1. **Audit System**: Persists all events for strong traceability.
+2. **Vapor Monitor**: (Phase 2) Updates operational dashboards and KPIs in real-time.
+3. **Orchestrator Twin**: (Phase 3+) Consumes spatial and incident events to render anomalies, map layout density, and feed rule-based recommendations.
+4. **AI Monitoring Agent**: Detects anomalies and suggests actions using the established Correlation Model.
+5. **Analytics / BI**: Builds reports and historical warehouse performance KPIs.
 
 ---
 

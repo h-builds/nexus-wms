@@ -337,6 +337,105 @@ Demonstrate tactical orchestration capability by transforming operational data i
 
 ---
 
+## Phase 4 — Total Integration 🚧 IN PROGRESS
+
+**Started:** 2026-03-30
+
+### Objective
+
+Transform NexusWMS into a fully integrated distributed system by introducing a unified event-driven backbone that connects all modules.
+
+This phase establishes:
+
+- end-to-end system orchestration
+- cross-module communication via events
+- full traceability using correlation models
+- decision accountability through structured logging
+
+---
+
+### Phase 4.1 — Integration Backbone Definition ✅
+
+**Type:** Architecture Alignment (NO implementation)
+
+- [x] align architecture to a true event-driven model
+- [x] define how the 3 modules connect and communicate
+- [x] establish the correlation model (correlationId, causationId)
+- [x] define decision logging concept (non-persistent)
+
+**Exit Criteria:**
+
+- architecture clearly defines event flow across all modules
+- correlation model is standardized across the system
+- integration flow is documented end-to-end
+- system reads as a distributed event-driven architecture
+
+---
+
+### Phase 4.2 — Event Pipeline Implementation
+
+**Type:** Backend Infrastructure
+
+- [ ] implement transactional outbox pattern
+- [ ] ensure consistent event broadcasting
+- [ ] normalize event structure across domains
+
+**Exit Criteria:**
+
+- events are emitted reliably after DB commit
+- no lost or duplicated events
+- event format is consistent and aligned with EVENT_CATALOG
+
+---
+
+### Phase 4.3 — Cross-Surface Consumption
+
+**Type:** Integration Layer
+
+- [ ] Vapor Monitor consumes real-time events
+- [ ] Orchestrator Twin consumes the same event stream
+- [ ] correlation data is visible across all clients
+
+**Exit Criteria:**
+
+- all modules react to the same source of truth (event stream)
+- event-driven UI updates are observable
+- correlationId is traceable across surfaces
+
+---
+
+### Phase 4.4 — Decision Intelligence Layer
+
+**Type:** Intelligence + Persistence
+
+- [ ] Orchestrator generates actionable recommendations
+- [ ] persist decision logs (decision trace)
+- [ ] establish full event → decision traceability
+
+**Exit Criteria:**
+
+- decisions are explainable and linked to events
+- decision logs can be queried and audited
+- system demonstrates reasoning capability (not just visualization)
+
+---
+
+### Phase 4.5 — Cross Alerts & UX Integration
+
+**Type:** Product Layer
+
+- [ ] unified alert system across modules
+- [ ] visual feedback loops between surfaces
+- [ ] highlight anomalies and system reactions in real-time
+
+**Exit Criteria:**
+
+- alerts are triggered by real events
+- users can observe system reactions across modules
+- UX reflects a cohesive, intelligent system
+
+---
+
 ## Architectural Principles
 
 - domain-first design
@@ -393,5 +492,7 @@ Phase 1 / Field-Agent Mobile Core MVP was validated and completed on 2026-03-29.
 Phase 2 / Operational Visibility was validated and completed on 2026-03-29.
 
 Phase 3 / Orchestrator Twin Lite was validated and completed on 2026-03-30.
+
+Phase 4 / Total Integration started on 2026-03-30.
 
 Every PR must align with this plan.
