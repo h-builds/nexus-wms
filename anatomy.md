@@ -2,13 +2,354 @@
 ├── apps
 │   ├── api
 │   │   ├── app
+│   │   │   ├── Http
+│   │   │   │   ├── Controllers
+│   │   │   │   │   └── Controller.php
+│   │   │   │   ├── Middleware
+│   │   │   │   │   └── IdempotencyMiddleware.php
+│   │   │   │   └── Responses
+│   │   │   │       └── PaginatedResponse.php
+│   │   │   ├── Models
+│   │   │   │   └── User.php
+│   │   │   ├── Modules
+│   │   │   │   ├── Audit
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   ├── Actions
+│   │   │   │   │   │   ├── DTOs
+│   │   │   │   │   │   ├── Queries
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   │       └── AuditLogger.php
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   │   ├── Entities
+│   │   │   │   │   │   │   └── AuditLog.php
+│   │   │   │   │   │   ├── Enums
+│   │   │   │   │   │   │   └── AuditActorType.php
+│   │   │   │   │   │   ├── Events
+│   │   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   ├── Repositories
+│   │   │   │   │   │   └── ValueObjects
+│   │   │   │   │   ├── Infrastructure
+│   │   │   │   │   │   ├── Http
+│   │   │   │   │   │   │   ├── Controllers
+│   │   │   │   │   │   │   ├── Requests
+│   │   │   │   │   │   │   └── Resources
+│   │   │   │   │   │   ├── Persistence
+│   │   │   │   │   │   │   ├── Eloquent
+│   │   │   │   │   │   │   │   └── AuditLogModel.php
+│   │   │   │   │   │   │   └── Mappers
+│   │   │   │   │   │   └── Providers
+│   │   │   │   │   └── routes.php
+│   │   │   │   ├── Events
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   │       ├── BroadcastableOutboxEvent.php
+│   │   │   │   │   │       └── OutboxDispatcher.php
+│   │   │   │   │   └── Infrastructure
+│   │   │   │   │       └── Persistence
+│   │   │   │   │           └── Eloquent
+│   │   │   │   │               └── EventOutboxModel.php
+│   │   │   │   ├── Identity
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   ├── Actions
+│   │   │   │   │   │   ├── DTOs
+│   │   │   │   │   │   ├── Queries
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   │   ├── Entities
+│   │   │   │   │   │   ├── Enums
+│   │   │   │   │   │   ├── Events
+│   │   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   ├── Repositories
+│   │   │   │   │   │   └── ValueObjects
+│   │   │   │   │   ├── Infrastructure
+│   │   │   │   │   │   ├── Http
+│   │   │   │   │   │   │   ├── Controllers
+│   │   │   │   │   │   │   ├── Requests
+│   │   │   │   │   │   │   └── Resources
+│   │   │   │   │   │   ├── Persistence
+│   │   │   │   │   │   │   ├── Eloquent
+│   │   │   │   │   │   │   └── Mappers
+│   │   │   │   │   │   └── Providers
+│   │   │   │   │   └── routes.php
+│   │   │   │   ├── Incidents
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   ├── Actions
+│   │   │   │   │   │   │   ├── GetIncidentByIdAction.php
+│   │   │   │   │   │   │   ├── GetIncidentsAction.php
+│   │   │   │   │   │   │   ├── ReportIncidentAction.php
+│   │   │   │   │   │   │   ├── UpdateIncidentMetadataAction.php
+│   │   │   │   │   │   │   └── UpdateIncidentStatusAction.php
+│   │   │   │   │   │   ├── DTOs
+│   │   │   │   │   │   │   ├── ReportIncidentDTO.php
+│   │   │   │   │   │   │   ├── UpdateIncidentMetadataDTO.php
+│   │   │   │   │   │   │   └── UpdateIncidentStatusDTO.php
+│   │   │   │   │   │   ├── Queries
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   │   ├── Entities
+│   │   │   │   │   │   │   └── InventoryIncident.php
+│   │   │   │   │   │   ├── Enums
+│   │   │   │   │   │   │   ├── IncidentSeverity.php
+│   │   │   │   │   │   │   ├── IncidentStatus.php
+│   │   │   │   │   │   │   └── IncidentType.php
+│   │   │   │   │   │   ├── Events
+│   │   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   ├── Repositories
+│   │   │   │   │   │   │   └── IncidentRepository.php
+│   │   │   │   │   │   ├── Services
+│   │   │   │   │   │   │   └── IncidentValidator.php
+│   │   │   │   │   │   └── ValueObjects
+│   │   │   │   │   ├── Infrastructure
+│   │   │   │   │   │   ├── Http
+│   │   │   │   │   │   │   ├── Controllers
+│   │   │   │   │   │   │   │   └── IncidentController.php
+│   │   │   │   │   │   │   ├── Requests
+│   │   │   │   │   │   │   │   ├── ReportIncidentRequest.php
+│   │   │   │   │   │   │   │   ├── UpdateIncidentMetadataRequest.php
+│   │   │   │   │   │   │   │   └── UpdateIncidentStatusRequest.php
+│   │   │   │   │   │   │   └── Resources
+│   │   │   │   │   │   │       └── IncidentResource.php
+│   │   │   │   │   │   ├── Persistence
+│   │   │   │   │   │   │   ├── Eloquent
+│   │   │   │   │   │   │   │   └── InventoryIncidentModel.php
+│   │   │   │   │   │   │   ├── Mappers
+│   │   │   │   │   │   │   └── Repositories
+│   │   │   │   │   │   │       └── EloquentIncidentRepository.php
+│   │   │   │   │   │   └── Providers
+│   │   │   │   │   │       └── IncidentServiceProvider.php
+│   │   │   │   │   └── routes.php
+│   │   │   │   ├── Inventory
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   ├── Actions
+│   │   │   │   │   │   │   ├── GetStockItemByIdAction.php
+│   │   │   │   │   │   │   └── ListStockItemsAction.php
+│   │   │   │   │   │   ├── DTOs
+│   │   │   │   │   │   ├── Queries
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   │       └── InternalStockMutationService.php
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   │   ├── Entities
+│   │   │   │   │   │   │   └── StockItem.php
+│   │   │   │   │   │   ├── Enums
+│   │   │   │   │   │   │   └── InventoryStatus.php
+│   │   │   │   │   │   ├── Events
+│   │   │   │   │   │   │   ├── StockAdjusted.php
+│   │   │   │   │   │   │   ├── StockReceived.php
+│   │   │   │   │   │   │   └── StockRelocated.php
+│   │   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   │   ├── OptimisticLockException.php
+│   │   │   │   │   │   │   └── StockItemNotFound.php
+│   │   │   │   │   │   ├── Repositories
+│   │   │   │   │   │   │   └── StockItemRepository.php
+│   │   │   │   │   │   ├── Services
+│   │   │   │   │   │   │   └── InventoryValidator.php
+│   │   │   │   │   │   └── ValueObjects
+│   │   │   │   │   │       └── StockItemId.php
+│   │   │   │   │   ├── Infrastructure
+│   │   │   │   │   │   ├── Http
+│   │   │   │   │   │   │   ├── Controllers
+│   │   │   │   │   │   │   │   └── InventoryController.php
+│   │   │   │   │   │   │   ├── Requests
+│   │   │   │   │   │   │   └── Resources
+│   │   │   │   │   │   │       └── StockItemResource.php
+│   │   │   │   │   │   ├── Persistence
+│   │   │   │   │   │   │   ├── Eloquent
+│   │   │   │   │   │   │   │   ├── EloquentStockItemRepository.php
+│   │   │   │   │   │   │   │   └── StockItemModel.php
+│   │   │   │   │   │   │   └── Mappers
+│   │   │   │   │   │   └── Providers
+│   │   │   │   │   │       └── InventoryServiceProvider.php
+│   │   │   │   │   └── routes.php
+│   │   │   │   ├── Locations
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   ├── Actions
+│   │   │   │   │   │   │   ├── CreateLocationAction.php
+│   │   │   │   │   │   │   ├── GetLocationByIdAction.php
+│   │   │   │   │   │   │   ├── ListLocationsAction.php
+│   │   │   │   │   │   │   └── UpdateLocationStatusAction.php
+│   │   │   │   │   │   ├── DTOs
+│   │   │   │   │   │   │   ├── CreateLocationData.php
+│   │   │   │   │   │   │   └── UpdateLocationStatusData.php
+│   │   │   │   │   │   ├── Queries
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   │   ├── Entities
+│   │   │   │   │   │   │   └── Location.php
+│   │   │   │   │   │   ├── Enums
+│   │   │   │   │   │   ├── Events
+│   │   │   │   │   │   │   └── LocationCreated.php
+│   │   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   │   ├── DuplicateLocationLabel.php
+│   │   │   │   │   │   │   └── LocationNotFound.php
+│   │   │   │   │   │   ├── Repositories
+│   │   │   │   │   │   │   └── LocationRepository.php
+│   │   │   │   │   │   └── ValueObjects
+│   │   │   │   │   ├── Infrastructure
+│   │   │   │   │   │   ├── Http
+│   │   │   │   │   │   │   ├── Controllers
+│   │   │   │   │   │   │   │   └── LocationController.php
+│   │   │   │   │   │   │   ├── Requests
+│   │   │   │   │   │   │   │   ├── StoreLocationRequest.php
+│   │   │   │   │   │   │   │   └── UpdateLocationStatusRequest.php
+│   │   │   │   │   │   │   └── Resources
+│   │   │   │   │   │   │       └── LocationResource.php
+│   │   │   │   │   │   ├── Persistence
+│   │   │   │   │   │   │   ├── Eloquent
+│   │   │   │   │   │   │   │   ├── EloquentLocationRepository.php
+│   │   │   │   │   │   │   │   └── LocationModel.php
+│   │   │   │   │   │   │   └── Mappers
+│   │   │   │   │   │   └── Providers
+│   │   │   │   │   │       └── LocationsServiceProvider.php
+│   │   │   │   │   └── routes.php
+│   │   │   │   ├── Monitoring
+│   │   │   │   │   ├── Application
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   └── Infrastructure
+│   │   │   │   ├── Movements
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   ├── Actions
+│   │   │   │   │   │   │   ├── GetMovementByIdAction.php
+│   │   │   │   │   │   │   ├── GetMovementsAction.php
+│   │   │   │   │   │   │   └── RegisterMovementAction.php
+│   │   │   │   │   │   ├── DTOs
+│   │   │   │   │   │   │   └── RegisterMovementDTO.php
+│   │   │   │   │   │   ├── Queries
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   │   ├── Entities
+│   │   │   │   │   │   │   └── InventoryMovement.php
+│   │   │   │   │   │   ├── Enums
+│   │   │   │   │   │   │   ├── AdjustmentReason.php
+│   │   │   │   │   │   │   └── MovementType.php
+│   │   │   │   │   │   ├── Events
+│   │   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   ├── Repositories
+│   │   │   │   │   │   │   └── MovementRepository.php
+│   │   │   │   │   │   ├── Services
+│   │   │   │   │   │   │   └── MovementValidator.php
+│   │   │   │   │   │   └── ValueObjects
+│   │   │   │   │   ├── Infrastructure
+│   │   │   │   │   │   ├── Http
+│   │   │   │   │   │   │   ├── Controllers
+│   │   │   │   │   │   │   │   └── MovementController.php
+│   │   │   │   │   │   │   ├── Requests
+│   │   │   │   │   │   │   │   └── RegisterMovementRequest.php
+│   │   │   │   │   │   │   └── Resources
+│   │   │   │   │   │   │       └── MovementResource.php
+│   │   │   │   │   │   ├── Persistence
+│   │   │   │   │   │   │   ├── Eloquent
+│   │   │   │   │   │   │   │   └── InventoryMovementModel.php
+│   │   │   │   │   │   │   ├── Mappers
+│   │   │   │   │   │   │   └── Repositories
+│   │   │   │   │   │   │       └── EloquentMovementRepository.php
+│   │   │   │   │   │   └── Providers
+│   │   │   │   │   │       └── MovementServiceProvider.php
+│   │   │   │   │   └── routes.php
+│   │   │   │   ├── Orchestration
+│   │   │   │   │   ├── Application
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   └── Infrastructure
+│   │   │   │   ├── Product
+│   │   │   │   │   ├── Application
+│   │   │   │   │   │   ├── Actions
+│   │   │   │   │   │   │   ├── CreateProductAction.php
+│   │   │   │   │   │   │   ├── GetProductByIdAction.php
+│   │   │   │   │   │   │   └── ListProductsAction.php
+│   │   │   │   │   │   ├── DTOs
+│   │   │   │   │   │   │   ├── CreateProductData.php
+│   │   │   │   │   │   │   └── ProductView.php
+│   │   │   │   │   │   ├── Queries
+│   │   │   │   │   │   └── Services
+│   │   │   │   │   ├── Domain
+│   │   │   │   │   │   ├── Entities
+│   │   │   │   │   │   │   └── Product.php
+│   │   │   │   │   │   ├── Enums
+│   │   │   │   │   │   │   └── UnitOfMeasure.php
+│   │   │   │   │   │   ├── Events
+│   │   │   │   │   │   │   └── ProductCreated.php
+│   │   │   │   │   │   ├── Exceptions
+│   │   │   │   │   │   │   ├── DuplicateSku.php
+│   │   │   │   │   │   │   └── ProductNotFound.php
+│   │   │   │   │   │   ├── Repositories
+│   │   │   │   │   │   │   └── ProductRepository.php
+│   │   │   │   │   │   └── ValueObjects
+│   │   │   │   │   │       └── ProductId.php
+│   │   │   │   │   ├── Infrastructure
+│   │   │   │   │   │   ├── Http
+│   │   │   │   │   │   │   ├── Controllers
+│   │   │   │   │   │   │   │   └── ProductController.php
+│   │   │   │   │   │   │   ├── Requests
+│   │   │   │   │   │   │   │   └── StoreProductRequest.php
+│   │   │   │   │   │   │   └── Resources
+│   │   │   │   │   │   │       └── ProductResource.php
+│   │   │   │   │   │   ├── Persistence
+│   │   │   │   │   │   │   ├── Eloquent
+│   │   │   │   │   │   │   │   ├── EloquentProductRepository.php
+│   │   │   │   │   │   │   │   └── ProductModel.php
+│   │   │   │   │   │   │   └── Mappers
+│   │   │   │   │   │   └── Providers
+│   │   │   │   │   │       └── ProductServiceProvider.php
+│   │   │   │   │   └── routes.php
+│   │   │   │   └── Replenishment
+│   │   │   │       ├── Application
+│   │   │   │       ├── Domain
+│   │   │   │       └── Infrastructure
+│   │   │   ├── Providers
+│   │   │   │   └── AppServiceProvider.php
+│   │   │   └── Shared
+│   │   │       ├── Application
+│   │   │       ├── Domain
+│   │   │       ├── Infrastructure
+│   │   │       └── Support
 │   │   ├── bootstrap
+│   │   │   ├── cache
+│   │   │   │   ├── packages.php
+│   │   │   │   └── services.php
+│   │   │   ├── app.php
+│   │   │   └── providers.php
 │   │   ├── config
+│   │   │   ├── app.php
+│   │   │   ├── auth.php
+│   │   │   ├── broadcasting.php
+│   │   │   ├── cache.php
+│   │   │   ├── database.php
+│   │   │   ├── filesystems.php
+│   │   │   ├── logging.php
+│   │   │   ├── mail.php
+│   │   │   ├── queue.php
+│   │   │   ├── reverb.php
+│   │   │   ├── services.php
+│   │   │   └── session.php
 │   │   ├── database
-│   │   ├── public
+│   │   │   ├── factories
+│   │   │   │   └── UserFactory.php
+│   │   │   ├── migrations
+│   │   │   │   ├── 0001_01_01_000000_create_users_table.php
+│   │   │   │   ├── 0001_01_01_000001_create_cache_table.php
+│   │   │   │   ├── 0001_01_01_000002_create_jobs_table.php
+│   │   │   │   ├── 2026_03_28_063718_create_products_table.php
+│   │   │   │   ├── 2026_03_28_071730_create_locations_table.php
+│   │   │   │   ├── 2026_03_29_045200_create_stock_items_table.php
+│   │   │   │   ├── 2026_03_29_054218_create_event_outbox_table.php
+│   │   │   │   ├── 2026_03_29_054221_create_inventory_movements_table.php
+│   │   │   │   ├── 2026_03_29_064500_create_inventory_incidents_table.php
+│   │   │   │   ├── 2026_03_29_132300_create_audit_logs_table.php
+│   │   │   │   └── 2026_03_30_230300_add_dispatched_at_to_event_outbox_table.php
+│   │   │   ├── seeders
+│   │   │   │   └── DatabaseSeeder.php
+│   │   │   └── database.sqlite
 │   │   ├── resources
+│   │   │   ├── js
+│   │   │   │   ├── app.js
+│   │   │   │   ├── bootstrap.js
+│   │   │   │   └── echo.js
+│   │   │   └── views
+│   │   │       └── welcome.blade.php
 │   │   ├── routes
-│   │   ├── tests
+│   │   │   ├── api.php
+│   │   │   ├── channels.php
+│   │   │   ├── console.php
+│   │   │   └── web.php
 │   │   ├── README.md
 │   │   ├── artisan
 │   │   ├── composer.json
@@ -17,17 +358,165 @@
 │   │   ├── phpunit.xml
 │   │   └── vite.config.js
 │   ├── field-agent-mobile
-│   │   ├── public
 │   │   ├── src
+│   │   │   ├── boot
+│   │   │   ├── components
+│   │   │   ├── domains
+│   │   │   │   ├── auth
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   └── views
+│   │   │   │   ├── incidents
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   └── views
+│   │   │   │   │       └── ReportIncident.vue
+│   │   │   │   ├── inventory
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   └── views
+│   │   │   │   │       └── ProductLookup.vue
+│   │   │   │   ├── movements
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   └── views
+│   │   │   │   │       └── ExecuteMovement.vue
+│   │   │   │   └── sync
+│   │   │   │       ├── api
+│   │   │   │       ├── components
+│   │   │   │       ├── composables
+│   │   │   │       ├── stores
+│   │   │   │       ├── types
+│   │   │   │       └── views
+│   │   │   ├── offline
+│   │   │   │   └── SyncQueue.ts
+│   │   │   ├── pages
+│   │   │   │   └── FieldHome.vue
+│   │   │   ├── router
+│   │   │   │   └── index.ts
+│   │   │   ├── services
+│   │   │   │   └── api.ts
+│   │   │   ├── stores
+│   │   │   │   ├── useIncidentsStore.ts
+│   │   │   │   ├── useInventoryStore.ts
+│   │   │   │   └── useMovementsStore.ts
+│   │   │   ├── types
+│   │   │   │   └── domain.ts
+│   │   │   ├── App.vue
+│   │   │   ├── main.ts
+│   │   │   └── quasar-variables.sass
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   ├── tsconfig.tsbuildinfo
 │   │   └── vite.config.ts
 │   ├── orchestrator-twin
-│   │   ├── public
 │   │   ├── src
+│   │   │   ├── app
+│   │   │   ├── components
+│   │   │   │   ├── layout
+│   │   │   │   │   ├── BinCell.vue
+│   │   │   │   │   ├── RackView.vue
+│   │   │   │   │   ├── WarehouseGrid.vue
+│   │   │   │   │   └── ZoneView.vue
+│   │   │   │   └── panels
+│   │   │   │       ├── RecommendationsPanel.vue
+│   │   │   │       └── SimulationPanel.vue
+│   │   │   ├── domains
+│   │   │   │   ├── congestion
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   └── views
+│   │   │   │   ├── events
+│   │   │   │   │   ├── components
+│   │   │   │   │   │   └── EventLogDebugger.vue
+│   │   │   │   │   ├── services
+│   │   │   │   │   │   └── EventInterpreter.ts
+│   │   │   │   │   └── stores
+│   │   │   │   │       ├── useEventIngestionStore.ts
+│   │   │   │   │       └── useEventStateStore.ts
+│   │   │   │   ├── heatmap
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── service.ts
+│   │   │   │   │   └── types.ts
+│   │   │   │   ├── incidents
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── mapper.ts
+│   │   │   │   │   ├── service.ts
+│   │   │   │   │   └── types.ts
+│   │   │   │   ├── layout
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   ├── views
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── mapper.ts
+│   │   │   │   │   ├── service.ts
+│   │   │   │   │   └── types.ts
+│   │   │   │   ├── occupancy
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── mapper.ts
+│   │   │   │   │   ├── service.ts
+│   │   │   │   │   └── types.ts
+│   │   │   │   ├── recommendations
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   ├── views
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── service.ts
+│   │   │   │   │   └── types.ts
+│   │   │   │   ├── shared
+│   │   │   │   │   ├── api.ts
+│   │   │   │   │   └── binState.ts
+│   │   │   │   ├── simulation
+│   │   │   │   │   ├── api
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── composables
+│   │   │   │   │   ├── stores
+│   │   │   │   │   ├── types
+│   │   │   │   │   ├── views
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── service.ts
+│   │   │   │   │   └── types.ts
+│   │   │   │   └── slotting
+│   │   │   │       ├── api
+│   │   │   │       ├── components
+│   │   │   │       ├── composables
+│   │   │   │       ├── stores
+│   │   │   │       ├── types
+│   │   │   │       └── views
+│   │   │   ├── engine
+│   │   │   ├── scenes
+│   │   │   ├── services
+│   │   │   │   └── echo.ts
+│   │   │   ├── stores
+│   │   │   │   └── counter.ts
+│   │   │   ├── types
+│   │   │   ├── App.vue
+│   │   │   ├── env.d.ts
+│   │   │   └── main.ts
 │   │   ├── README.md
+│   │   ├── anatomy.md
 │   │   ├── env.d.ts
 │   │   ├── eslint.config.ts
 │   │   ├── index.html
@@ -40,8 +529,76 @@
 │   │   ├── vite.config.ts
 │   │   └── vitest.config.ts
 │   └── vapor-monitor
-│       ├── public
 │       ├── src
+│       │   ├── app
+│       │   │   ├── providers
+│       │   │   ├── router
+│       │   │   └── store
+│       │   ├── components
+│       │   ├── composables
+│       │   ├── domains
+│       │   │   ├── events
+│       │   │   │   ├── components
+│       │   │   │   │   └── EventLogDebugger.vue
+│       │   │   │   ├── services
+│       │   │   │   │   ├── __tests__
+│       │   │   │   │   │   └── EventInterpreter.contract.test.ts
+│       │   │   │   │   └── EventInterpreter.ts
+│       │   │   │   └── stores
+│       │   │   │       ├── useEventIngestionStore.ts
+│       │   │   │       └── useEventStateStore.ts
+│       │   │   ├── incidents
+│       │   │   │   ├── api
+│       │   │   │   ├── components
+│       │   │   │   │   └── IncidentFeed.vue
+│       │   │   │   ├── composables
+│       │   │   │   ├── stores
+│       │   │   │   ├── types
+│       │   │   │   └── views
+│       │   │   ├── inventory
+│       │   │   │   ├── api
+│       │   │   │   ├── components
+│       │   │   │   ├── composables
+│       │   │   │   ├── stores
+│       │   │   │   ├── types
+│       │   │   │   └── views
+│       │   │   ├── locations
+│       │   │   │   └── components
+│       │   │   │       └── ZoneOccupancy.vue
+│       │   │   ├── monitoring
+│       │   │   │   ├── api
+│       │   │   │   ├── components
+│       │   │   │   ├── composables
+│       │   │   │   ├── stores
+│       │   │   │   │   └── useMonitoringStore.ts
+│       │   │   │   ├── types
+│       │   │   │   └── views
+│       │   │   ├── movements
+│       │   │   │   └── components
+│       │   │   │       ├── InboundFeed.vue
+│       │   │   │       └── OutboundFeed.vue
+│       │   │   ├── purchasing
+│       │   │   │   ├── api
+│       │   │   │   ├── components
+│       │   │   │   ├── composables
+│       │   │   │   ├── stores
+│       │   │   │   ├── types
+│       │   │   │   └── views
+│       │   │   └── shared
+│       │   │       ├── api
+│       │   │       ├── components
+│       │   │       ├── composables
+│       │   │       ├── stores
+│       │   │       ├── types
+│       │   │       └── views
+│       │   ├── pages
+│       │   ├── services
+│       │   │   └── echo.ts
+│       │   ├── stores
+│       │   │   └── counter.ts
+│       │   ├── types
+│       │   ├── App.vue
+│       │   └── main.ts
 │       ├── README.md
 │       ├── env.d.ts
 │       ├── eslint.config.ts
@@ -86,6 +643,10 @@
 │   │   └── package.json
 │   ├── event-contracts
 │   │   ├── src
+│   │   │   ├── incident-events.ts
+│   │   │   ├── index.ts
+│   │   │   ├── inventory-events.ts
+│   │   │   └── movement-events.ts
 │   │   └── package.json
 │   ├── prompt-library
 │   │   ├── incidents
@@ -93,12 +654,25 @@
 │   │   └── slotting
 │   ├── shared-schemas
 │   │   ├── src
+│   │   │   ├── incidents.ts
+│   │   │   ├── index.ts
+│   │   │   ├── inventory.ts
+│   │   │   └── movements.ts
 │   │   └── package.json
 │   ├── shared-types
 │   │   ├── src
+│   │   │   ├── events.ts
+│   │   │   ├── incidents.ts
+│   │   │   ├── index.ts
+│   │   │   ├── inventory.ts
+│   │   │   ├── locations.ts
+│   │   │   └── movements.ts
 │   │   └── package.json
 │   └── ui-tokens
 │       ├── src
+│       │   ├── accessibility.ts
+│       │   ├── colors.ts
+│       │   └── spacing.ts
 │       └── package.json
 ├── scripts
 │   ├── bootstrap.sh
@@ -111,4 +685,4 @@
 ├── package.json
 └── pnpm-workspace.yaml
 
-42 directories, 69 files
+384 directories, 301 files

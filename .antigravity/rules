@@ -1,12 +1,15 @@
 # Antigravity Compute Efficiency Protocol (Nexus-WMS)
+
 # Goal: Prevent Weekly Marathon Lockout & Minimize Sprint Unit Waste
 
 ## 1. Structural Discovery (Mandatory)
+
 - ALWAYS read `anatomy.md` before performing any file search.
-- NEVER execute `ls -R` or `find` on the root directory. 
+- NEVER execute `ls -R` or `find` on the root directory.
 - Use the structural index to locate Laravel controllers or Vue components directly.
 
 ## 2. Resource Protection (No-Fly Zones)
+
 - Do not index or read contents of:
   - `vendor/` (Laravel dependencies)
   - `node_modules/` (Frontend dependencies)
@@ -15,9 +18,11 @@
 - Reading these folders triggers high Compute Weight and risks immediate 7-day lockout.
 
 ## 3. Task Optimization
+
 - **Reasoning Depth:** Prefer direct action over long "Chain of Thought" during VET 07:00-13:00 (Peak Hours).
 - **Incremental Updates:** Only modify the necessary lines. Avoid re-writing full PHP classes or Vue templates to save output tokens.
 - **Agent Loops:** If a task takes more than 3 turns without progress, STOP and ask for clarification to avoid "Infinite Loop" penalties.
 
 ## 4. Cache Management
+
 - Rely on implicit context caching. Do not re-read configuration files (e.g., `vite.config.ts`, `composer.json`) once the environment is established.
