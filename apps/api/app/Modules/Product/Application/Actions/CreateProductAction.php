@@ -4,51 +4,85 @@ declare(strict_types=1);
 
 namespace App\Modules\Product\Application\Actions;
 
+use App\Modules\Events\Application\Services\EventPublisher;
 use App\Modules\Product\Application\DTOs\CreateProductData;
 use App\Modules\Product\Domain\Entities\Product;
 use App\Modules\Product\Domain\Enums\UnitOfMeasure;
-use App\Modules\Product\Domain\Events\ProductCreated;
 use App\Modules\Product\Domain\Exceptions\DuplicateSku;
+use App\Modules\Product\Domain\Exceptions\InvalidUnitOfMeasure;
 use App\Modules\Product\Domain\Repositories\ProductRepository;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class CreateProductAction
 {
     public function __construct(
         private readonly ProductRepository $products,
-    ) {
+        private readonly EventPublisher $eventPublisher,
+    ) {}
+
+    public function execute(CreateProductData $command): Product
+    {
+        $this->ensureSkuIsUnique($command->sku);
+
+        $newProduct = $this->buildProductEntity($command);
+
+        $correlationId = $command->correlationId ?? Str::uuid()->toString();
+
+        return $this->persistProductAndEvents($newProduct, $command->actorId, $correlationId);
     }
 
-    public function execute(CreateProductData $data): Product
+    private function ensureSkuIsUnique(string $sku): void
     {
-        $existing = $this->products->findBySku($data->sku);
+        $existingProduct = $this->products->findBySku($sku);
 
-        if ($existing !== null) {
-            throw DuplicateSku::withSku($data->sku);
+        if ($existingProduct !== null) {
+            throw DuplicateSku::withSku($sku);
+        }
+    }
+
+    private function buildProductEntity(CreateProductData $command): Product
+    {
+        $unitOfMeasure = UnitOfMeasure::tryFrom($command->unitOfMeasure);
+        
+        if (!$unitOfMeasure) {
+            throw InvalidUnitOfMeasure::withUnit($command->unitOfMeasure);
         }
 
-        $product = new Product(
+        return new Product(
             id: (string) Str::uuid(),
-            sku: $data->sku,
-            name: $data->name,
-            category: $data->category,
-            unitOfMeasure: UnitOfMeasure::from($data->unitOfMeasure),
-            attributes: $data->attributes,
+            sku: $command->sku,
+            name: $command->name,
+            category: $command->category,
+            unitOfMeasure: $unitOfMeasure,
+            attributes: $command->attributes,
         );
+    }
 
-        $created = $this->products->create($product);
+    private function persistProductAndEvents(Product $newProduct, string $actorId, string $correlationId): Product
+    {
+        return DB::transaction(function () use ($newProduct, $actorId, $correlationId) {
+            $persistedProduct = $this->products->create($newProduct);
 
-        Event::dispatch(new ProductCreated(
-            productId: $created->id(),
-            sku: $created->sku(),
-            name: $created->name(),
-            category: $created->category(),
-            unitOfMeasure: $created->unitOfMeasure()->value,
-            occurredAt: now()->toIso8601String(),
-            actorId: $data->actorId,
-        ));
+            $this->publishProductCreatedEvent($persistedProduct, $actorId, $correlationId);
 
-        return $created;
+            return $persistedProduct;
+        });
+    }
+
+    private function publishProductCreatedEvent(Product $persistedProduct, string $actorId, string $correlationId): void
+    {
+        $this->eventPublisher->publish(
+            eventType: 'product.created',
+            payload: [
+                'productId' => $persistedProduct->id(),
+                'sku' => $persistedProduct->sku(),
+                'name' => $persistedProduct->name(),
+                'category' => $persistedProduct->category(),
+                'unitOfMeasure' => $persistedProduct->unitOfMeasure()->value,
+            ],
+            actorId: $actorId,
+            correlationId: $correlationId
+        );
     }
 }

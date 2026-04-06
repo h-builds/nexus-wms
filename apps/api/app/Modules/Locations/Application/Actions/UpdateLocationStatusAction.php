@@ -5,86 +5,105 @@ declare(strict_types=1);
 namespace App\Modules\Locations\Application\Actions;
 
 use App\Modules\Audit\Application\Services\AuditLogger;
-use App\Modules\Events\Infrastructure\Persistence\Eloquent\EventOutboxModel;
+use App\Modules\Events\Application\Services\EventPublisher;
 use App\Modules\Locations\Application\DTOs\UpdateLocationStatusData;
 use App\Modules\Locations\Domain\Entities\Location;
+use App\Modules\Locations\Domain\Exceptions\LocationNotFound;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
-use App\Modules\Locations\Infrastructure\Persistence\Eloquent\LocationModel;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 final class UpdateLocationStatusAction
 {
     public function __construct(
         private readonly LocationRepository $locationRepository,
         private readonly AuditLogger $auditLogger,
+        private readonly EventPublisher $eventPublisher,
     ) {}
 
-    public function execute(UpdateLocationStatusData $data): Location
+    public function execute(UpdateLocationStatusData $command): Location
     {
-        $location = $this->locationRepository->findById($data->locationId);
-        if (!$location) {
-            throw new InvalidArgumentException("Location {$data->locationId} not found.");
+        $warehouseLocation = $this->getWarehouseLocationOrThrow($command->locationId);
+
+        if ($warehouseLocation->isBlocked() === $command->isBlocked) {
+            return $warehouseLocation;
         }
 
-        if ($location->isBlocked() === $data->isBlocked) {
-            return $location;
+        $updatedLocation = $this->buildUpdatedLocationEntity($warehouseLocation, $command->isBlocked);
+        $this->persistStatusChange($command, $updatedLocation, $command->correlationId);
+
+        return $updatedLocation;
+    }
+
+    private function getWarehouseLocationOrThrow(string $locationId): Location
+    {
+        $warehouseLocation = $this->locationRepository->findById($locationId);
+        
+        if (!$warehouseLocation) {
+            throw LocationNotFound::withId($locationId);
         }
+        
+        return $warehouseLocation;
+    }
 
-        $outboxEventId = Str::uuid()->toString();
-        $correlationId = request()->header('X-Correlation-ID', Str::uuid()->toString());
-        $eventType = $data->isBlocked ? 'location.blocked' : 'location.unblocked';
+    private function persistStatusChange(UpdateLocationStatusData $command, Location $updatedLocation, string $correlationId): void
+    {
+        $eventType = $command->isBlocked ? 'location.blocked' : 'location.unblocked';
 
-        DB::transaction(function () use ($data, $location, $outboxEventId, $correlationId, $eventType) {
-            LocationModel::where('id', $data->locationId)->update([
-                'is_blocked' => $data->isBlocked,
-                'updated_at' => now(),
-            ]);
+        DB::transaction(function () use ($command, $updatedLocation, $correlationId, $eventType) {
+            $this->locationRepository->save($updatedLocation);
 
-            $auditAction = $data->isBlocked ? 'location.blocked' : 'location.unblocked';
-            $changeset = ['isBlocked' => $data->isBlocked];
-            if ($data->reason !== null) {
-                $changeset['reason'] = $data->reason;
-            }
-
-            $this->auditLogger->log(
-                action: $auditAction,
-                entityType: 'WarehouseLocation',
-                entityId: $data->locationId,
-                changeset: $changeset,
-                actorId: $data->performedBy,
-                correlationId: $correlationId
-            );
-
-            $eventPayload = ['locationId' => $data->locationId];
-            if ($data->isBlocked && $data->reason !== null) {
-                $eventPayload['reason'] = $data->reason;
-            }
-
-            EventOutboxModel::create([
-                'event_id' => $outboxEventId,
-                'event_type' => $eventType,
-                'event_version' => 1,
-                'occurred_at' => now(),
-                'actor_id' => $data->performedBy,
-                'correlation_id' => $correlationId,
-                'causation_id' => $outboxEventId,
-                'payload' => $eventPayload,
-                'dispatched' => false,
-            ]);
+            $this->logAuditTrail($command, $correlationId);
+            $this->publishEvent($command, $correlationId, $eventType);
         });
+    }
 
+    private function logAuditTrail(UpdateLocationStatusData $command, string $correlationId): void
+    {
+        $auditAction = $command->isBlocked ? 'location.blocked' : 'location.unblocked';
+        $changeset = ['isBlocked' => $command->isBlocked];
+        
+        if ($command->reason !== null) {
+            $changeset['reason'] = $command->reason;
+        }
+
+        $this->auditLogger->log(
+            action: $auditAction,
+            entityType: 'WarehouseLocation',
+            entityId: $command->locationId,
+            changeset: $changeset,
+            actorId: $command->performedBy,
+            correlationId: $correlationId
+        );
+    }
+
+    private function publishEvent(UpdateLocationStatusData $command, string $correlationId, string $eventType): void
+    {
+        $eventPayload = ['locationId' => $command->locationId];
+        
+        if ($command->isBlocked && $command->reason !== null) {
+            $eventPayload['reason'] = $command->reason;
+        }
+
+        $this->eventPublisher->publish(
+            eventType: $eventType,
+            payload: $eventPayload,
+            actorId: $command->performedBy,
+            correlationId: $correlationId
+        );
+    }
+
+    private function buildUpdatedLocationEntity(Location $warehouseLocation, bool $isBlocked): Location
+    {
         return new Location(
-            id: $location->id(),
-            warehouseCode: $location->warehouseCode(),
-            zone: $location->zone(),
-            aisle: $location->aisle(),
-            rack: $location->rack(),
-            level: $location->level(),
-            bin: $location->bin(),
-            label: $location->label(),
-            isBlocked: $data->isBlocked,
+            id: $warehouseLocation->id(),
+            warehouseCode: $warehouseLocation->warehouseCode(),
+            zone: $warehouseLocation->zone(),
+            aisle: $warehouseLocation->aisle(),
+            rack: $warehouseLocation->rack(),
+            level: $warehouseLocation->level(),
+            bin: $warehouseLocation->bin(),
+            label: $warehouseLocation->label(),
+            isBlocked: $isBlocked,
         );
     }
 }

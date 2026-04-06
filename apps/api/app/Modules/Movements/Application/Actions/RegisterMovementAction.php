@@ -5,198 +5,215 @@ declare(strict_types=1);
 namespace App\Modules\Movements\Application\Actions;
 
 use App\Modules\Audit\Application\Services\AuditLogger;
-use App\Modules\Events\Application\Services\OutboxDispatcher;
-use App\Modules\Events\Infrastructure\Persistence\Eloquent\EventOutboxModel;
+use App\Modules\Events\Application\Services\EventPublisher;
 use App\Modules\Inventory\Application\Services\InternalStockMutationService;
+use App\Modules\Locations\Domain\Exceptions\LocationNotFound;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
 use App\Modules\Movements\Application\DTOs\RegisterMovementDTO;
 use App\Modules\Movements\Domain\Entities\InventoryMovement;
 use App\Modules\Movements\Domain\Enums\MovementType;
+use App\Modules\Movements\Domain\Exceptions\InvalidMovementType;
 use App\Modules\Movements\Domain\Services\MovementValidator;
-use App\Modules\Movements\Infrastructure\Persistence\Eloquent\InventoryMovementModel;
+use App\Modules\Movements\Domain\Repositories\MovementRepository;
+use App\Modules\Product\Domain\Exceptions\ProductNotFound;
 use App\Modules\Product\Domain\Repositories\ProductRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 final class RegisterMovementAction
 {
     public function __construct(
         private readonly ProductRepository $productRepository,
         private readonly LocationRepository $locationRepository,
+        private readonly MovementRepository $movementRepository,
         private readonly MovementValidator $movementValidator,
         private readonly InternalStockMutationService $stockMutationService,
-        private readonly OutboxDispatcher $outboxDispatcher,
+        private readonly EventPublisher $eventPublisher,
         private readonly AuditLogger $auditLogger,
     ) {}
 
-    public function execute(RegisterMovementDTO $movementData): InventoryMovement
+    public function execute(RegisterMovementDTO $command): InventoryMovement
     {
-        if ($movementData->idempotencyKey !== null) {
-            $existing = InventoryMovementModel::where('idempotency_key', $movementData->idempotencyKey)->first();
-            if ($existing) {
-                return new InventoryMovement(
-                    id: $existing->id,
-                    productId: $existing->product_id,
-                    fromLocationId: $existing->from_location_id,
-                    toLocationId: $existing->to_location_id,
-                    type: MovementType::from($existing->type),
-                    quantity: (int) $existing->quantity,
-                    reference: $existing->reference,
-                    lotNumber: $existing->lot_number,
-                    reason: $existing->reason,
-                    performedBy: $existing->performed_by,
-                    performedAt: is_object($existing->performed_at) ? $existing->performed_at->toIso8601String() : (string) $existing->performed_at,
-                    idempotencyKey: $existing->idempotency_key,
-                    createdAt: $existing->created_at?->toIso8601String(),
-                    updatedAt: $existing->updated_at?->toIso8601String(),
-                );
+        if ($command->idempotencyKey !== null) {
+            $existingMovement = $this->movementRepository->findByIdempotencyKey($command->idempotencyKey);
+            if ($existingMovement) {
+                return $existingMovement;
             }
         }
 
-        $product = $this->productRepository->findById($movementData->productId);
-        if (!$product) {
-            throw new InvalidArgumentException("Product {$movementData->productId} not found.");
-        }
+        $this->ensureProductExists($command->productId);
+        
+        $movementType = $this->parseMovementType($command->type);
+        
+        $this->ensureLocationStateIsValid($command->fromLocationId);
+        $this->ensureLocationStateIsValid($command->toLocationId);
 
-        $type = MovementType::tryFrom($movementData->type);
-        if (!$type) {
-            throw new InvalidArgumentException("Invalid movement type: {$movementData->type}.");
-        }
+        $inventoryMovement = $this->buildMovementEntity($command, $movementType);
 
-        if ($movementData->fromLocationId !== null) {
-            $fromLocation = $this->locationRepository->findById($movementData->fromLocationId);
-            if (!$fromLocation) {
-                throw new InvalidArgumentException("Location {$movementData->fromLocationId} not found.");
+        $this->persistMovementAndEvents($inventoryMovement, $command->correlationId);
+
+        return $inventoryMovement;
+    }
+
+
+
+    private function ensureProductExists(string $productId): void
+    {
+        $stockItemProduct = $this->productRepository->findById($productId);
+        if (!$stockItemProduct) {
+            throw ProductNotFound::withId($productId);
+        }
+    }
+
+    private function parseMovementType(string $typeToken): MovementType
+    {
+        $movementType = MovementType::tryFrom($typeToken);
+        if (!$movementType) {
+            throw InvalidMovementType::withType($typeToken);
+        }
+        return $movementType;
+    }
+
+    private function ensureLocationStateIsValid(?string $locationId): void
+    {
+        if ($locationId !== null) {
+            $warehouseLocation = $this->locationRepository->findById($locationId);
+            if (!$warehouseLocation) {
+                throw LocationNotFound::withId($locationId);
             }
-            $this->movementValidator->assertLocationNotBlocked($fromLocation->id(), $fromLocation->isBlocked());
+            $this->movementValidator->assertLocationNotBlocked($warehouseLocation->id(), $warehouseLocation->isBlocked());
         }
+    }
 
-        if ($movementData->toLocationId !== null) {
-            $toLocation = $this->locationRepository->findById($movementData->toLocationId);
-            if (!$toLocation) {
-                throw new InvalidArgumentException("Location {$movementData->toLocationId} not found.");
-            }
-            $this->movementValidator->assertLocationNotBlocked($toLocation->id(), $toLocation->isBlocked());
-        }
-
-        $movementId = Str::uuid()->toString();
-        $movement = new InventoryMovement(
-            id: $movementId,
-            productId: $movementData->productId,
-            fromLocationId: $movementData->fromLocationId,
-            toLocationId: $movementData->toLocationId,
-            type: $type,
-            quantity: $movementData->quantity,
-            reference: $movementData->reference,
-            lotNumber: $movementData->lotNumber,
-            reason: $movementData->reason,
-            performedBy: $movementData->performedBy,
-            performedAt: $movementData->performedAt,
-            idempotencyKey: $movementData->idempotencyKey,
+    private function buildMovementEntity(RegisterMovementDTO $command, MovementType $movementType): InventoryMovement
+    {
+        return new InventoryMovement(
+            id: Str::uuid()->toString(),
+            productId: $command->productId,
+            fromLocationId: $command->fromLocationId,
+            toLocationId: $command->toLocationId,
+            type: $movementType,
+            quantity: $command->quantity,
+            reference: $command->reference,
+            lotNumber: $command->lotNumber,
+            reason: $command->reason,
+            performedBy: $command->performedBy,
+            performedAt: $command->performedAt,
+            idempotencyKey: $command->idempotencyKey,
             createdAt: now()->toIso8601String(),
             updatedAt: now()->toIso8601String(),
         );
+    }
 
-        $outboxEventId = Str::uuid()->toString();
-        $correlationId = request()->header('X-Correlation-ID', Str::uuid()->toString());
-
-        DB::transaction(function () use ($movement, $outboxEventId, $correlationId) {
-            InventoryMovementModel::create([
-                'id' => $movement->id(),
-                'product_id' => $movement->productId(),
-                'from_location_id' => $movement->fromLocationId(),
-                'to_location_id' => $movement->toLocationId(),
-                'type' => $movement->type()->value,
-                'quantity' => $movement->quantity(),
-                'reference' => $movement->reference(),
-                'lot_number' => $movement->lotNumber(),
-                'reason' => $movement->reason(),
-                'performed_by' => $movement->performedBy(),
-                'performed_at' => $movement->performedAt(),
-                'idempotency_key' => $movement->idempotencyKey(),
-            ]);
-
-            $this->stockMutationService->applyMovement($movement);
-
-            $this->auditLogger->log(
-                action: 'movement.registered',
-                entityType: 'InventoryMovement',
-                entityId: $movement->id(),
-                changeset: [
-                    'type' => $movement->type()->value,
-                    'quantity' => $movement->quantity(),
-                    'fromLocationId' => $movement->fromLocationId(),
-                    'toLocationId' => $movement->toLocationId(),
-                    'reference' => $movement->reference(),
-                ],
-                actorId: $movement->performedBy(),
-                correlationId: $correlationId
-            );
-
-            $eventId = Str::uuid()->toString();
-            $eventPayload = [
-                'movementId' => $movement->id(),
-                'productId' => $movement->productId(),
-                'type' => $movement->type()->value,
-                'quantity' => $movement->quantity(),
-                'fromLocationId' => $movement->fromLocationId(),
-                'toLocationId' => $movement->toLocationId()
-            ];
-
-            EventOutboxModel::create([
-                'event_id' => $outboxEventId,
-                'event_type' => 'movement.created',
-                'event_version' => 1,
-                'occurred_at' => now(),
-                'actor_id' => $movement->performedBy(),
-                'correlation_id' => $correlationId,
-                'causation_id' => $outboxEventId,
-                'payload' => $eventPayload,
-                'dispatched' => false,
-            ]);
+    private function persistMovementAndEvents(InventoryMovement $inventoryMovement, string $correlationId): void
+    {
+        DB::transaction(function () use ($inventoryMovement, $correlationId) {
+            $this->storeMovementRecord($inventoryMovement);
             
-            $stockEventId = Str::uuid()->toString();
-            $stockEventType = match ($movement->type()) {
-                MovementType::RECEIPT => 'inventory.stock.received',
-                MovementType::PUTAWAY => 'inventory.stock.putaway',
-                MovementType::RELOCATION => 'inventory.stock.relocated',
-                MovementType::ADJUSTMENT => 'inventory.stock.adjusted',
-                MovementType::PICKING => 'inventory.stock.picked',
-                MovementType::RETURN_INTERNAL => 'inventory.stock.returned',
-            };
+            $this->stockMutationService->applyMovement($inventoryMovement);
+
+            $this->logMovementAudit($inventoryMovement, $correlationId);
+
+            $this->publishMovementCreatedEvent($inventoryMovement, $correlationId);
             
-            $stockEventPayload = match ($movement->type()) {
-                MovementType::RECEIPT => [
-                    'movementId' => $movement->id(), 'productId' => $movement->productId(), 'locationId' => $movement->toLocationId(), 'quantity' => $movement->quantity(), 'lotNumber' => $movement->lotNumber()
-                ],
-                MovementType::PUTAWAY, MovementType::RELOCATION, MovementType::RETURN_INTERNAL => [
-                    'productId' => $movement->productId(), 'fromLocationId' => $movement->fromLocationId(), 'toLocationId' => $movement->toLocationId(), 'quantity' => $movement->quantity()
-                ],
-                MovementType::ADJUSTMENT => [
-                    'productId' => $movement->productId(), 'locationId' => $movement->fromLocationId(), 'reason' => $movement->reason(), 'deltaQuantity' => -$movement->quantity()
-                ],
-                MovementType::PICKING => [
-                    'productId' => $movement->productId(), 'locationId' => $movement->fromLocationId(), 'quantity' => $movement->quantity()
-                ]
-            };
-
-            EventOutboxModel::create([
-                'event_id' => $stockEventId,
-                'event_type' => $stockEventType,
-                'event_version' => 1,
-                'occurred_at' => now(),
-                'actor_id' => $movement->performedBy(),
-                'correlation_id' => $correlationId,
-                'causation_id' => $stockEventId,
-                'payload' => $stockEventPayload,
-                'dispatched' => false,
-            ]);
-
+            $this->publishStockEvent($inventoryMovement, $correlationId);
         });
+    }
 
-        $this->outboxDispatcher->dispatchAndMark($outboxEventId, new \stdClass());
+    private function storeMovementRecord(InventoryMovement $inventoryMovement): void
+    {
+        $this->movementRepository->save($inventoryMovement);
+    }
 
-        return $movement;
+    private function logMovementAudit(InventoryMovement $inventoryMovement, string $correlationId): void
+    {
+        $this->auditLogger->log(
+            action: 'movement.registered',
+            entityType: 'InventoryMovement',
+            entityId: $inventoryMovement->id(),
+            changeset: [
+                'type' => $inventoryMovement->type()->value,
+                'quantity' => $inventoryMovement->quantity(),
+                'fromLocationId' => $inventoryMovement->fromLocationId(),
+                'toLocationId' => $inventoryMovement->toLocationId(),
+                'reference' => $inventoryMovement->reference(),
+            ],
+            actorId: $inventoryMovement->performedBy(),
+            correlationId: $correlationId
+        );
+    }
+
+    private function publishMovementCreatedEvent(InventoryMovement $inventoryMovement, string $correlationId): void
+    {
+        $eventPayload = [
+            'movementId' => $inventoryMovement->id(),
+            'productId' => $inventoryMovement->productId(),
+            'type' => $inventoryMovement->type()->value,
+            'quantity' => $inventoryMovement->quantity(),
+            'fromLocationId' => $inventoryMovement->fromLocationId(),
+            'toLocationId' => $inventoryMovement->toLocationId()
+        ];
+
+        $this->eventPublisher->publish(
+            eventType: 'movement.created',
+            payload: $eventPayload,
+            actorId: $inventoryMovement->performedBy(),
+            correlationId: $correlationId
+        );
+    }
+
+    private function publishStockEvent(InventoryMovement $inventoryMovement, string $correlationId): void
+    {
+        $stockEventType = match ($inventoryMovement->type()) {
+            MovementType::RECEIPT => 'inventory.stock.received',
+            MovementType::PUTAWAY => 'inventory.stock.putaway',
+            MovementType::RELOCATION => 'inventory.stock.relocated',
+            MovementType::ADJUSTMENT => 'inventory.stock.adjusted',
+            MovementType::PICKING => 'inventory.stock.picked',
+            MovementType::RETURN_INTERNAL => 'inventory.stock.returned',
+        };
+        
+        $stockEventPayload = match ($inventoryMovement->type()) {
+            MovementType::RECEIPT => [
+                'movementId' => $inventoryMovement->id(), 'productId' => $inventoryMovement->productId(), 'locationId' => $inventoryMovement->toLocationId(), 'quantity' => $inventoryMovement->quantity(), 'lotNumber' => $inventoryMovement->lotNumber()
+            ],
+            MovementType::PUTAWAY, MovementType::RELOCATION, MovementType::RETURN_INTERNAL => [
+                'productId' => $inventoryMovement->productId(), 'fromLocationId' => $inventoryMovement->fromLocationId(), 'toLocationId' => $inventoryMovement->toLocationId(), 'quantity' => $inventoryMovement->quantity()
+            ],
+            MovementType::ADJUSTMENT => $this->buildAdjustmentPayload($inventoryMovement),
+            MovementType::PICKING => [
+                'productId' => $inventoryMovement->productId(), 'locationId' => $inventoryMovement->fromLocationId(), 'quantity' => $inventoryMovement->quantity()
+            ]
+        };
+
+        $this->eventPublisher->publish(
+            eventType: $stockEventType,
+            payload: $stockEventPayload,
+            actorId: $inventoryMovement->performedBy(),
+            correlationId: $correlationId
+        );
+    }
+
+    /**
+     * Reads post-mutation stock to build EVENT_CATALOG-compliant adjustment payload
+     * with previousQuantity and newQuantity instead of deltaQuantity.
+     */
+    private function buildAdjustmentPayload(InventoryMovement $inventoryMovement): array
+    {
+        $newQuantity = $this->stockMutationService->getQuantityOnHand(
+            productId: $inventoryMovement->productId(),
+            locationId: $inventoryMovement->fromLocationId(),
+            lotNumber: $inventoryMovement->lotNumber()
+        );
+
+        $previousQuantity = $newQuantity + $inventoryMovement->quantity();
+
+        return [
+            'productId' => $inventoryMovement->productId(),
+            'locationId' => $inventoryMovement->fromLocationId(),
+            'previousQuantity' => $previousQuantity,
+            'newQuantity' => $newQuantity,
+            'reason' => $inventoryMovement->reason(),
+        ];
     }
 }
