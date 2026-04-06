@@ -10,4 +10,5 @@ return [
     App\Modules\Inventory\Infrastructure\Providers\InventoryServiceProvider::class,
     App\Modules\Movements\Infrastructure\Providers\MovementServiceProvider::class,
     App\Modules\Incidents\Infrastructure\Providers\IncidentServiceProvider::class,
+    App\Modules\Intelligence\Infrastructure\Providers\IntelligenceServiceProvider::class,
 ];
