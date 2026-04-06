@@ -338,6 +338,56 @@ Traceability across distributed components, asynchronous events, and agent decis
 
 ---
 
+## Decision Trace Layer
+
+The Decision Trace Layer captures structured advisory outputs from agents and rule engines. It is not part of the event pipeline — it is a parallel accountability layer that records what agents detected, why, and what they recommended.
+
+### Architecture Position
+
+Decision traces sit outside the domain event flow:
+
+```text
+Domain Event (immutable fact)
+    ↓
+Agent / Rule Engine (consumes event)
+    ↓
+Decision Trace (advisory record, not an event)
+    ↓
+Intelligence Query Service (read-only access for UI/audit)
+```
+
+Decision traces are **never** written to the event outbox. They are persisted in a dedicated intelligence store and are queryable but do not participate in the event lifecycle.
+
+### Correlation Linkage
+
+Each DecisionTrace explicitly links to the event ecosystem via:
+
+- **`causationId`**: The specific `eventId` that directly triggered the agent's analysis.
+- **`correlationId`**: Inherited from the originating event chain, enabling end-to-end trace reconstruction.
+- **`triggerEventIds`**: The full set of events the agent considered during analysis (may include events across a time window).
+
+This means a decision trace can be traced backward to:
+1. The exact event that triggered it
+2. The full correlation chain (original user action → domain events → decision trace)
+3. All contextual events the agent analyzed
+
+### Lifecycle
+
+1. **Created**: An agent or rule engine produces a decision trace with status `advisory`.
+2. **Persisted**: The trace is stored in the Intelligence domain's persistence layer (NOT the event outbox).
+3. **Surfaced**: UI surfaces (Vapor Monitor, Orchestrator Twin) query and display traces.
+4. **Resolved**: A human actor acknowledges, acts upon, or dismisses the trace.
+
+### Governance Constraints
+
+- Decision traces must NOT be confused with domain events or commands.
+- Decision traces must NOT trigger automatic domain state mutations in MVP.
+- Decision traces must NOT be emitted through the event outbox or broadcast channels.
+- Decision traces must be explainable: every trace includes `detection`, `reasoning`, and `suggestion` as explicit fields.
+- Decision traces must be auditable: `status` transitions require actor attribution.
+
+---
+
 ## Non-Functional Priorities
 
 - **Traceability**: Audit logs for every movement

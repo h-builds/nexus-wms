@@ -380,7 +380,11 @@ These events are/will be consumed by:
 2. **Vapor Monitor**: (Phase 2) Updates operational dashboards and KPIs in real-time.
 3. **Orchestrator Twin**: (Phase 3+) Consumes spatial and incident events to render anomalies, map layout density, and feed rule-based recommendations.
 4. **AI Monitoring Agent**: Detects anomalies and suggests actions using the established Correlation Model.
-5. **Analytics / BI**: Builds reports and historical warehouse performance KPIs.
+5. **Intelligence Domain**: (Phase 4.4+) Agents consume domain events and produce `DecisionTrace` records (see `docs/DOMAIN_MODEL.md`). Decision traces are NOT domain events — they are derived advisory records stored separately.
+6. **Analytics / BI**: Builds reports and historical warehouse performance KPIs.
+
+> [!IMPORTANT]
+> **Domain Events vs Decision Traces**: This catalog defines domain events — immutable facts about what already happened in the warehouse. Decision traces produced by agents in response to these events are NOT domain events. They are structured advisory records owned by the Intelligence domain and must NOT appear in this catalog, the event outbox, or the broadcast channels. See `docs/ARCHITECTURE.md` (Decision Trace Layer) for the full architectural distinction.
 
 ---
 

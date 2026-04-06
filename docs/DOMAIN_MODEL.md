@@ -170,6 +170,29 @@ Key concepts:
 
 ---
 
+### 8. Intelligence
+
+Owns decision trace lifecycle and agent output accountability.
+
+Responsibilities:
+
+- recording structured decision traces from agents and rule engines
+- linking recommendations to originating domain events
+- preserving explainability for audit and review
+- tracking whether advisory outputs were later acted upon
+
+Key concepts:
+
+- DecisionTrace
+- DetectionType
+- TraceStatus
+- AgentIdentity
+
+> [!IMPORTANT]
+> The Intelligence domain does NOT own domain state mutation. Decision traces are structured advisory records. They do not act as commands and must never be confused with domain events. Agents remain suggestion-first in MVP.
+
+---
+
 ## Initial Entity Candidates
 
 ### StockItem
@@ -289,6 +312,36 @@ Attributes:
 > [!NOTE]
 > The AuditLog table is write-only from the application's perspective. Domain services write audit entries but never update or delete them. Read access is through a dedicated Audit query service.
 
+### DecisionTrace
+
+Represents a structured advisory output produced by an agent or rule engine in response to detected conditions. Decision traces are not commands and do not mutate domain state. They are append-only records that support explainability, auditability, and future retrospective analysis.
+
+**Owner**: Intelligence domain.
+
+Attributes:
+
+- id (uuid)
+- traceType (`anomaly_detection` | `pattern_insight` | `optimization_suggestion` | `risk_alert`)
+- agentId (string — identifies the producing agent, e.g., `inventory-monitoring-agent`)
+- agentDomain (`inventory` | `incidents` | `movements` | `monitoring`)
+- detection (string — what was detected, e.g., "Stock for SKU TV-001 dropped 40% in 2 hours")
+- reasoning (string — why it matters, e.g., "Drop exceeds normal movement patterns for this product category")
+- suggestion (string — what action is recommended, e.g., "Review recent picking and relocation movements for SKU TV-001")
+- severity (`low` | `medium` | `high` | `critical`)
+- triggerEventIds (array of eventId strings — the specific event(s) that caused this trace)
+- causationId (string — the single eventId that directly triggered analysis, required)
+- correlationId (string — the originating request correlation chain, required)
+- status (`advisory` | `acknowledged` | `acted_upon` | `dismissed`)
+- actedUponAt (ISO-8601 timestamp, nullable — when a human or system acted on this trace)
+- actedUponBy (string, nullable — actorId who acted on or dismissed the trace)
+- createdAt (ISO-8601 timestamp — when the trace was generated)
+
+> [!IMPORTANT]
+> `status` starts as `advisory` at creation. Transitions to `acknowledged`, `acted_upon`, or `dismissed` are recorded explicitly with actor attribution. Decision traces must never be deleted or modified after creation — only their status may transition forward.
+
+> [!NOTE]
+> DecisionTrace is explicitly NOT a domain event. It is a derived advisory record. It does not appear in the event outbox. It does not trigger downstream event chains. It is queryable through a dedicated Intelligence query service.
+
 ---
 
 ## Planned Relationships
@@ -318,6 +371,14 @@ Attributes:
 - belongs to one warehouse
 - may contain multiple stock records
 
+### DecisionTrace
+
+- references one or more domain events (via triggerEventIds)
+- links to one causation event (via causationId)
+- belongs to one correlation chain (via correlationId)
+- is produced by one agent
+- may be acted upon by one actor
+
 ---
 
 ## Initial Business Rules
@@ -329,6 +390,7 @@ Attributes:
 5. Every incident must be attributable to an actor.
 6. A blocked location should not be treated as freely usable.
 7. A blocked quantity should not be counted as available quantity.
+8. Decision traces are advisory records. They do not mutate domain state, do not emit domain events, and do not participate in the transactional outbox.
 
 ---
 

@@ -73,18 +73,36 @@ Agents focus on:
 
 ### 4. Explainability Required
 
-Every agent output must include:
+## Agent Output Contract (DecisionTrace)
 
-- what it detected
-- why it matters
-- what it suggests
-- what data it used
-- **Decision Trace**: A formal log capturing the analytical path. It must include the exact `causationId` (the event that triggered the analysis), the intermediate facts considered, and the final deterministic output.
+All persisted advisory outputs intended for operator visibility, follow-up, or audit MUST be recorded as a `DecisionTrace` record with the following required fields:
 
-> [!TIP]
-> No black-box decisions are allowed. All agent decisions and their execution context (decision traces) will later be formally persisted to enable retroactive auditing, debugging, and continuous evaluation of AI-driven suggestions.
+| Field             | Purpose                                                                                         |
+| :---------------- | :---------------------------------------------------------------------------------------------- |
+| `traceType`       | Classification: `anomaly_detection`, `pattern_insight`, `optimization_suggestion`, `risk_alert` |
+| `agentId`         | Identifier of the producing agent                                                               |
+| `agentDomain`     | Domain scope of the agent                                                                       |
+| `detection`       | Human-readable summary of what was detected                                                     |
+| `reasoning`       | Explanation of why the detection matters                                                        |
+| `suggestion`      | Recommended action for the operator                                                             |
+| `severity`        | `low`, `medium`, `high`, `critical`                                                             |
+| `causationId`     | The `eventId` that directly triggered analysis                                                  |
+| `correlationId`   | The originating correlation chain                                                               |
+| `triggerEventIds` | All event IDs the agent considered                                                              |
+| `status`          | Lifecycle state: `advisory` → `acknowledged` / `acted_upon` / `dismissed`                       |
+| `createdAt`       | Timestamp of trace creation                                                                     |
 
----
+**Optional (set during resolution)**:
+
+| Field         | Purpose                      |
+| :------------ | :--------------------------- |
+| `actedUponAt` | When the trace was resolved  |
+| `actedUponBy` | Actor who resolved the trace |
+
+> [!IMPORTANT]
+> Not all intermediate or low-signal agent outputs must be persisted. Only material, actionable, or audit-relevant advisory outputs should be recorded as DecisionTrace entities.
+
+## See `docs/DOMAIN_MODEL.md` for full entity definition.
 
 ### 5. No Data Overreach
 
@@ -224,19 +242,33 @@ Agents may evolve to:
 
 ---
 
-## Agent Output Contract
+## Agent Output Contract (DecisionTrace)
 
-Every agent output should follow:
+Every agent output is persisted as a `DecisionTrace` record with the following required fields:
 
-- **Observation**: [Summary of detection]
-- **Context**: [Data used for detection]
-- **Reasoning**: [Logic behind the suggestion]
-- **Suggested Action**: [Action to be taken by user]
+| Field             | Purpose                                                                                         |
+| :---------------- | :---------------------------------------------------------------------------------------------- |
+| `traceType`       | Classification: `anomaly_detection`, `pattern_insight`, `optimization_suggestion`, `risk_alert` |
+| `agentId`         | Identifier of the producing agent                                                               |
+| `agentDomain`     | Domain scope of the agent                                                                       |
+| `detection`       | Human-readable summary of what was detected                                                     |
+| `reasoning`       | Explanation of why the detection matters                                                        |
+| `suggestion`      | Recommended action for the operator                                                             |
+| `severity`        | `low`, `medium`, `high`, `critical`                                                             |
+| `causationId`     | The `eventId` that directly triggered analysis                                                  |
+| `correlationId`   | The originating correlation chain                                                               |
+| `triggerEventIds` | All event IDs the agent considered                                                              |
+| `status`          | Lifecycle state: `advisory` → `acknowledged` / `acted_upon` / `dismissed`                       |
+| `createdAt`       | Timestamp of trace creation                                                                     |
 
-**Optional**:
+**Optional (set during resolution)**:
 
-- Confidence level
-- Related events
+| Field         | Purpose                      |
+| :------------ | :--------------------------- |
+| `actedUponAt` | When the trace was resolved  |
+| `actedUponBy` | Actor who resolved the trace |
+
+See `docs/DOMAIN_MODEL.md` for full entity definition.
 
 ---
 
@@ -260,6 +292,7 @@ Agents will eventually integrate with:
 - monitoring dashboards (Vapor Monitor)
 - orchestration layer (Orchestrator Twin)
 - future AI execution engine
+- Intelligence domain (decision trace persistence and query)
 
 ## Final Rule
 

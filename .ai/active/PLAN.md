@@ -418,21 +418,89 @@ This phase establishes:
 - decision logs can be queried and audited
 - system demonstrates reasoning capability (not just visualization)
 
+#### Phase 4.4.1 — Decision Trace Model Definition ✅
+
+**Type:** Architecture + Contract (NO implementation)
+
+- [x] define canonical DecisionTrace entity in DOMAIN_MODEL.md
+- [x] define Intelligence domain ownership in DOMAIN_MODEL.md
+- [x] define Decision Trace Layer architecture in ARCHITECTURE.md
+- [x] formalize Agent Output Contract as DecisionTrace in AGENTS.md
+- [x] establish boundary between domain events and decision traces in EVENT_CATALOG.md
+- [x] update CONTEXT.md to reflect Phase 4.4 awareness
+
+#### Phase 4.4.2 — DecisionTrace Persistence Layer ✅
+
+**Type:** Backend Infrastructure
+
+- [x] database migration for traces
+- [x] domain entity and invariant enforcement
+- [x] Eloquent repository with append-only persistence
+- [x] read-only API endpoints
+
+#### Phase 4.4.3 — Advisory Emission Layer ✅
+
+**Type:** Intelligence Logic
+
+- [x] DecisionAgent contract interface
+- [x] InventoryAnomalyAgent (deterministic rule)
+- [x] AgentExecutor orchestrator (duplicate prevention)
+- [x] synchronous listener on BroadcastableOutboxEvent
+
+#### Phase 4.4.4 — Decision Trace UI Binding ✅
+
+**Type:** Frontend Integration
+
+- [x] useDecisionTraceStore Pinia stores
+- [x] projection-only rendering panels (DecisionTraceFeed, DecisionTracePanel)
+
+#### Phase 4.4.5 — Decision Trace Human Interaction ✅
+
+**Type:** Frontend & Backend Mutative Actions
+
+- [x] PATCH backend endpoints (acknowledge, act-upon, dismiss)
+- [x] UI controls in DecisionTraceFeed and DecisionTracePanel
+- [x] strict attribution checks over Action executions
+
+#### Phase 4.4.6 — Decision Trace Query Layer ✅
+
+**Type:** Backend & Frontend Read Model
+
+- [x] stateless filtering and ordering parameters in repository
+- [x] UI dropdown controls in both surfaces
+
+#### Phase 4.4.7 — Decision Trace Metrics / Dashboard Layer ✅
+
+**Type:** Visualization & Summary
+
+- [x] minimalist metrics GET endpoint
+- [x] getMetrics repository aggregate
+- [x] fetchMetrics store functions
+- [x] non-logical summary panels in Vapor Monitor and Orchestrator Twin
+
+#### Phase 4.4.8 — Intelligence Layer Hardening ✅
+
+**Type:** Reliability & Stability
+
+- [x] strict failure isolation in AgentExecutor
+- [x] logical duplicate protection via causationId/agentId
+- [x] payload validation and reliable entity evolution
+
 ---
 
-### Phase 4.5 — Cross Alerts & UX Integration
+### Phase 4.5 — Cross Alerts & UX Integration ✅
 
 **Type:** Product Layer
 
-- [ ] unified alert system across modules
-- [ ] visual feedback loops between surfaces
-- [ ] highlight anomalies and system reactions in real-time
+- [x] unified alert system across modules
+- [x] visual feedback loops between surfaces
+- [x] highlight anomalies and system reactions in real-time
 
 **Exit Criteria:**
 
-- alerts are triggered by real events
-- users can observe system reactions across modules
-- UX reflects a cohesive, intelligent system
+- ✅ alerts are triggered by real events
+- ✅ users can observe system reactions across modules
+- ✅ UX reflects a cohesive, intelligent system
 
 ---
 
