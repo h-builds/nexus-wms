@@ -34,9 +34,12 @@ final class BroadcastableOutboxEvent implements ShouldBroadcastNow
             'eventId' => $this->outboxEvent->event_id,
             'eventType' => $this->outboxEvent->event_type,
             'eventVersion' => $this->outboxEvent->event_version,
-            'occurredAt' => $this->outboxEvent->occurred_at,
+            'occurredAt' => $this->outboxEvent->occurred_at instanceof \DateTimeInterface 
+                ? $this->outboxEvent->occurred_at->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z')
+                : $this->outboxEvent->occurred_at,
             'actorId' => $this->outboxEvent->actor_id,
             'correlationId' => $this->outboxEvent->correlation_id,
+            'causationId' => $this->outboxEvent->causation_id,
             'payload' => $this->outboxEvent->payload,
         ];
     }

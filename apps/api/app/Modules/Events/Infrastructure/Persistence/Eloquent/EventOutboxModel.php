@@ -22,11 +22,13 @@ final class EventOutboxModel extends Model
         'causation_id',
         'payload',
         'dispatched',
+        'dispatched_at',
     ];
 
     protected $casts = [
         'payload' => 'array',
         'dispatched' => 'boolean',
         'occurred_at' => 'datetime',
+        'dispatched_at' => 'datetime',
     ];
 }
