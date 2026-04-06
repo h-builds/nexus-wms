@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace App\Modules\Incidents\Application\Actions;
 
-use App\Modules\Events\Application\Services\OutboxDispatcher;
-use App\Modules\Events\Infrastructure\Persistence\Eloquent\EventOutboxModel;
+use App\Modules\Events\Application\Services\EventPublisher;
 use App\Modules\Incidents\Application\DTOs\ReportIncidentDTO;
 use App\Modules\Incidents\Domain\Entities\InventoryIncident;
 use App\Modules\Incidents\Domain\Enums\IncidentSeverity;
 use App\Modules\Incidents\Domain\Enums\IncidentStatus;
 use App\Modules\Incidents\Domain\Enums\IncidentType;
 use App\Modules\Incidents\Domain\Repositories\IncidentRepository;
-use App\Modules\Incidents\Infrastructure\Persistence\Eloquent\InventoryIncidentModel;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
 use App\Modules\Product\Domain\Repositories\ProductRepository;
+use App\Modules\Audit\Application\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -25,103 +24,124 @@ final class ReportIncidentAction
         private readonly ProductRepository $productRepository,
         private readonly LocationRepository $locationRepository,
         private readonly IncidentRepository $incidentRepository,
-        private readonly OutboxDispatcher $outboxDispatcher,
-        private readonly \App\Modules\Audit\Application\Services\AuditLogger $auditLogger,
+        private readonly EventPublisher $eventPublisher,
+        private readonly AuditLogger $auditLogger,
     ) {}
 
-    public function execute(ReportIncidentDTO $incidentData): InventoryIncident
+    public function execute(ReportIncidentDTO $incidentDetails): InventoryIncident
     {
-        if ($incidentData->idempotencyKey !== null) {
-            $existing = $this->incidentRepository->findByIdempotencyKey($incidentData->idempotencyKey);
+        if ($incidentDetails->idempotencyKey !== null) {
+            $existing = $this->incidentRepository->findByIdempotencyKey($incidentDetails->idempotencyKey);
             if ($existing) {
                 return $existing;
             }
         }
 
-        $product = $this->productRepository->findById($incidentData->productId);
-        if (!$product) {
-            throw new InvalidArgumentException("Product {$incidentData->productId} not found.");
-        }
+        $this->ensureProductExists($incidentDetails->productId);
+        $this->ensureLocationExists($incidentDetails->locationId);
 
-        if ($incidentData->locationId !== null) {
-            $location = $this->locationRepository->findById($incidentData->locationId);
-            if (!$location) {
-                throw new InvalidArgumentException("Location {$incidentData->locationId} not found.");
-            }
-        }
-
-        $type = IncidentType::tryFrom($incidentData->type);
-        if (!$type) {
-            throw new InvalidArgumentException("Invalid incident type: {$incidentData->type}.");
-        }
-
-        $severity = IncidentSeverity::tryFrom($incidentData->severity);
-        if (!$severity) {
-            throw new InvalidArgumentException("Invalid incident severity: {$incidentData->severity}.");
-        }
+        $type = $this->parseIncidentType($incidentDetails->type);
+        $severity = $this->parseIncidentSeverity($incidentDetails->severity);
 
         $incidentId = Str::uuid()->toString();
         $now = now()->toIso8601String();
+        $correlationId = $incidentDetails->correlationId;
 
         $incident = new InventoryIncident(
             id: $incidentId,
-            productId: $incidentData->productId,
-            locationId: $incidentData->locationId,
+            productId: $incidentDetails->productId,
+            locationId: $incidentDetails->locationId,
             type: $type,
             severity: $severity,
             status: IncidentStatus::OPEN,
-            description: $incidentData->description,
-            quantityAffected: $incidentData->quantityAffected,
-            reportedBy: $incidentData->reportedBy,
+            description: $incidentDetails->description,
+            quantityAffected: $incidentDetails->quantityAffected,
+            reportedBy: $incidentDetails->reportedBy,
             createdAt: $now,
             updatedAt: $now,
-            idempotencyKey: $incidentData->idempotencyKey
+            idempotencyKey: $incidentDetails->idempotencyKey
         );
 
-        $outboxEventId = Str::uuid()->toString();
-        $correlationId = request()->header('X-Correlation-ID', Str::uuid()->toString());
-
-        DB::transaction(function () use ($incident, $outboxEventId, $correlationId) {
+        DB::transaction(function () use ($incident, $correlationId) {
             $this->incidentRepository->save($incident);
-
-            $this->auditLogger->log(
-                action: 'incident.reported',
-                entityType: 'InventoryIncident',
-                entityId: $incident->id(),
-                changeset: [
-                    'status' => $incident->status()->value,
-                    'type' => $incident->type()->value,
-                    'severity' => $incident->severity()->value,
-                    'quantityAffected' => $incident->quantityAffected(),
-                    'locationId' => $incident->locationId(),
-                ],
-                actorId: $incident->reportedBy(),
-                correlationId: $correlationId
-            );
-
-            $eventPayload = [
-                'incidentId' => $incident->id(),
-                'productId' => $incident->productId(),
-                'locationId' => $incident->locationId(),
-                'type' => $incident->type()->value,
-                'description' => $incident->description(),
-            ];
-
-            EventOutboxModel::create([
-                'event_id' => $outboxEventId,
-                'event_type' => 'incident.reported',
-                'event_version' => 1,
-                'occurred_at' => now(),
-                'actor_id' => $incident->reportedBy(),
-                'correlation_id' => $correlationId,
-                'causation_id' => $outboxEventId,
-                'payload' => $eventPayload,
-                'dispatched' => false,
-            ]);
+            $this->logAuditTrail($incident, $correlationId);
+            $this->dispatchReportedEvent($incident, $correlationId);
         });
 
-        $this->outboxDispatcher->dispatchAndMark($outboxEventId, new \stdClass());
-
         return $incident;
+    }
+
+    private function ensureProductExists(string $productId): void
+    {
+        $product = $this->productRepository->findById($productId);
+        if (!$product) {
+            throw new InvalidArgumentException("Product {$productId} not found.");
+        }
+    }
+
+    private function ensureLocationExists(?string $locationId): void
+    {
+        if ($locationId === null) {
+            return;
+        }
+
+        $location = $this->locationRepository->findById($locationId);
+        if (!$location) {
+            throw new InvalidArgumentException("Location {$locationId} not found.");
+        }
+    }
+
+    private function parseIncidentType(string $typeValue): IncidentType
+    {
+        $type = IncidentType::tryFrom($typeValue);
+        if (!$type) {
+            throw new InvalidArgumentException("Invalid incident type: {$typeValue}.");
+        }
+        return $type;
+    }
+
+    private function parseIncidentSeverity(string $severityValue): IncidentSeverity
+    {
+        $severity = IncidentSeverity::tryFrom($severityValue);
+        if (!$severity) {
+            throw new InvalidArgumentException("Invalid incident severity: {$severityValue}.");
+        }
+        return $severity;
+    }
+
+    private function logAuditTrail(InventoryIncident $incident, string $correlationId): void
+    {
+        $this->auditLogger->log(
+            action: 'incident.reported',
+            entityType: 'InventoryIncident',
+            entityId: $incident->id(),
+            changeset: [
+                'status' => $incident->status()->value,
+                'type' => $incident->type()->value,
+                'severity' => $incident->severity()->value,
+                'quantityAffected' => $incident->quantityAffected(),
+                'locationId' => $incident->locationId(),
+            ],
+            actorId: $incident->reportedBy(),
+            correlationId: $correlationId
+        );
+    }
+
+    private function dispatchReportedEvent(InventoryIncident $incident, string $correlationId): void
+    {
+        $eventPayload = [
+            'incidentId' => $incident->id(),
+            'productId' => $incident->productId(),
+            'locationId' => $incident->locationId(),
+            'type' => $incident->type()->value,
+            'description' => $incident->description(),
+        ];
+
+        $this->eventPublisher->publish(
+            eventType: 'incident.reported',
+            payload: $eventPayload,
+            actorId: $incident->reportedBy(),
+            correlationId: $correlationId
+        );
     }
 }
