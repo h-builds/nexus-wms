@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace App\Modules\Inventory\Application\Services;
 
+use App\Modules\Inventory\Domain\Entities\StockItem;
+use App\Modules\Inventory\Domain\Enums\InventoryStatus;
 use App\Modules\Inventory\Domain\Exceptions\OptimisticLockException;
+use App\Modules\Inventory\Domain\Exceptions\StockItemNotFound;
+use App\Modules\Inventory\Domain\Repositories\StockItemRepository;
 use App\Modules\Inventory\Domain\Services\InventoryValidator;
-use App\Modules\Movements\Domain\Entities\InventoryMovement;
-use App\Modules\Movements\Domain\Enums\MovementType;
-use Illuminate\Support\Facades\DB;
+use App\Modules\Inventory\Application\DTOs\StockMutationDTO;
+use App\Modules\Inventory\Domain\Enums\MutationOperation;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
-use RuntimeException;
 
 /**
  * Service explicitly and exclusively for mutating stock levels.
@@ -20,19 +21,24 @@ use RuntimeException;
 class InternalStockMutationService
 {
     public function __construct(
-        private readonly InventoryValidator $validator
+        private readonly InventoryValidator $validator,
+        private readonly StockItemRepository $repository
     ) {}
 
-    /**
-     * Applies the movement quantity to the inventory using explicit optimistic locking.
-     */
-    public function applyMovement(InventoryMovement $movement): void
+    public function applyMutation(StockMutationDTO $mutation): void
     {
-        match ($movement->type()) {
-            MovementType::RECEIPT, MovementType::RETURN_INTERNAL => $this->addStock($movement->toLocationId(), $movement->productId(), $movement->quantity(), $movement->lotNumber()),
-            MovementType::ADJUSTMENT, MovementType::PICKING => $this->subtractStock($movement->fromLocationId(), $movement->productId(), $movement->quantity(), $movement->lotNumber()),
-            MovementType::RELOCATION, MovementType::PUTAWAY => $this->moveStock($movement->fromLocationId(), $movement->toLocationId(), $movement->productId(), $movement->quantity(), $movement->lotNumber()),
+        match ($mutation->operation) {
+            MutationOperation::ADD => $this->addStock($mutation->toLocationId, $mutation->productId, $mutation->quantity, $mutation->lotNumber),
+            MutationOperation::SUBTRACT => $this->subtractStock($mutation->fromLocationId, $mutation->productId, $mutation->quantity, $mutation->lotNumber),
+            MutationOperation::MOVE => $this->moveStock($mutation->fromLocationId, $mutation->toLocationId, $mutation->productId, $mutation->quantity, $mutation->lotNumber),
         };
+    }
+
+    public function getQuantityOnHand(string $productId, string $locationId, ?string $lotNumber = null): int
+    {
+        $stockItem = $this->repository->findByProductAndLocation($productId, $locationId, $lotNumber);
+
+        return $stockItem ? $stockItem->quantityOnHand() : 0;
     }
 
     private function moveStock(string $fromLocationId, string $toLocationId, string $productId, int $quantity, ?string $lotNumber): void
@@ -43,102 +49,71 @@ class InternalStockMutationService
 
     private function addStock(string $locationId, string $productId, int $quantity, ?string $lotNumber): void
     {
-        $query = DB::table('stock_items')
-            ->where('product_id', $productId)
-            ->where('location_id', $locationId);
+        $stockItem = $this->repository->findByProductAndLocation($productId, $locationId, $lotNumber);
 
-        if ($lotNumber === null) {
-            $query->whereNull('lot_number');
+        if ($stockItem) {
+            $this->updateExistingStock($stockItem, $quantity);
         } else {
-            $query->where('lot_number', $lotNumber);
-        }
-
-        $record = $query->first();
-
-        if ($record) {
-            $this->validator->validateAdjustment(
-                currentAvailable: (int) $record->quantity_available,
-                currentBlocked: (int) $record->quantity_blocked,
-                deltaAvailable: $quantity,
-                deltaBlocked: 0
-            );
-
-            $newAvailable = $record->quantity_available + $quantity;
-            $newOnHand = $this->validator->computeOnHand($newAvailable, (int) $record->quantity_blocked);
-
-            $affected = DB::table('stock_items')
-                ->where('id', $record->id)
-                ->where('version', $record->version)
-                ->update([
-                    'quantity_available' => $newAvailable,
-                    'quantity_on_hand' => $newOnHand,
-                    'version' => $record->version + 1,
-                    'updated_at' => now(),
-                ]);
-
-            if ($affected === 0) {
-                throw OptimisticLockException::forStockItem($record->id);
-            }
-        } else {
-            $newAvailable = $quantity;
-            $newOnHand = $this->validator->computeOnHand($newAvailable, 0);
-
-            DB::table('stock_items')->insert([
-                'id' => Str::uuid()->toString(),
-                'product_id' => $productId,
-                'location_id' => $locationId,
-                'quantity_available' => $newAvailable,
-                'quantity_on_hand' => $newOnHand,
-                'quantity_blocked' => 0,
-                'lot_number' => $lotNumber,
-                'status' => 'available',
-                'version' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $this->insertNewStockItem($locationId, $productId, $quantity, $lotNumber);
         }
     }
 
     private function subtractStock(string $locationId, string $productId, int $quantity, ?string $lotNumber): void
     {
-        $query = DB::table('stock_items')
-            ->where('product_id', $productId)
-            ->where('location_id', $locationId);
+        $stockItem = $this->repository->findByProductAndLocation($productId, $locationId, $lotNumber);
 
-        if ($lotNumber === null) {
-            $query->whereNull('lot_number');
-        } else {
-            $query->where('lot_number', $lotNumber);
+        if (!$stockItem) {
+            throw StockItemNotFound::forProductAndLocation($productId, $locationId);
         }
 
-        $record = $query->first();
+        $this->updateExistingStock($stockItem, -$quantity);
+    }
 
-        if (!$record) {
-            throw new RuntimeException("Cannot subtract stock: stock item not found for product {$productId} at location {$locationId}.");
-        }
-
+    private function updateExistingStock(StockItem $stockItem, int $quantityDelta): void
+    {
         $this->validator->validateAdjustment(
-            currentAvailable: (int) $record->quantity_available,
-            currentBlocked: (int) $record->quantity_blocked,
-            deltaAvailable: -$quantity,
+            currentAvailable: $stockItem->quantityAvailable(),
+            currentBlocked: $stockItem->quantityBlocked(),
+            deltaAvailable: $quantityDelta,
             deltaBlocked: 0
         );
 
-        $newAvailable = $record->quantity_available - $quantity;
-        $newOnHand = $this->validator->computeOnHand($newAvailable, (int) $record->quantity_blocked);
+        $newAvailable = $stockItem->quantityAvailable() + $quantityDelta;
+        $newOnHand = $this->validator->computeOnHand($newAvailable, $stockItem->quantityBlocked());
 
-        $affected = DB::table('stock_items')
-            ->where('id', $record->id)
-            ->where('version', $record->version)
-            ->update([
-                'quantity_available' => $newAvailable,
-                'quantity_on_hand' => $newOnHand,
-                'version' => $record->version + 1,
-                'updated_at' => now(),
-            ]);
+        $updated = $this->repository->updateQuantity(
+            $stockItem->id(),
+            $newAvailable,
+            $newOnHand,
+            $stockItem->version()
+        );
 
-        if ($affected === 0) {
-            throw OptimisticLockException::forStockItem($record->id);
+        if (!$updated) {
+            throw OptimisticLockException::forStockItem($stockItem->id());
         }
+    }
+
+    private function insertNewStockItem(string $locationId, string $productId, int $quantity, ?string $lotNumber): void
+    {
+        $newAvailable = $quantity;
+        $newOnHand = $this->validator->computeOnHand($newAvailable, 0);
+
+        $stockItem = new StockItem(
+            id: Str::uuid()->toString(),
+            productId: $productId,
+            locationId: $locationId,
+            quantityOnHand: $newOnHand,
+            quantityAvailable: $newAvailable,
+            quantityBlocked: 0,
+            lotNumber: $lotNumber,
+            serialNumber: null,
+            receivedAt: null,
+            expiresAt: null,
+            status: InventoryStatus::AVAILABLE,
+            version: 1,
+            updatedAt: now()->toIso8601String(),
+        );
+
+        $this->repository->insertStockItem($stockItem);
     }
 }

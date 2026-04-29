@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Intelligence\Infrastructure\Persistence\Repositories;
 
+use App\Modules\Intelligence\Application\DTOs\DecisionTraceListCriteria;
 use App\Modules\Intelligence\Application\DTOs\DecisionTraceMetrics;
+use App\Modules\Intelligence\Application\DTOs\DecisionTraceSortOrder;
+use App\Modules\Intelligence\Application\Queries\DecisionTraceQueryService;
 use App\Modules\Intelligence\Domain\Entities\DecisionTrace;
 use App\Modules\Intelligence\Domain\Enums\AgentDomain;
 use App\Modules\Intelligence\Domain\Enums\TraceSeverity;
@@ -15,7 +18,7 @@ use App\Modules\Intelligence\Infrastructure\Persistence\Eloquent\DecisionTraceMo
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
-final class EloquentDecisionTraceRepository implements DecisionTraceRepository
+final class EloquentDecisionTraceRepository implements DecisionTraceRepository, DecisionTraceQueryService
 {
     public function save(DecisionTrace $trace): void
     {
@@ -43,26 +46,26 @@ final class EloquentDecisionTraceRepository implements DecisionTraceRepository
 
     public function findById(string $id): ?DecisionTrace
     {
-        $model = DecisionTraceModel::find($id);
+        $decisionTraceModel = DecisionTraceModel::find($id);
 
-        if (!$model) {
+        if (!$decisionTraceModel) {
             return null;
         }
 
-        return $this->toEntity($model);
+        return $this->toEntity($decisionTraceModel);
     }
 
-    public function paginate(int $page = 1, int $perPage = 50, array $filters = [], string $sort = 'createdAt_desc'): LengthAwarePaginator
+    public function paginate(DecisionTraceListCriteria $criteria): LengthAwarePaginator
     {
         $query = DecisionTraceModel::query();
 
-        $this->applyFilters($query, $filters);
-        $this->applySortOrder($query, $sort);
+        $this->applyFilters($query, $criteria);
+        $this->applySortOrder($query, $criteria->sortOrder);
 
-        $paginator = $query->paginate(perPage: $perPage, page: $page);
+        $paginator = $query->paginate(perPage: $criteria->perPage, page: $criteria->page);
 
         $paginator->getCollection()->transform(
-            fn (DecisionTraceModel $model): DecisionTrace => $this->toEntity($model)
+            fn (DecisionTraceModel $decisionTraceModel): DecisionTrace => $this->toEntity($decisionTraceModel)
         );
 
         return $paginator;
@@ -83,42 +86,39 @@ final class EloquentDecisionTraceRepository implements DecisionTraceRepository
 
         return new DecisionTraceMetrics(
             totalTraces: array_sum($traceCountByStatus),
-            advisoryCount: $traceCountByStatus['advisory'] ?? 0,
-            acknowledgedCount: $traceCountByStatus['acknowledged'] ?? 0,
-            actedUponCount: $traceCountByStatus['acted_upon'] ?? 0,
-            dismissedCount: $traceCountByStatus['dismissed'] ?? 0,
-            criticalCount: $traceCountBySeverity['critical'] ?? 0,
-            highCount: $traceCountBySeverity['high'] ?? 0,
-            mediumCount: $traceCountBySeverity['medium'] ?? 0,
-            lowCount: $traceCountBySeverity['low'] ?? 0,
-            inventoryDomainCount: $traceCountByDomain['inventory'] ?? 0,
-            incidentsDomainCount: $traceCountByDomain['incidents'] ?? 0,
-            movementsDomainCount: $traceCountByDomain['movements'] ?? 0,
-            monitoringDomainCount: $traceCountByDomain['monitoring'] ?? 0,
+            advisoryCount: $traceCountByStatus[TraceStatus::Advisory->value] ?? 0,
+            acknowledgedCount: $traceCountByStatus[TraceStatus::Acknowledged->value] ?? 0,
+            actedUponCount: $traceCountByStatus[TraceStatus::ActedUpon->value] ?? 0,
+            dismissedCount: $traceCountByStatus[TraceStatus::Dismissed->value] ?? 0,
+            criticalCount: $traceCountBySeverity[TraceSeverity::Critical->value] ?? 0,
+            highCount: $traceCountBySeverity[TraceSeverity::High->value] ?? 0,
+            mediumCount: $traceCountBySeverity[TraceSeverity::Medium->value] ?? 0,
+            lowCount: $traceCountBySeverity[TraceSeverity::Low->value] ?? 0,
+            inventoryDomainCount: $traceCountByDomain[AgentDomain::Inventory->value] ?? 0,
+            incidentsDomainCount: $traceCountByDomain[AgentDomain::Incidents->value] ?? 0,
+            movementsDomainCount: $traceCountByDomain[AgentDomain::Movements->value] ?? 0,
+            monitoringDomainCount: $traceCountByDomain[AgentDomain::Monitoring->value] ?? 0,
         );
     }
 
-    /**
-     * @param array<string, mixed> $filters
-     */
-    private function applyFilters(Builder $query, array $filters): void
+    private function applyFilters(Builder $query, DecisionTraceListCriteria $criteria): void
     {
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if ($criteria->status !== null) {
+            $query->where('status', $criteria->status->value);
         }
 
-        if (isset($filters['severity'])) {
-            $query->where('severity', $filters['severity']);
+        if ($criteria->severity !== null) {
+            $query->where('severity', $criteria->severity->value);
         }
 
-        if (isset($filters['agentDomain'])) {
-            $query->where('agent_domain', $filters['agentDomain']);
+        if ($criteria->agentDomain !== null) {
+            $query->where('agent_domain', $criteria->agentDomain->value);
         }
     }
 
-    private function applySortOrder(Builder $query, string $sort): void
+    private function applySortOrder(Builder $query, DecisionTraceSortOrder $sortOrder): void
     {
-        $direction = $sort === 'createdAt_asc' ? 'asc' : 'desc';
+        $direction = $sortOrder === DecisionTraceSortOrder::CreatedAtAsc ? 'asc' : 'desc';
         $query->orderBy('created_at', $direction);
     }
 
@@ -142,25 +142,25 @@ final class EloquentDecisionTraceRepository implements DecisionTraceRepository
             ->toArray();
     }
 
-    private function toEntity(DecisionTraceModel $model): DecisionTrace
+    private function toEntity(DecisionTraceModel $decisionTraceModel): DecisionTrace
     {
         return new DecisionTrace(
-            id: $model->id,
-            traceType: TraceType::from($model->trace_type),
-            agentId: $model->agent_id,
-            agentDomain: AgentDomain::from($model->agent_domain),
-            detection: $model->detection,
-            reasoning: $model->reasoning,
-            suggestion: $model->suggestion,
-            severity: TraceSeverity::from($model->severity),
-            causationId: $model->causation_id,
-            correlationId: $model->correlation_id,
-            triggerEventIds: $model->trigger_event_ids ?? [],
-            status: TraceStatus::from($model->status),
-            createdAt: $model->created_at->toIso8601String(),
-            updatedAt: $model->updated_at?->toIso8601String(),
-            actedUponAt: $model->acted_upon_at?->toIso8601String(),
-            actedUponBy: $model->acted_upon_by,
+            id: $decisionTraceModel->id,
+            traceType: TraceType::from($decisionTraceModel->trace_type),
+            agentId: $decisionTraceModel->agent_id,
+            agentDomain: AgentDomain::from($decisionTraceModel->agent_domain),
+            detection: $decisionTraceModel->detection,
+            reasoning: $decisionTraceModel->reasoning,
+            suggestion: $decisionTraceModel->suggestion,
+            severity: TraceSeverity::from($decisionTraceModel->severity),
+            causationId: $decisionTraceModel->causation_id,
+            correlationId: $decisionTraceModel->correlation_id,
+            triggerEventIds: $decisionTraceModel->trigger_event_ids ?? [],
+            status: TraceStatus::from($decisionTraceModel->status),
+            createdAt: $decisionTraceModel->created_at->toIso8601String(),
+            updatedAt: $decisionTraceModel->updated_at?->toIso8601String(),
+            actedUponAt: $decisionTraceModel->acted_upon_at?->toIso8601String(),
+            actedUponBy: $decisionTraceModel->acted_upon_by,
         );
     }
 }
