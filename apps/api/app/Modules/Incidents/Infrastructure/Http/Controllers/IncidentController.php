@@ -12,6 +12,8 @@ use App\Modules\Incidents\Application\Actions\UpdateIncidentStatusAction;
 use App\Modules\Incidents\Application\DTOs\ReportIncidentDTO;
 use App\Modules\Incidents\Application\DTOs\UpdateIncidentMetadataDTO;
 use App\Modules\Incidents\Application\DTOs\UpdateIncidentStatusDTO;
+use App\Modules\Incidents\Application\Exceptions\IdempotencyConflictException;
+use App\Modules\Incidents\Domain\Enums\IncidentStatus;
 use App\Modules\Incidents\Infrastructure\Http\Requests\ReportIncidentRequest;
 use App\Modules\Incidents\Infrastructure\Http\Requests\UpdateIncidentMetadataRequest;
 use App\Modules\Incidents\Infrastructure\Http\Requests\UpdateIncidentStatusRequest;
@@ -22,157 +24,172 @@ use InvalidArgumentException;
 
 final class IncidentController
 {
-    public function index(Request $request, GetIncidentsAction $action): JsonResponse
+    public function listIncidents(Request $request, GetIncidentsAction $action): JsonResponse
     {
-        $page = (int) $request->query('page', '1');
-        $perPage = (int) $request->query('per_page', '50');
+        $validated = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'status' => ['nullable', 'string'],
+            'type' => ['nullable', 'string'],
+            'locationId' => ['nullable', 'string'],
+            'productId' => ['nullable', 'string'],
+        ]);
 
-        $filters = [
-            'status' => $request->query('status'),
-            'type' => $request->query('type'),
-            'locationId' => $request->query('locationId'),
-            'productId' => $request->query('productId'),
-        ];
+        $incidentFilters = array_filter([
+            'status' => $validated['status'] ?? null,
+            'type' => $validated['type'] ?? null,
+            'locationId' => $validated['locationId'] ?? null,
+            'productId' => $validated['productId'] ?? null,
+        ]);
 
-        $paginator = $action->execute($page, $perPage, array_filter($filters));
+        $paginator = $action->execute(
+            (int) ($validated['page'] ?? 1),
+            (int) ($validated['per_page'] ?? 50),
+            $incidentFilters
+        );
 
         return \App\Http\Responses\PaginatedResponse::make($paginator, IncidentResource::class);
     }
 
-    public function show(string $id, GetIncidentByIdAction $action): JsonResponse
+    public function viewIncident(string $incidentId, GetIncidentByIdAction $action): JsonResponse
     {
-        $incident = $action->execute($id);
+        $incidentDetails = $action->execute($incidentId);
 
-        if (!$incident) {
-            return response()->json([
-                'error' => [
-                    'code' => 'not_found',
-                    'message' => "Incident [{$id}] not found."
-                ]
-            ], 404);
+        if (!$incidentDetails) {
+            return $this->buildIncidentNotFoundResponse($incidentId);
         }
 
         return response()->json([
-            'data' => new IncidentResource($incident)
+            'data' => new IncidentResource($incidentDetails)
         ]);
     }
 
-    public function store(ReportIncidentRequest $request, ReportIncidentAction $action): JsonResponse
+    public function reportIncident(ReportIncidentRequest $request, ReportIncidentAction $action): JsonResponse
     {
         try {
-            $userId = $request->user() ? (string) $request->user()->id : 'system_user';
-            
-            $incidentReport = new ReportIncidentDTO(
-                productId: $request->validated('productId'),
-                locationId: $request->validated('locationId'),
-                type: $request->validated('type'),
-                severity: $request->validated('severity'),
-                description: $request->validated('description'),
-                quantityAffected: $request->validated('quantityAffected') !== null ? (int) $request->validated('quantityAffected') : null,
-                reportedBy: $userId,
-                idempotencyKey: $request->header('Idempotency-Key')
-            );
-
-            $incident = $action->execute($incidentReport);
+            $incidentReport = $this->buildReportIncidentDTO($request);
+            $incidentDetails = $action->execute($incidentReport);
 
             return response()->json([
-                'data' => new IncidentResource($incident)
+                'data' => new IncidentResource($incidentDetails)
             ], 201);
 
         } catch (InvalidArgumentException $e) {
-            return response()->json([
-                'error' => [
-                    'code' => 'validation_failed',
-                    'message' => $e->getMessage()
-                ]
-            ], 422);
-        } catch (\Illuminate\Database\QueryException $e) {
-            if ($e->getCode() === '23000' || $e->getCode() === '23505' || $e->getCode() === '19') {
-                return response()->json([
-                    'error' => [
-                        'code' => 'conflict',
-                        'message' => 'Idempotency key already processed.',
-                    ]
-                ], 409);
-            }
-            throw $e;
+            return $this->buildValidationFailedResponse($e->getMessage());
+        } catch (IdempotencyConflictException $e) {
+            return $this->handleIdempotencyConflict($e);
         }
     }
 
-    public function updateStatus(string $id, UpdateIncidentStatusRequest $request, UpdateIncidentStatusAction $action): JsonResponse
+    public function transitionIncidentStatus(string $incidentId, UpdateIncidentStatusRequest $request, UpdateIncidentStatusAction $action): JsonResponse
     {
         try {
-            $userId = $request->user() ? (string) $request->user()->id : 'system_user';
-            
-            $statusTransition = new UpdateIncidentStatusDTO(
-                incidentId: $id,
-                status: $request->validated('status'),
-                performedBy: $userId
-            );
-
-            $incident = $action->execute($statusTransition);
+            $statusTransition = $this->buildUpdateIncidentStatusDTO($incidentId, $request);
+            $incidentDetails = $action->execute($statusTransition);
 
             return response()->json([
-                'data' => new IncidentResource($incident)
+                'data' => new IncidentResource($incidentDetails)
             ]);
 
         } catch (InvalidArgumentException $e) {
             if (str_contains($e->getMessage(), 'not found')) {
-                return response()->json([
-                    'error' => [
-                        'code' => 'not_found',
-                        'message' => $e->getMessage()
-                    ]
-                ], 404);
+                return $this->buildIncidentNotFoundResponse($incidentId);
             }
-            
-            return response()->json([
-                'error' => [
-                    'code' => 'validation_failed',
-                    'message' => $e->getMessage()
-                ]
-            ], 422);
+            return $this->buildValidationFailedResponse($e->getMessage());
         }
     }
 
-    public function update(string $id, UpdateIncidentMetadataRequest $request, UpdateIncidentMetadataAction $action): JsonResponse
+    public function updateIncidentMetadata(string $incidentId, UpdateIncidentMetadataRequest $request, UpdateIncidentMetadataAction $action): JsonResponse
     {
         try {
-            $userId = $request->user() ? (string) $request->user()->id : 'system_user';
-
-            $metadataUpdate = new UpdateIncidentMetadataDTO(
-                incidentId: $id,
-                notes: $request->validated('notes'),
-                assignedTo: $request->validated('assignedTo'),
-                performedBy: $userId,
-            );
-
-            $incident = $action->execute($metadataUpdate);
+            $metadataUpdate = $this->buildUpdateIncidentMetadataDTO($incidentId, $request);
+            $incidentDetails = $action->execute($metadataUpdate);
 
             return response()->json([
-                'data' => [
-                    'id' => $incident->id(),
-                    'notes' => $incident->notes(),
-                    'updatedAt' => $incident->updatedAt(),
-                ],
+                'data' => new IncidentResource($incidentDetails)
             ]);
 
         } catch (InvalidArgumentException $e) {
             if (str_contains($e->getMessage(), 'not found')) {
-                return response()->json([
-                    'error' => [
-                        'code' => 'not_found',
-                        'message' => $e->getMessage(),
-                    ]
-                ], 404);
+                return $this->buildIncidentNotFoundResponse($incidentId);
             }
-
-            return response()->json([
-                'error' => [
-                    'code' => 'validation_failed',
-                    'message' => $e->getMessage(),
-                ]
-            ], 422);
+            return $this->buildValidationFailedResponse($e->getMessage());
         }
+    }
+
+    private function buildReportIncidentDTO(ReportIncidentRequest $request): ReportIncidentDTO
+    {
+        $userId = $request->user() ? (string) $request->user()->id : 'system_user';
+        
+        return new ReportIncidentDTO(
+            productId: $request->validated('productId'),
+            locationId: $request->validated('locationId'),
+            type: $request->validated('type'),
+            severity: $request->validated('severity'),
+            description: $request->validated('description'),
+            quantityAffected: $request->validated('quantityAffected') !== null ? (int) $request->validated('quantityAffected') : null,
+            reportedBy: $userId,
+            correlationId: $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString()),
+            idempotencyKey: $request->header('Idempotency-Key')
+        );
+    }
+
+    private function buildUpdateIncidentStatusDTO(string $incidentId, UpdateIncidentStatusRequest $request): UpdateIncidentStatusDTO
+    {
+        $userId = $request->user() ? (string) $request->user()->id : 'system_user';
+        
+        $status = IncidentStatus::tryFrom($request->validated('status'));
+        if (!$status) {
+            throw new InvalidArgumentException("Invalid incident status: {$request->validated('status')}.");
+        }
+
+        return new UpdateIncidentStatusDTO(
+            incidentId: $incidentId,
+            incidentStatus: $status,
+            performedBy: $userId,
+            correlationId: $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString())
+        );
+    }
+
+    private function buildUpdateIncidentMetadataDTO(string $incidentId, UpdateIncidentMetadataRequest $request): UpdateIncidentMetadataDTO
+    {
+        $userId = $request->user() ? (string) $request->user()->id : 'system_user';
+
+        return new UpdateIncidentMetadataDTO(
+            incidentId: $incidentId,
+            notes: $request->validated('notes'),
+            assignedTo: $request->validated('assignedTo'),
+            performedBy: $userId,
+        );
+    }
+
+    private function buildIncidentNotFoundResponse(string $incidentId): JsonResponse
+    {
+        return response()->json([
+            'error' => [
+                'code' => 'not_found',
+                'message' => "Incident [{$incidentId}] not found."
+            ]
+        ], 404);
+    }
+
+    private function buildValidationFailedResponse(string $message): JsonResponse
+    {
+        return response()->json([
+            'error' => [
+                'code' => 'validation_failed',
+                'message' => $message
+            ]
+        ], 422);
+    }
+
+    private function handleIdempotencyConflict(IdempotencyConflictException $e): JsonResponse
+    {
+        return response()->json([
+            'error' => [
+                'code' => 'conflict',
+                'message' => $e->getMessage(),
+            ]
+        ], 409);
     }
 }

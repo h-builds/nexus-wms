@@ -10,7 +10,13 @@ use App\Modules\Intelligence\Application\Actions\DismissDecisionTraceAction;
 use App\Modules\Intelligence\Application\Actions\GetDecisionTraceByIdAction;
 use App\Modules\Intelligence\Application\Actions\GetDecisionTraceMetricsAction;
 use App\Modules\Intelligence\Application\Actions\ListDecisionTracesAction;
+use App\Modules\Intelligence\Application\DTOs\DecisionTraceListCriteria;
+use App\Modules\Intelligence\Application\DTOs\DecisionTraceSortOrder;
 use App\Modules\Intelligence\Domain\Entities\DecisionTrace;
+use App\Modules\Intelligence\Domain\Enums\AgentDomain;
+use App\Modules\Intelligence\Domain\Enums\TraceSeverity;
+use App\Modules\Intelligence\Domain\Enums\TraceStatus;
+use App\Modules\Intelligence\Domain\Exceptions\InvalidStateTransitionException;
 use App\Modules\Intelligence\Infrastructure\Http\Requests\ActUponDecisionTraceRequest;
 use App\Modules\Intelligence\Infrastructure\Http\Requests\DismissDecisionTraceRequest;
 use App\Modules\Intelligence\Infrastructure\Http\Requests\ListDecisionTracesRequest;
@@ -19,93 +25,93 @@ use Illuminate\Http\JsonResponse;
 
 final class DecisionTraceController
 {
-    public function metrics(GetDecisionTraceMetricsAction $getMetricsAction): JsonResponse
+    public function getDecisionTraceMetrics(GetDecisionTraceMetricsAction $getMetricsAction): JsonResponse
     {
         return response()->json([
-            'data' => $getMetricsAction->execute()->toArray(),
+            'metrics' => $getMetricsAction->execute()->toArray(),
         ]);
     }
 
-    public function index(ListDecisionTracesRequest $request, ListDecisionTracesAction $listTracesAction): JsonResponse
+    public function listDecisionTraces(ListDecisionTracesRequest $request, ListDecisionTracesAction $listTracesAction): JsonResponse
     {
-        $validatedData = $request->validated();
+        $listCriteria = $this->buildListCriteria($request);
+        $decisionTracesPaginator = $listTracesAction->execute($listCriteria);
 
-        $pageNumber = (int) ($validatedData['page'] ?? 1);
-        $itemsPerPage = (int) ($validatedData['per_page'] ?? 50);
-
-        $activeFilters = array_filter([
-            'status' => $validatedData['status'] ?? null,
-            'severity' => $validatedData['severity'] ?? null,
-            'agentDomain' => $validatedData['agentDomain'] ?? null,
-        ]);
-        
-        $sortCriteria = (string) ($validatedData['sort'] ?? 'createdAt_desc');
-
-        $paginatedResults = $listTracesAction->execute($pageNumber, $itemsPerPage, $activeFilters, $sortCriteria);
-
-        return \App\Http\Responses\PaginatedResponse::make($paginatedResults, DecisionTraceResource::class);
+        return \App\Http\Responses\PaginatedResponse::make($decisionTracesPaginator, DecisionTraceResource::class);
     }
 
-    public function show(string $decisionTraceId, GetDecisionTraceByIdAction $getTraceByIdAction): JsonResponse
+    public function viewDecisionTrace(string $decisionTraceId, GetDecisionTraceByIdAction $getTraceByIdAction): JsonResponse
     {
-        $decisionTrace = $getTraceByIdAction->execute($decisionTraceId);
+        $decisionTraceDetails = $getTraceByIdAction->execute($decisionTraceId);
 
-        if (!$decisionTrace) {
+        if (!$decisionTraceDetails) {
             return $this->buildTraceNotFoundResponse($decisionTraceId);
         }
 
-        return $this->buildSuccessfulTraceResponse($decisionTrace);
+        return $this->buildSuccessfulTraceResponse($decisionTraceDetails);
     }
 
-    public function acknowledge(string $decisionTraceId, AcknowledgeDecisionTraceAction $acknowledgeAction): JsonResponse
+    public function acknowledgeDecisionTrace(string $decisionTraceId, AcknowledgeDecisionTraceAction $acknowledgeAction): JsonResponse
     {
         try {
-            $decisionTrace = $acknowledgeAction->execute($decisionTraceId);
+            $decisionTraceDetails = $acknowledgeAction->execute($decisionTraceId);
 
-            if (!$decisionTrace) {
+            if (!$decisionTraceDetails) {
                 return $this->buildTraceNotFoundResponse($decisionTraceId);
             }
 
-            return $this->buildSuccessfulTraceResponse($decisionTrace);
-        } catch (\InvalidArgumentException $domainValidationException) {
+            return $this->buildSuccessfulTraceResponse($decisionTraceDetails);
+        } catch (InvalidStateTransitionException $domainValidationException) {
             return $this->buildInvalidStateTransitionResponse($domainValidationException->getMessage());
         }
     }
 
-    public function actUpon(ActUponDecisionTraceRequest $request, string $decisionTraceId, ActUponDecisionTraceAction $actUponAction): JsonResponse
+    public function actUponDecisionTrace(ActUponDecisionTraceRequest $request, string $decisionTraceId, ActUponDecisionTraceAction $actUponAction): JsonResponse
     {
-        $validatedInput = $request->validated();
-        $actorId = $validatedInput['actor_id'];
+        $actorId = (string) $request->validated('actor_id');
 
         try {
-            $decisionTrace = $actUponAction->execute($decisionTraceId, $actorId);
+            $decisionTraceDetails = $actUponAction->execute($decisionTraceId, $actorId);
 
-            if (!$decisionTrace) {
+            if (!$decisionTraceDetails) {
                 return $this->buildTraceNotFoundResponse($decisionTraceId);
             }
 
-            return $this->buildSuccessfulTraceResponse($decisionTrace);
-        } catch (\InvalidArgumentException $domainValidationException) {
+            return $this->buildSuccessfulTraceResponse($decisionTraceDetails);
+        } catch (InvalidStateTransitionException $domainValidationException) {
             return $this->buildInvalidStateTransitionResponse($domainValidationException->getMessage());
         }
     }
 
-    public function dismiss(DismissDecisionTraceRequest $request, string $decisionTraceId, DismissDecisionTraceAction $dismissAction): JsonResponse
+    public function dismissDecisionTrace(DismissDecisionTraceRequest $request, string $decisionTraceId, DismissDecisionTraceAction $dismissAction): JsonResponse
     {
-        $validatedInput = $request->validated();
-        $actorId = $validatedInput['actor_id'];
+        $actorId = (string) $request->validated('actor_id');
 
         try {
-            $decisionTrace = $dismissAction->execute($decisionTraceId, $actorId);
+            $decisionTraceDetails = $dismissAction->execute($decisionTraceId, $actorId);
 
-            if (!$decisionTrace) {
+            if (!$decisionTraceDetails) {
                 return $this->buildTraceNotFoundResponse($decisionTraceId);
             }
 
-            return $this->buildSuccessfulTraceResponse($decisionTrace);
-        } catch (\InvalidArgumentException $domainValidationException) {
+            return $this->buildSuccessfulTraceResponse($decisionTraceDetails);
+        } catch (InvalidStateTransitionException $domainValidationException) {
             return $this->buildInvalidStateTransitionResponse($domainValidationException->getMessage());
         }
+    }
+
+    private function buildListCriteria(ListDecisionTracesRequest $request): DecisionTraceListCriteria
+    {
+        $validatedFilters = $request->validated();
+        
+        return new DecisionTraceListCriteria(
+            page: (int) ($validatedFilters['page'] ?? 1),
+            perPage: (int) ($validatedFilters['per_page'] ?? 50),
+            status: isset($validatedFilters['status']) ? TraceStatus::tryFrom((string) $validatedFilters['status']) : null,
+            severity: isset($validatedFilters['severity']) ? TraceSeverity::tryFrom((string) $validatedFilters['severity']) : null,
+            agentDomain: isset($validatedFilters['agentDomain']) ? AgentDomain::tryFrom((string) $validatedFilters['agentDomain']) : null,
+            sortOrder: DecisionTraceSortOrder::fromStringOrDefault((string) ($validatedFilters['sort'] ?? 'createdAt_desc')),
+        );
     }
 
     private function buildSuccessfulTraceResponse(DecisionTrace $decisionTrace): JsonResponse
