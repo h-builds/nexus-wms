@@ -10,9 +10,9 @@ use App\Modules\Incidents\Domain\Entities\InventoryIncident;
 use App\Modules\Incidents\Domain\Enums\IncidentStatus;
 use App\Modules\Incidents\Domain\Repositories\IncidentRepository;
 use App\Modules\Audit\Application\Services\AuditLogger;
-use Illuminate\Support\Facades\DB;
+use App\Modules\Incidents\Domain\Exceptions\IncidentNotFound;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 final class UpdateIncidentStatusAction
 {
@@ -20,41 +20,48 @@ final class UpdateIncidentStatusAction
         private readonly IncidentRepository $incidentRepository,
         private readonly EventPublisher $eventPublisher,
         private readonly AuditLogger $auditLogger,
+        private readonly ConnectionInterface $db,
     ) {}
 
     public function execute(UpdateIncidentStatusDTO $statusTransition): InventoryIncident
     {
-        $newStatus = $this->parseIncidentStatus($statusTransition->status);
         $incident = $this->ensureIncidentExists($statusTransition->incidentId);
 
+        return $this->transitionIncidentStatus($incident, $statusTransition);
+    }
+
+    private function transitionIncidentStatus(InventoryIncident $incident, UpdateIncidentStatusDTO $statusTransition): InventoryIncident
+    {
+        $newStatus = $statusTransition->incidentStatus;
         $previousStatus = $incident->status();
         $correlationId = $statusTransition->correlationId;
 
-        DB::transaction(function () use ($incident, $newStatus, $statusTransition, $previousStatus, $correlationId) {
-            $incident->transitionTo($newStatus, now()->toIso8601String());
-            $this->incidentRepository->save($incident);
+        try {
+            $this->db->transaction(function () use ($incident, $newStatus, $statusTransition, $previousStatus, $correlationId) {
+                $incident->transitionTo($newStatus, now()->toIso8601String());
+                $this->incidentRepository->save($incident);
 
-            $this->logAuditTrail($incident, $previousStatus, $newStatus, $statusTransition->performedBy, $correlationId);
-            $this->dispatchStatusUpdatedEvent($incident, $previousStatus, $newStatus, $statusTransition->performedBy, $correlationId);
-        });
+                $this->logAuditTrail($incident, $previousStatus, $newStatus, $statusTransition->performedBy, $correlationId);
+                $this->dispatchStatusUpdatedEvent($incident, $previousStatus, $newStatus, $statusTransition->performedBy, $correlationId);
+            });
+        } catch (\App\Modules\Incidents\Application\Exceptions\IdempotencyConflictException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new \App\Modules\Incidents\Application\Exceptions\IncidentStatusUpdateFailedException(
+                'Failed to update incident status and dispatch events.',
+                0,
+                $e
+            );
+        }
 
         return $incident;
-    }
-
-    private function parseIncidentStatus(string $statusValue): IncidentStatus
-    {
-        $newStatus = IncidentStatus::tryFrom($statusValue);
-        if (!$newStatus) {
-            throw new InvalidArgumentException("Invalid incident status: {$statusValue}.");
-        }
-        return $newStatus;
     }
 
     private function ensureIncidentExists(string $incidentId): InventoryIncident
     {
         $incident = $this->incidentRepository->findById($incidentId);
         if (!$incident) {
-            throw new InvalidArgumentException("Incident {$incidentId} not found.");
+            throw IncidentNotFound::withId($incidentId);
         }
         return $incident;
     }
@@ -86,11 +93,11 @@ final class UpdateIncidentStatusAction
         string $performedBy,
         string $correlationId
     ): void {
-        $eventPayload = [
-            'incidentId' => $incident->id(),
-            'previousStatus' => $previousStatus->value,
-            'newStatus' => $newStatus->value,
-        ];
+        $eventPayload = new \App\Modules\Incidents\Application\DTOs\IncidentStatusUpdatedEventPayload(
+            incidentId: $incident->id(),
+            previousStatus: $previousStatus->value,
+            newStatus: $newStatus->value,
+        );
 
         $this->eventPublisher->publish(
             eventType: 'incident.status.updated',

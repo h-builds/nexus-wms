@@ -14,9 +14,10 @@ use App\Modules\Incidents\Domain\Repositories\IncidentRepository;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
 use App\Modules\Product\Domain\Repositories\ProductRepository;
 use App\Modules\Audit\Application\Services\AuditLogger;
-use Illuminate\Support\Facades\DB;
+use App\Modules\Locations\Domain\Exceptions\LocationNotFound;
+use App\Modules\Product\Domain\Exceptions\ProductNotFound;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 final class ReportIncidentAction
 {
@@ -26,47 +27,63 @@ final class ReportIncidentAction
         private readonly IncidentRepository $incidentRepository,
         private readonly EventPublisher $eventPublisher,
         private readonly AuditLogger $auditLogger,
+        private readonly ConnectionInterface $db,
     ) {}
 
     public function execute(ReportIncidentDTO $incidentDetails): InventoryIncident
     {
         if ($incidentDetails->idempotencyKey !== null) {
-            $existing = $this->incidentRepository->findByIdempotencyKey($incidentDetails->idempotencyKey);
-            if ($existing) {
-                return $existing;
+            $existingIncident = $this->incidentRepository->findByIdempotencyKey($incidentDetails->idempotencyKey);
+            if ($existingIncident) {
+                return $existingIncident;
             }
         }
 
         $this->ensureProductExists($incidentDetails->productId);
         $this->ensureLocationExists($incidentDetails->locationId);
 
-        $type = $this->parseIncidentType($incidentDetails->type);
-        $severity = $this->parseIncidentSeverity($incidentDetails->severity);
+        $newIncident = $this->createIncidentFrom($incidentDetails);
 
-        $incidentId = Str::uuid()->toString();
-        $now = now()->toIso8601String();
-        $correlationId = $incidentDetails->correlationId;
+        return $this->persistIncidentAndDispatchEvents($newIncident, $incidentDetails->correlationId);
+    }
 
-        $incident = new InventoryIncident(
-            id: $incidentId,
+    private function createIncidentFrom(ReportIncidentDTO $incidentDetails): InventoryIncident
+    {
+        $reportedAt = now()->toIso8601String();
+
+        return new InventoryIncident(
+            id: Str::uuid()->toString(),
             productId: $incidentDetails->productId,
             locationId: $incidentDetails->locationId,
-            type: $type,
-            severity: $severity,
+            type: $incidentDetails->type,
+            severity: $incidentDetails->severity,
             status: IncidentStatus::OPEN,
             description: $incidentDetails->description,
             quantityAffected: $incidentDetails->quantityAffected,
             reportedBy: $incidentDetails->reportedBy,
-            createdAt: $now,
-            updatedAt: $now,
+            createdAt: $reportedAt,
+            updatedAt: $reportedAt,
             idempotencyKey: $incidentDetails->idempotencyKey
         );
+    }
 
-        DB::transaction(function () use ($incident, $correlationId) {
-            $this->incidentRepository->save($incident);
-            $this->logAuditTrail($incident, $correlationId);
-            $this->dispatchReportedEvent($incident, $correlationId);
-        });
+    private function persistIncidentAndDispatchEvents(InventoryIncident $incident, string $correlationId): InventoryIncident
+    {
+        try {
+            $this->db->transaction(function () use ($incident, $correlationId) {
+                $this->incidentRepository->save($incident);
+                $this->logAuditTrail($incident, $correlationId);
+                $this->dispatchReportedEvent($incident, $correlationId);
+            });
+        } catch (\App\Modules\Incidents\Application\Exceptions\IdempotencyConflictException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new \App\Modules\Incidents\Application\Exceptions\IncidentReportingFailedException(
+                'Failed to persist incident and dispatch events.',
+                0,
+                $e
+            );
+        }
 
         return $incident;
     }
@@ -75,7 +92,7 @@ final class ReportIncidentAction
     {
         $product = $this->productRepository->findById($productId);
         if (!$product) {
-            throw new InvalidArgumentException("Product {$productId} not found.");
+            throw ProductNotFound::withId($productId);
         }
     }
 
@@ -87,26 +104,8 @@ final class ReportIncidentAction
 
         $location = $this->locationRepository->findById($locationId);
         if (!$location) {
-            throw new InvalidArgumentException("Location {$locationId} not found.");
+            throw LocationNotFound::withId($locationId);
         }
-    }
-
-    private function parseIncidentType(string $typeValue): IncidentType
-    {
-        $type = IncidentType::tryFrom($typeValue);
-        if (!$type) {
-            throw new InvalidArgumentException("Invalid incident type: {$typeValue}.");
-        }
-        return $type;
-    }
-
-    private function parseIncidentSeverity(string $severityValue): IncidentSeverity
-    {
-        $severity = IncidentSeverity::tryFrom($severityValue);
-        if (!$severity) {
-            throw new InvalidArgumentException("Invalid incident severity: {$severityValue}.");
-        }
-        return $severity;
     }
 
     private function logAuditTrail(InventoryIncident $incident, string $correlationId): void
@@ -129,13 +128,13 @@ final class ReportIncidentAction
 
     private function dispatchReportedEvent(InventoryIncident $incident, string $correlationId): void
     {
-        $eventPayload = [
-            'incidentId' => $incident->id(),
-            'productId' => $incident->productId(),
-            'locationId' => $incident->locationId(),
-            'type' => $incident->type()->value,
-            'description' => $incident->description(),
-        ];
+        $eventPayload = new \App\Modules\Incidents\Application\DTOs\IncidentReportedEventPayload(
+            incidentId: $incident->id(),
+            productId: $incident->productId(),
+            locationId: $incident->locationId(),
+            type: $incident->type()->value,
+            description: $incident->description(),
+        );
 
         $this->eventPublisher->publish(
             eventType: 'incident.reported',
