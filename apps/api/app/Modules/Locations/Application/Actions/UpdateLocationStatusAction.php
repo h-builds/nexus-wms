@@ -6,9 +6,8 @@ namespace App\Modules\Locations\Application\Actions;
 
 use App\Modules\Audit\Application\Services\AuditLogger;
 use App\Modules\Events\Application\Services\EventPublisher;
-use App\Modules\Locations\Application\DTOs\UpdateLocationStatusData;
+use App\Modules\Locations\Application\DTOs\UpdateLocationStatusDTO;
 use App\Modules\Locations\Domain\Entities\Location;
-use App\Modules\Locations\Domain\Exceptions\LocationNotFound;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
 use Illuminate\Support\Facades\DB;
 
@@ -20,9 +19,9 @@ final class UpdateLocationStatusAction
         private readonly EventPublisher $eventPublisher,
     ) {}
 
-    public function execute(UpdateLocationStatusData $command): Location
+    public function execute(UpdateLocationStatusDTO $command): Location
     {
-        $warehouseLocation = $this->getWarehouseLocationOrThrow($command->locationId);
+        $warehouseLocation = $this->locationRepository->getById($command->locationId);
 
         if ($warehouseLocation->isBlocked() === $command->isBlocked) {
             return $warehouseLocation;
@@ -34,30 +33,19 @@ final class UpdateLocationStatusAction
         return $updatedLocation;
     }
 
-    private function getWarehouseLocationOrThrow(string $locationId): Location
-    {
-        $warehouseLocation = $this->locationRepository->findById($locationId);
-        
-        if (!$warehouseLocation) {
-            throw LocationNotFound::withId($locationId);
-        }
-        
-        return $warehouseLocation;
-    }
-
-    private function persistStatusChange(UpdateLocationStatusData $command, Location $updatedLocation, string $correlationId): void
+    private function persistStatusChange(UpdateLocationStatusDTO $command, Location $updatedLocation, string $correlationId): void
     {
         $eventType = $command->isBlocked ? 'location.blocked' : 'location.unblocked';
 
         DB::transaction(function () use ($command, $updatedLocation, $correlationId, $eventType) {
-            $this->locationRepository->save($updatedLocation);
+            $this->locationRepository->update($updatedLocation);
 
             $this->logAuditTrail($command, $correlationId);
             $this->publishEvent($command, $correlationId, $eventType);
         });
     }
 
-    private function logAuditTrail(UpdateLocationStatusData $command, string $correlationId): void
+    private function logAuditTrail(UpdateLocationStatusDTO $command, string $correlationId): void
     {
         $auditAction = $command->isBlocked ? 'location.blocked' : 'location.unblocked';
         $changeset = ['isBlocked' => $command->isBlocked];
@@ -76,7 +64,7 @@ final class UpdateLocationStatusAction
         );
     }
 
-    private function publishEvent(UpdateLocationStatusData $command, string $correlationId, string $eventType): void
+    private function publishEvent(UpdateLocationStatusDTO $command, string $correlationId, string $eventType): void
     {
         $eventPayload = ['locationId' => $command->locationId];
         

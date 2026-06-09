@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Locations\Application\Actions;
 
 use App\Modules\Events\Application\Services\EventPublisher;
-use App\Modules\Locations\Application\DTOs\CreateLocationData;
+use App\Modules\Locations\Application\DTOs\CreateLocationDTO;
 use App\Modules\Locations\Domain\Entities\Location;
 use App\Modules\Locations\Domain\Exceptions\DuplicateLocationLabel;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
@@ -20,7 +20,7 @@ final class CreateLocationAction
     ) {
     }
 
-    public function execute(CreateLocationData $locationDetails): Location
+    public function execute(CreateLocationDTO $locationDetails): Location
     {
         $label = $this->generateLocationLabel($locationDetails);
 
@@ -41,7 +41,7 @@ final class CreateLocationAction
         $correlationId = $locationDetails->correlationId;
 
         return DB::transaction(function () use ($location, $locationDetails, $correlationId) {
-            $persistedLocation = $this->locations->create($location);
+            $persistedLocation = $this->locations->add($location);
             
             $this->dispatchLocationCreatedEvent($persistedLocation, $locationDetails->actorId, $correlationId);
 
@@ -49,7 +49,7 @@ final class CreateLocationAction
         });
     }
 
-    private function generateLocationLabel(CreateLocationData $locationDetails): string
+    private function generateLocationLabel(CreateLocationDTO $locationDetails): string
     {
         return sprintf('%s-%s-%s-%s-%s-%s',
             $locationDetails->warehouseCode,
