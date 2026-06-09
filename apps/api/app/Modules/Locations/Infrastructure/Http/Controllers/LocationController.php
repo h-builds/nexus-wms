@@ -9,31 +9,34 @@ use App\Modules\Locations\Application\Actions\CreateLocationAction;
 use App\Modules\Locations\Application\Actions\GetLocationByIdAction;
 use App\Modules\Locations\Application\Actions\ListLocationsAction;
 use App\Modules\Locations\Application\Actions\UpdateLocationStatusAction;
-use App\Modules\Locations\Application\DTOs\CreateLocationData;
-use App\Modules\Locations\Application\DTOs\UpdateLocationStatusData;
+use App\Modules\Locations\Application\DTOs\CreateLocationDTO;
+use App\Modules\Locations\Application\DTOs\LocationListCriteria;
+use App\Modules\Locations\Application\DTOs\UpdateLocationStatusDTO;
+use App\Modules\Locations\Domain\Exceptions\LocationNotFound;
 use App\Modules\Locations\Infrastructure\Http\Requests\StoreLocationRequest;
+use App\Modules\Locations\Infrastructure\Http\Requests\ListLocationsRequest;
 use App\Modules\Locations\Infrastructure\Http\Requests\UpdateLocationStatusRequest;
 use App\Modules\Locations\Infrastructure\Http\Resources\LocationResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 
 final class LocationController extends Controller
 {
-    public function index(Request $request, ListLocationsAction $action): JsonResponse
+    public function index(ListLocationsRequest $request, ListLocationsAction $action): JsonResponse
     {
-        $page = (int) $request->query('page', '1');
-        $perPage = (int) $request->query('per_page', '50');
+        $payload = $request->validated();
+        $page = (int) ($payload['page'] ?? 1);
+        $perPage = (int) ($payload['per_page'] ?? 50);
 
-        $filters = array_filter([
-            'warehouseCode' => $request->query('warehouseCode'),
-            'zone' => $request->query('zone'),
-            'aisle' => $request->query('aisle'),
-            'rack' => $request->query('rack'),
-            'bin' => $request->query('bin'),
-        ]);
+        $criteria = new LocationListCriteria(
+            warehouseCode: $payload['warehouseCode'] ?? null,
+            zone: $payload['zone'] ?? null,
+            aisle: $payload['aisle'] ?? null,
+            rack: $payload['rack'] ?? null,
+            bin: $payload['bin'] ?? null,
+        );
 
-        $paginator = $action->execute($page, $perPage, $filters);
+        $paginator = $action->execute($page, $perPage, $criteria);
 
         return \App\Http\Responses\PaginatedResponse::make($paginator, LocationResource::class);
     }
@@ -50,7 +53,16 @@ final class LocationController extends Controller
     public function store(StoreLocationRequest $request, CreateLocationAction $action): JsonResponse
     {
         $location = $action->execute(
-            CreateLocationData::fromArray($request->validated())
+            new CreateLocationDTO(
+                warehouseCode: $request->validated('warehouseCode'),
+                zone: $request->validated('zone'),
+                aisle: $request->validated('aisle'),
+                rack: $request->validated('rack'),
+                level: $request->validated('level'),
+                bin: $request->validated('bin'),
+                correlationId: $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString()),
+                actorId: $request->user()?->id !== null ? (string) $request->user()?->id : null,
+            )
         );
 
         return response()->json([
@@ -63,38 +75,27 @@ final class LocationController extends Controller
         try {
             $userId = $request->user() ? (string) $request->user()->id : 'system_user';
 
-            $statusUpdate = new UpdateLocationStatusData(
+            $statusUpdate = new UpdateLocationStatusDTO(
                 locationId: $id,
                 isBlocked: (bool) $request->validated('isBlocked'),
                 reason: $request->validated('reason'),
                 performedBy: $userId,
+                correlationId: $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString()),
             );
 
             $location = $action->execute($statusUpdate);
 
             return response()->json([
-                'data' => [
-                    'id' => $location->id(),
-                    'isBlocked' => $location->isBlocked(),
-                ],
+                'data' => new LocationResource($location),
             ]);
 
-        } catch (InvalidArgumentException $e) {
-            if (str_contains($e->getMessage(), 'not found')) {
-                return response()->json([
-                    'error' => [
-                        'code' => 'not_found',
-                        'message' => $e->getMessage(),
-                    ]
-                ], 404);
-            }
-
+        } catch (LocationNotFound $e) {
             return response()->json([
                 'error' => [
-                    'code' => 'validation_failed',
+                    'code' => 'not_found',
                     'message' => $e->getMessage(),
                 ]
-            ], 422);
+            ], 404);
         }
     }
 }
