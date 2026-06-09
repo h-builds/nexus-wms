@@ -8,6 +8,7 @@ use App\Modules\Intelligence\Domain\Enums\AgentDomain;
 use App\Modules\Intelligence\Domain\Enums\TraceSeverity;
 use App\Modules\Intelligence\Domain\Enums\TraceStatus;
 use App\Modules\Intelligence\Domain\Enums\TraceType;
+use App\Modules\Intelligence\Domain\Exceptions\InvalidStateTransitionException;
 use InvalidArgumentException;
 
 /**
@@ -72,7 +73,7 @@ final class DecisionTrace
 
     public function acknowledge(string $timestamp): void
     {
-        $this->transitionStatus(TraceStatus::Acknowledged, actorId: null, timestamp: $timestamp);
+        $this->transitionStatus(TraceStatus::Acknowledged, timestamp: $timestamp);
     }
 
     public function actUpon(string $actorId, string $timestamp): void
@@ -81,7 +82,7 @@ final class DecisionTrace
             throw new InvalidArgumentException('actorId is required to act upon a DecisionTrace.');
         }
 
-        $this->transitionStatus(TraceStatus::ActedUpon, actorId: $actorId, timestamp: $timestamp);
+        $this->transitionStatus(TraceStatus::ActedUpon, timestamp: $timestamp);
         $this->actedUponAt = $timestamp;
         $this->actedUponBy = $actorId;
     }
@@ -92,15 +93,15 @@ final class DecisionTrace
             throw new InvalidArgumentException('actorId is required to dismiss a DecisionTrace.');
         }
 
-        $this->transitionStatus(TraceStatus::Dismissed, actorId: $actorId, timestamp: $timestamp);
+        $this->transitionStatus(TraceStatus::Dismissed, timestamp: $timestamp);
         $this->actedUponAt = $timestamp;
         $this->actedUponBy = $actorId;
     }
 
-    private function transitionStatus(TraceStatus $target, ?string $actorId, string $timestamp): void
+    private function transitionStatus(TraceStatus $target, string $timestamp): void
     {
         if (!$this->status->canTransitionTo($target)) {
-            throw new InvalidArgumentException(
+            throw new InvalidStateTransitionException(
                 "Cannot transition DecisionTrace status from {$this->status->value} to {$target->value}."
             );
         }
