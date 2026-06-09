@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Events\Application\Services;
 
-use App\Modules\Events\Application\DTOs\DomainEventPayload;
+use App\Modules\Events\Domain\DTOs\DomainEventPayload;
 use App\Modules\Events\Domain\Repositories\EventOutboxRepository;
 use App\Modules\Events\Application\Exceptions\EventPublishingFailedException;
 use Illuminate\Database\Connection;
@@ -41,8 +41,8 @@ final class EventPublisher
             $this->scheduleDispatch($outboxEventId, $payload);
         } catch (\Throwable $e) {
             throw new EventPublishingFailedException(
-                'Failed to persist and schedule event dispatch.',
-                0,
+                $eventType,
+                $outboxEventId,
                 $e
             );
         }
