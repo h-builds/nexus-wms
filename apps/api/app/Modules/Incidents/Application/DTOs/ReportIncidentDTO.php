@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace App\Modules\Incidents\Application\DTOs;
 
-final class ReportIncidentDTO
+use App\Modules\Incidents\Domain\Enums\IncidentSeverity;
+use App\Modules\Incidents\Domain\Enums\IncidentType;
+
+final readonly class ReportIncidentDTO
 {
     public function __construct(
-        public readonly string $productId,
-        public readonly ?string $locationId,
-        public readonly string $type,
-        public readonly string $severity,
-        public readonly string $description,
-        public readonly ?int $quantityAffected,
-        public readonly string $reportedBy,
-        public readonly ?string $idempotencyKey = null,
+        public string $productId,
+        public ?string $locationId,
+        public IncidentType $type,
+        public IncidentSeverity $severity,
+        public string $description,
+        public ?int $quantityAffected,
+        public string $reportedBy,
+        public string $correlationId,
+        public ?string $idempotencyKey = null,
     ) {}
 }
