@@ -39,6 +39,58 @@ final class EloquentStockItemRepository implements StockItemRepository
         return $paginator;
     }
 
+    public function findByProductAndLocation(string $productId, string $locationId, ?string $lotNumber = null): ?StockItem
+    {
+        $query = StockItemModel::query()
+            ->where('product_id', $productId)
+            ->where('location_id', $locationId);
+
+        if ($lotNumber === null) {
+            $query->whereNull('lot_number');
+        } else {
+            $query->where('lot_number', $lotNumber);
+        }
+
+        $model = $query->first();
+
+        return $model ? $this->toDomain($model) : null;
+    }
+
+    public function updateQuantity(string $stockItemId, int $newAvailable, int $newOnHand, int $expectedVersion): bool
+    {
+        $updatedRowsCount = StockItemModel::query()
+            ->where('id', $stockItemId)
+            ->where('version', $expectedVersion)
+            ->update([
+                'quantity_available' => $newAvailable,
+                'quantity_on_hand' => $newOnHand,
+                'version' => $expectedVersion + 1,
+                'updated_at' => now(),
+            ]);
+
+        return $updatedRowsCount > 0;
+    }
+
+    public function insertStockItem(StockItem $stockItem): void
+    {
+        StockItemModel::query()->insert([
+            'id' => $stockItem->id(),
+            'product_id' => $stockItem->productId(),
+            'location_id' => $stockItem->locationId(),
+            'quantity_available' => $stockItem->quantityAvailable(),
+            'quantity_on_hand' => $stockItem->quantityOnHand(),
+            'quantity_blocked' => $stockItem->quantityBlocked(),
+            'lot_number' => $stockItem->lotNumber(),
+            'serial_number' => $stockItem->serialNumber(),
+            'received_at' => $stockItem->receivedAt(),
+            'expires_at' => $stockItem->expiresAt(),
+            'status' => $stockItem->status()->value,
+            'version' => $stockItem->version(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
     private function applyFilters(Builder $query, array $filters): void
     {
         if (isset($filters['productId']) && $filters['productId'] !== '') {

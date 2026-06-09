@@ -12,8 +12,6 @@ interface StockItemRepository
     public function findById(string $id): ?StockItem;
 
     /**
-     * Paginate stock items with optional filters.
-     *
      * Supported filter keys:
      *  - productId (string)
      *  - locationId (string)
@@ -22,4 +20,10 @@ interface StockItemRepository
      * @param array<string, mixed> $filters
      */
     public function paginate(int $page = 1, int $perPage = 50, array $filters = []): LengthAwarePaginator;
+
+    public function findByProductAndLocation(string $productId, string $locationId, ?string $lotNumber = null): ?StockItem;
+
+    public function updateQuantity(string $stockItemId, int $newAvailable, int $newOnHand, int $expectedVersion): bool;
+
+    public function insertStockItem(StockItem $stockItem): void;
 }

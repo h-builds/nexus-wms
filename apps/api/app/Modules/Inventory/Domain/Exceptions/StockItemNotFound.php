@@ -13,13 +13,8 @@ final class StockItemNotFound extends RuntimeException
         return new self("StockItem with id [{$id}] was not found.");
     }
 
-    public function render($request)
+    public static function forProductAndLocation(string $productId, string $locationId): self
     {
-        return response()->json([
-            'error' => [
-                'code' => 'stock_item_not_found',
-                'message' => $this->getMessage(),
-            ],
-        ], 404);
+        return new self("StockItem not found for product [{$productId}] at location [{$locationId}].");
     }
 }

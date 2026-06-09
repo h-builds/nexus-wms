@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use App\Modules\Inventory\Domain\Exceptions\StockItemNotFound;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -62,6 +63,17 @@ return Application::configure(basePath: dirname(__DIR__))
                     'error' => [
                         'code' => 'not_found',
                         'message' => 'Resource not found.',
+                    ],
+                ], 404);
+            }
+        });
+
+        $exceptions->render(function (StockItemNotFound $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'error' => [
+                        'code' => 'stock_item_not_found',
+                        'message' => $e->getMessage(),
                     ],
                 ], 404);
             }
