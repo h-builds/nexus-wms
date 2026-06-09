@@ -39,7 +39,7 @@ final class AgentExecutor
     private function evaluateAgent(DecisionAgent $agent, CanonicalEvent $event): void
     {
         try {
-            $trace = $agent->handle($event);
+            $trace = $agent->evaluate($event);
 
             if ($trace === null) {
                 return;
