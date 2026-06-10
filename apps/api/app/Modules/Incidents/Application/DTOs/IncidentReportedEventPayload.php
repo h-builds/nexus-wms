@@ -12,7 +12,7 @@ final readonly class IncidentReportedEventPayload implements DomainEventPayload
         public string $incidentId,
         public string $productId,
         public ?string $locationId,
-        public string $type,
+        public string $incidentType,
         public string $description,
     ) {}
 
@@ -22,7 +22,7 @@ final readonly class IncidentReportedEventPayload implements DomainEventPayload
             'incidentId' => $this->incidentId,
             'productId' => $this->productId,
             'locationId' => $this->locationId,
-            'type' => $this->type,
+            'incidentType' => $this->incidentType,
             'description' => $this->description,
         ];
     }

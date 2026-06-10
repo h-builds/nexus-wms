@@ -132,7 +132,7 @@ final class ReportIncidentAction
             incidentId: $incident->id(),
             productId: $incident->productId(),
             locationId: $incident->locationId(),
-            type: $incident->type()->value,
+            incidentType: $incident->type()->value,
             description: $incident->description(),
         );
 
