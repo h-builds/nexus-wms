@@ -5,11 +5,13 @@ import InboundFeed from '@/domains/movements/components/InboundFeed.vue';
 import OutboundFeed from '@/domains/movements/components/OutboundFeed.vue';
 import IncidentFeed from '@/domains/incidents/components/IncidentFeed.vue';
 import ZoneOccupancy from '@/domains/locations/components/ZoneOccupancy.vue';
+import EventLogDebugger from '@/domains/events/components/EventLogDebugger.vue';
+import DecisionTraceFeed from '@/domains/intelligence/components/DecisionTraceFeed.vue';
 
-const store = useMonitoringStore();
+const monitoringStore = useMonitoringStore();
 
 onMounted(() => {
-  store.fetchInitialData();
+  monitoringStore.fetchInitialData();
 });
 </script>
 
@@ -22,9 +24,9 @@ onMounted(() => {
       </div>
       <div 
         class="status-pill" 
-        :class="{ 'status-error': store.error, 'status-loading': store.isLoading }"
+        :class="{ 'status-error': monitoringStore.error, 'status-loading': monitoringStore.isLoading }"
       >
-        {{ store.error ? 'Connection Failed' : (store.isLoading ? 'Syncing...' : 'Operational Realtime Feed Active') }}
+        {{ monitoringStore.error ? 'Connection Failed' : (monitoringStore.isLoading ? 'Syncing...' : 'Operational Realtime Feed Active') }}
       </div>
     </header>
 
@@ -47,11 +49,11 @@ onMounted(() => {
 
       <section class="main-panel">
         
-        <div v-if="store.error" class="error-banner">
-          {{ store.error }}
+        <div v-if="monitoringStore.error" class="error-banner">
+          {{ monitoringStore.error }}
         </div>
 
-        <div v-else-if="store.isLoading" class="loading-state">
+        <div v-else-if="monitoringStore.isLoading" class="loading-state">
           Connecting to warehouse streams...
         </div>
 
@@ -59,25 +61,23 @@ onMounted(() => {
           <div class="card-grid">
             <article class="card">
               <p class="label">Total Inventory</p>
-              <strong>{{ store.totalInventoryCount }}</strong>
-              <p class="card-context">units across {{ store.activeLocationsCount }} locations</p>
+              <strong>{{ monitoringStore.totalInventoryCount }}</strong>
+              <p class="card-context">units across {{ monitoringStore.activeLocationsCount }} locations</p>
             </article>
             <article class="card">
               <p class="label">Open Incidents</p>
-              <strong class="text-red">{{ store.openIncidentsCount }}</strong>
+              <strong class="text-red">{{ monitoringStore.openIncidentsCount }}</strong>
             </article>
             <article class="card">
-              <p class="label">Differences</p>
-              <strong class="text-yellow">{{ store.inventoryDifferences }}</strong>
+              <p class="label">Processed Events</p>
+              <strong class="text-blue">{{ monitoringStore.totalMovementsProcessed }}</strong>
             </article>
           </div>
 
-          <!-- Structural Occupancy Core -->
           <article class="panel mb-section">
             <ZoneOccupancy />
           </article>
 
-          <!-- Bounded Feeds -->
           <div class="feeds-grid">
             <article class="panel feed-inbound">
               <InboundFeed />
@@ -88,11 +88,15 @@ onMounted(() => {
             <article class="panel feed-incident">
               <IncidentFeed />
             </article>
+            <article class="panel feed-intelligence">
+              <DecisionTraceFeed />
+            </article>
           </div>
         </div>
 
       </section>
     </main>
+    <EventLogDebugger />
   </div>
 </template>
 
@@ -245,6 +249,12 @@ h1 {
   border-top: 4px solid #ef4444;
   background: rgba(239, 68, 68, 0.04);
   box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.15);
+}
+
+.feed-intelligence {
+  border-top: 4px solid #c084fc;
+  background: rgba(192, 132, 252, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(192, 132, 252, 0.15);
 }
 
 .card-context {
