@@ -29,7 +29,7 @@ final class InventoryAnomalyAgentTest extends TestCase
             'productId' => 'prod_001',
         ]);
 
-        $anomalyTrace = $this->agent->handle($canonicalEvent);
+        $anomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNull($anomalyTrace);
     }
@@ -44,7 +44,7 @@ final class InventoryAnomalyAgentTest extends TestCase
             'reason' => 'manual_adjustment',
         ]);
 
-        $anomalyTrace = $this->agent->handle($canonicalEvent);
+        $anomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNull($anomalyTrace, 'A 20% change should NOT trigger detection (threshold is 30%).');
     }
@@ -59,7 +59,7 @@ final class InventoryAnomalyAgentTest extends TestCase
             'reason' => 'manual_adjustment',
         ]);
 
-        $anomalyTrace = $this->agent->handle($canonicalEvent);
+        $anomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNotNull($anomalyTrace, 'A 30% change should trigger detection.');
         $this->assertSame(TraceType::AnomalyDetection, $anomalyTrace->traceType());
@@ -82,7 +82,7 @@ final class InventoryAnomalyAgentTest extends TestCase
             'reason' => 'manual_adjustment',
         ]);
 
-        $anomalyTrace = $this->agent->handle($canonicalEvent);
+        $anomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNotNull($anomalyTrace, 'A 60% change should trigger detection.');
         $this->assertSame(TraceSeverity::High, $anomalyTrace->severity());
@@ -98,7 +98,7 @@ final class InventoryAnomalyAgentTest extends TestCase
             'reason' => 'stock_correction',
         ]);
 
-        $anomalyTrace = $this->agent->handle($canonicalEvent);
+        $anomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNotNull($anomalyTrace, 'A 100% increase should trigger detection.');
         $this->assertSame(TraceSeverity::High, $anomalyTrace->severity());
@@ -115,7 +115,7 @@ final class InventoryAnomalyAgentTest extends TestCase
             'reason' => 'initial_stock',
         ]);
 
-        $anomalyTrace = $this->agent->handle($canonicalEvent);
+        $anomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNull($anomalyTrace, 'Division by zero case — must return null.');
     }
@@ -127,7 +127,7 @@ final class InventoryAnomalyAgentTest extends TestCase
             'locationId' => 'loc_001',
         ]);
 
-        $anomalyTrace = $this->agent->handle($canonicalEvent);
+        $anomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNull($anomalyTrace, 'Missing previousQuantity/newQuantity should be handled gracefully.');
     }
@@ -142,8 +142,8 @@ final class InventoryAnomalyAgentTest extends TestCase
             'reason' => 'manual_adjustment',
         ]);
 
-        $firstAnomalyTrace = $this->agent->handle($canonicalEvent);
-        $secondAnomalyTrace = $this->agent->handle($canonicalEvent);
+        $firstAnomalyTrace = $this->agent->evaluate($canonicalEvent);
+        $secondAnomalyTrace = $this->agent->evaluate($canonicalEvent);
 
         $this->assertNotNull($firstAnomalyTrace);
         $this->assertNotNull($secondAnomalyTrace);
