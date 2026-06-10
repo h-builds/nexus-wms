@@ -1,89 +1,82 @@
-# CURRENT TASK — Phase 4.1: Integration Backbone Definition
+# CURRENT TASK — Phase 4.3.4: System Validation
 
 ## Objective
 
-Define and align the system architecture for full cross-module integration using a unified event-driven backbone.
+Validate that the full event-driven pipeline behaves deterministically and consistently across all surfaces.
 
 ## Context
 
-Phase 3 delivered three independent but functional surfaces:
+Phase 4.3.3 completed:
 
-- Field-Agent Mobile (data capture)
-- Vapor Monitor (real-time visualization)
-- Orchestrator Twin (read-only tactical intelligence)
+- ingestion layer
+- interpretation layer
+- UI binding
 
-However, these modules are not yet fully integrated through a shared event pipeline.
+The system is now fully connected end-to-end.
 
 ## Problem
 
-The system currently behaves as partially connected components instead of a coordinated distributed system.
+Even with correct architecture, subtle inconsistencies can exist:
 
-There is no:
+- duplicate processing
+- state drift
+- ordering issues
+- contract mismatches
 
-- unified event flow across all modules
-- cross-surface correlation model
-- persistent decision trace
-- defined integration architecture
+## Scope
 
-## Scope of this task
+### In Scope
 
-This phase is strictly architectural and documentation-focused.
+- validate event → state → UI flow
+- validate baseline + stream consistency
+- validate cross-surface synchronization
+- validate deterministic replay behavior
 
-DO NOT implement:
+### Out of Scope
 
-- UI changes
-- AI decision engines
-- new endpoints
+- new features
+- UI redesign
+- performance optimization
+- AI/decision layers
 
-## Required Outcomes
+## Requirements
 
-### 1. Integration Backbone Definition
+### 1. Event Replay Consistency
 
-- Define how events flow from API → Event Bus → Consumers
-- Establish canonical event lifecycle
+- same sequence of events → identical interpreted state
+- no divergence between Vapor and Twin
 
-### 2. Correlation Model
+### 2. Duplicate Protection
 
-- Standardize usage of:
-  - correlationId
-  - causationId
-- Ensure traceability across all modules
+- re-sending same event must NOT mutate state twice
 
-### 3. Cross-Surface Integration Model
+### 3. Baseline + Stream Integrity
 
-Define how each module participates:
+- initial load shows correct state
+- new events update state incrementally
 
-- Field-Agent → emits domain actions
-- API → persists + emits events
-- Vapor Monitor → subscribes for visibility
-- Orchestrator → consumes for analysis
+### 4. Cross-Surface Sync
 
-### 4. Decision Logging (Conceptual Only)
+- both apps must reflect identical system state at all times
 
-Define:
+### 5. Contract Validation
 
-- what a decision log is
-- when it should be created
-- relationship with events
+- all interpreted fields must come from canonical payloads
+- no inferred data
 
-(NO persistence yet)
+## Validation
 
-## Files to update
+Test scenarios:
 
-- docs/ARCHITECTURE.md
-- docs/EVENT_CATALOG.md (only if needed)
-- docs/FLOWS/integration-flow.md (create if missing)
-- .ai/AGENTS.md (extend for decision trace concept)
+1. reload app → verify baseline renders correctly
+2. trigger movement → verify both apps update
+3. trigger incident → verify correct bin + KPI update
+4. replay same event → verify no duplication
+5. simulate event burst → verify ordering integrity
 
 ## Success Criteria
 
-- Clear event-driven architecture defined
-- Cross-module integration explicitly documented
-- Correlation model standardized
-- No implementation performed
-
-## Constraints
-
-- Follow existing API_SPEC and EVENT_CATALOG conventions
-- Do not introduce breaking changes
-- Maintain suggestion-first agent model (SECURITY_MODEL)
+- system behaves deterministically
+- no UI drift between apps
+- no duplicated processing
+- no contract violations
