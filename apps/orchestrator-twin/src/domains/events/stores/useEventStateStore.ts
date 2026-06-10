@@ -80,15 +80,15 @@ export const useEventStateStore = defineStore('eventState', () => {
             // until we hit an event we've already processed.
             // But they arrive chronologically fast, so we traverse the incoming slice from oldest to newest to maintain math.
             const unprocessed = [];
-            for (let i = 0; i < events.length; i++) {
-                if (state.value.processedEventIds.has(events[i].eventId)) {
+            for (const event of events) {
+                if (state.value.processedEventIds.has(event.eventId)) {
                     break;
                 }
-                unprocessed.push(events[i]);
+                unprocessed.push(event);
             }
 
-            for (let i = unprocessed.length - 1; i >= 0; i--) {
-                const event = unprocessed[i];
+            unprocessed.reverse();
+            for (const event of unprocessed) {
                 interpreter.interpret(event, state.value);
             }
         },
