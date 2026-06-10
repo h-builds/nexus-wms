@@ -14,44 +14,50 @@ use App\Modules\Product\Infrastructure\Http\Requests\StoreProductRequest;
 use App\Modules\Product\Infrastructure\Http\Resources\ProductResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 final class ProductController extends Controller
 {
-    public function index(Request $request, ListProductsAction $action): JsonResponse
+    public function index(Request $request, ListProductsAction $listProducts): JsonResponse
     {
-        $page = (int) $request->query('page', '1');
-        $perPage = (int) $request->query('per_page', '50');
-
-        $filters = array_filter([
-            'sku' => $request->query('sku'),
-            'q' => $request->query('q'),
+        $validated = $request->validate([
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'sku' => ['sometimes', 'string'],
+            'q' => ['sometimes', 'string'],
         ]);
 
-        $paginator = $action->execute($page, $perPage, $filters);
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 50);
+
+        $filters = array_filter([
+            'sku' => $validated['sku'] ?? null,
+            'q' => $validated['q'] ?? null,
+        ]);
+
+        $paginator = $listProducts->execute($page, $perPage, $filters);
 
         return PaginatedResponse::make($paginator, ProductResource::class);
     }
 
-    public function show(string $id, GetProductByIdAction $action): JsonResponse
+    public function show(string $productId, GetProductByIdAction $getProductById): JsonResponse
     {
-        $product = $action->execute($id);
+        $product = $getProductById->execute($productId);
 
-        return response()->json([
-            'data' => new ProductResource($product),
-        ]);
+        return (new ProductResource($product))->response();
     }
 
-    public function store(StoreProductRequest $request, CreateProductAction $action): JsonResponse
+    public function store(StoreProductRequest $request, CreateProductAction $createProduct): JsonResponse
     {
-        $product = $action->execute(
-            CreateProductPayload::fromArray(array_merge(
-                $request->validated(),
-                ['correlationId' => $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString())]
-            ))
-        );
+        $correlationId = (string) $request->header('X-Correlation-ID', Str::uuid()->toString());
 
-        return response()->json([
-            'data' => new ProductResource($product),
-        ], 201);
+        $payload = CreateProductPayload::fromArray(array_merge(
+            $request->validated(),
+            ['correlationId' => $correlationId]
+        ));
+
+        $product = $createProduct->execute($payload);
+
+        return (new ProductResource($product))->response()->setStatusCode(201);
     }
 }
