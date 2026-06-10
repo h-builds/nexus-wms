@@ -24,19 +24,11 @@ final class LocationController extends Controller
 {
     public function index(ListLocationsRequest $request, ListLocationsAction $action): JsonResponse
     {
-        $payload = $request->validated();
-        $page = (int) ($payload['page'] ?? 1);
-        $perPage = (int) ($payload['per_page'] ?? 50);
-
-        $criteria = new LocationListCriteria(
-            warehouseCode: $payload['warehouseCode'] ?? null,
-            zone: $payload['zone'] ?? null,
-            aisle: $payload['aisle'] ?? null,
-            rack: $payload['rack'] ?? null,
-            bin: $payload['bin'] ?? null,
+        $paginator = $action->execute(
+            $request->getPage(),
+            $request->getPerPage(),
+            $request->toCriteria()
         );
-
-        $paginator = $action->execute($page, $perPage, $criteria);
 
         return \App\Http\Responses\PaginatedResponse::make($paginator, LocationResource::class);
     }
@@ -73,15 +65,7 @@ final class LocationController extends Controller
     public function updateStatus(string $id, UpdateLocationStatusRequest $request, UpdateLocationStatusAction $action): JsonResponse
     {
         try {
-            $userId = $request->user() ? (string) $request->user()->id : 'system_user';
-
-            $statusUpdate = new UpdateLocationStatusDTO(
-                locationId: $id,
-                isBlocked: (bool) $request->validated('isBlocked'),
-                reason: $request->validated('reason'),
-                performedBy: $userId,
-                correlationId: $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString()),
-            );
+            $statusUpdate = $request->toDTO($id);
 
             $location = $action->execute($statusUpdate);
 
