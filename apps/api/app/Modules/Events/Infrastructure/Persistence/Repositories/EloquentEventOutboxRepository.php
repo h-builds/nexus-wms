@@ -8,7 +8,7 @@ use App\Modules\Events\Domain\DTOs\DomainEventPayload;
 use App\Modules\Events\Domain\Repositories\EventOutboxRepository;
 use App\Modules\Events\Infrastructure\Persistence\Eloquent\EventOutboxModel;
 
-class EloquentEventOutboxRepository implements EventOutboxRepository
+final class EloquentEventOutboxRepository implements EventOutboxRepository
 {
     public function save(
         string $eventId,
@@ -18,16 +18,24 @@ class EloquentEventOutboxRepository implements EventOutboxRepository
         string $correlationId,
         int $eventVersion
     ): void {
-        EventOutboxModel::create([
-            'event_id' => $eventId,
-            'event_type' => $eventType,
-            'event_version' => $eventVersion,
-            'occurred_at' => now(),
-            'actor_id' => $actorId,
-            'correlation_id' => $correlationId,
-            'causation_id' => $eventId,
-            'payload' => $payload->toArray(),
-            'dispatched' => false,
-        ]);
+        try {
+            EventOutboxModel::create([
+                'event_id' => $eventId,
+                'event_type' => $eventType,
+                'event_version' => $eventVersion,
+                'occurred_at' => now(),
+                'actor_id' => $actorId,
+                'correlation_id' => $correlationId,
+                'causation_id' => $eventId,
+                'payload' => $payload->toArray(),
+                'dispatched' => false,
+            ]);
+        } catch (\Throwable $e) {
+            throw new \App\Modules\Events\Infrastructure\Exceptions\EventOutboxPersistenceFailedException(
+                'Failed to persist event to outbox',
+                0,
+                $e
+            );
+        }
     }
 }
