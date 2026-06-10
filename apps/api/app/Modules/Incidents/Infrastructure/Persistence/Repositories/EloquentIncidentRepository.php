@@ -10,30 +10,39 @@ use App\Modules\Incidents\Domain\Enums\IncidentStatus;
 use App\Modules\Incidents\Domain\Enums\IncidentType;
 use App\Modules\Incidents\Domain\Repositories\IncidentRepository;
 use App\Modules\Incidents\Infrastructure\Persistence\Eloquent\InventoryIncidentModel;
+use App\Modules\Incidents\Application\Exceptions\IdempotencyConflictException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\QueryException;
 
 final class EloquentIncidentRepository implements IncidentRepository
 {
     public function save(InventoryIncident $incident): void
     {
-        InventoryIncidentModel::updateOrCreate(
-            ['id' => $incident->id()],
-            [
-                'product_id' => $incident->productId(),
-                'location_id' => $incident->locationId(),
-                'type' => $incident->type()->value,
-                'severity' => $incident->severity()->value,
-                'status' => $incident->status()->value,
-                'description' => $incident->description(),
-                'quantity_affected' => $incident->quantityAffected(),
-                'reported_by' => $incident->reportedBy(),
-                'assigned_to' => $incident->assignedTo(),
-                'notes' => $incident->notes(),
-                'created_at' => $incident->createdAt(),
-                'updated_at' => $incident->updatedAt(),
-                'idempotency_key' => $incident->idempotencyKey(),
-            ]
-        );
+        try {
+            InventoryIncidentModel::updateOrCreate(
+                ['id' => $incident->id()],
+                [
+                    'product_id' => $incident->productId(),
+                    'location_id' => $incident->locationId(),
+                    'type' => $incident->type()->value,
+                    'severity' => $incident->severity()->value,
+                    'status' => $incident->status()->value,
+                    'description' => $incident->description(),
+                    'quantity_affected' => $incident->quantityAffected(),
+                    'reported_by' => $incident->reportedBy(),
+                    'assigned_to' => $incident->assignedTo(),
+                    'notes' => $incident->notes(),
+                    'created_at' => $incident->createdAt(),
+                    'updated_at' => $incident->updatedAt(),
+                    'idempotency_key' => $incident->idempotencyKey(),
+                ]
+            );
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000' || $e->getCode() === '23505' || $e->getCode() === '19') {
+                throw new IdempotencyConflictException('Idempotency key already processed.');
+            }
+            throw $e;
+        }
     }
 
     public function findById(string $id): ?InventoryIncident

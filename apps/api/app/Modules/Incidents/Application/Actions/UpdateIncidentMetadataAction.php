@@ -23,7 +23,7 @@ final class UpdateIncidentMetadataAction
     {
         $incident = $this->incidentRepository->findById($data->incidentId);
         if (!$incident) {
-            throw new InvalidArgumentException("Incident {$data->incidentId} not found.");
+            throw \App\Modules\Incidents\Domain\Exceptions\IncidentNotFound::withId($data->incidentId);
         }
 
         $changeset = [];

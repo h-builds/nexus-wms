@@ -13,27 +13,24 @@ use App\Modules\Incidents\Application\DTOs\ReportIncidentDTO;
 use App\Modules\Incidents\Application\DTOs\UpdateIncidentMetadataDTO;
 use App\Modules\Incidents\Application\DTOs\UpdateIncidentStatusDTO;
 use App\Modules\Incidents\Application\Exceptions\IdempotencyConflictException;
+use App\Modules\Incidents\Domain\Enums\IncidentSeverity;
 use App\Modules\Incidents\Domain\Enums\IncidentStatus;
+use App\Modules\Incidents\Domain\Enums\IncidentType;
 use App\Modules\Incidents\Infrastructure\Http\Requests\ReportIncidentRequest;
+use App\Modules\Incidents\Infrastructure\Http\Requests\ListIncidentsRequest;
 use App\Modules\Incidents\Infrastructure\Http\Requests\UpdateIncidentMetadataRequest;
 use App\Modules\Incidents\Infrastructure\Http\Requests\UpdateIncidentStatusRequest;
 use App\Modules\Incidents\Infrastructure\Http\Resources\IncidentResource;
+use App\Modules\Incidents\Domain\Exceptions\IncidentNotFound;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
 final class IncidentController
 {
-    public function listIncidents(Request $request, GetIncidentsAction $action): JsonResponse
+    public function listIncidents(ListIncidentsRequest $request, GetIncidentsAction $action): JsonResponse
     {
-        $validated = $request->validate([
-            'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'status' => ['nullable', 'string'],
-            'type' => ['nullable', 'string'],
-            'locationId' => ['nullable', 'string'],
-            'productId' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
 
         $incidentFilters = array_filter([
             'status' => $validated['status'] ?? null,
@@ -91,10 +88,9 @@ final class IncidentController
                 'data' => new IncidentResource($incidentDetails)
             ]);
 
+        } catch (IncidentNotFound $e) {
+            return $this->buildIncidentNotFoundResponse($incidentId);
         } catch (InvalidArgumentException $e) {
-            if (str_contains($e->getMessage(), 'not found')) {
-                return $this->buildIncidentNotFoundResponse($incidentId);
-            }
             return $this->buildValidationFailedResponse($e->getMessage());
         }
     }
@@ -109,10 +105,9 @@ final class IncidentController
                 'data' => new IncidentResource($incidentDetails)
             ]);
 
+        } catch (IncidentNotFound $e) {
+            return $this->buildIncidentNotFoundResponse($incidentId);
         } catch (InvalidArgumentException $e) {
-            if (str_contains($e->getMessage(), 'not found')) {
-                return $this->buildIncidentNotFoundResponse($incidentId);
-            }
             return $this->buildValidationFailedResponse($e->getMessage());
         }
     }
@@ -121,11 +116,14 @@ final class IncidentController
     {
         $userId = $request->user() ? (string) $request->user()->id : 'system_user';
         
+        $type = IncidentType::from($request->validated('type'));
+        $severity = IncidentSeverity::from($request->validated('severity'));
+
         return new ReportIncidentDTO(
             productId: $request->validated('productId'),
             locationId: $request->validated('locationId'),
-            type: $request->validated('type'),
-            severity: $request->validated('severity'),
+            type: $type,
+            severity: $severity,
             description: $request->validated('description'),
             quantityAffected: $request->validated('quantityAffected') !== null ? (int) $request->validated('quantityAffected') : null,
             reportedBy: $userId,
@@ -138,10 +136,7 @@ final class IncidentController
     {
         $userId = $request->user() ? (string) $request->user()->id : 'system_user';
         
-        $status = IncidentStatus::tryFrom($request->validated('status'));
-        if (!$status) {
-            throw new InvalidArgumentException("Invalid incident status: {$request->validated('status')}.");
-        }
+        $status = IncidentStatus::from($request->validated('status'));
 
         return new UpdateIncidentStatusDTO(
             incidentId: $incidentId,
