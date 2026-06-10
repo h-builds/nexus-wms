@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import echo from '@/services/echo'
+import echo from '@/domains/shared/services/echo';
 
 export interface CanonicalEvent {
     eventId: string;

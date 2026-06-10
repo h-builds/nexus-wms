@@ -79,7 +79,7 @@ export const useEventStateStore = defineStore('eventState', () => {
             // Because new events are unshifted, we just process from the start of the array
             // until we hit an event we've already processed.
             // But they arrive chronologically fast, so we traverse the incoming slice from oldest to newest to maintain math.
-            const unprocessed = [];
+            const unprocessed: typeof events = [];
             for (const event of events) {
                 if (state.value.processedEventIds.has(event.eventId)) {
                     break;
