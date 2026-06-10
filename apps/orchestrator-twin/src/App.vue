@@ -17,9 +17,11 @@
 
       <aside class="insights-panel">
         <SimulationPanel :on-simulate="runWarehouseSimulation" />
+        <DecisionTracePanel />
         <RecommendationsPanel :recommendations="activeRecommendations" />
       </aside>
     </main>
+    <EventLogDebugger />
   </div>
 </template>
 
@@ -27,9 +29,11 @@
 import { ref, computed } from 'vue';
 import type { SimulationResult } from './domains/simulation/types';
 import type { Recommendation } from './domains/recommendations/types';
-import WarehouseGrid from './components/layout/WarehouseGrid.vue';
+import WarehouseGrid from './domains/layout/components/WarehouseGrid.vue';
 import SimulationPanel from './components/panels/SimulationPanel.vue';
 import RecommendationsPanel from './components/panels/RecommendationsPanel.vue';
+import DecisionTracePanel from './domains/intelligence/components/DecisionTracePanel.vue';
+import EventLogDebugger from '@/domains/events/components/EventLogDebugger.vue';
 
 const gridRef = ref<InstanceType<typeof WarehouseGrid> | null>(null);
 
