@@ -8,6 +8,7 @@ import type { OccupancySnapshot, ZoneDensity } from '../occupancy/types';
 import type { IncidentsSnapshot, ZoneIncidents } from '../incidents/types';
 import type { LayoutSnapshot } from '../layout/types';
 import type { SimulationResult } from '../simulation/types';
+import { safeGet } from '../shared/safeRecord';
 
 /**
  * Deterministic, rule-based recommendation engine.
@@ -125,8 +126,8 @@ export class RecommendationService {
       (a, b) => b.densityPercentage - a.densityPercentage,
     );
 
-    const highestDensityZone = sortedDensities[0];
-    const lowestDensityZone = sortedDensities[sortedDensities.length - 1];
+    const highestDensityZone = sortedDensities.at(0)!;
+    const lowestDensityZone = sortedDensities.at(-1)!;
     const densityGap = highestDensityZone.densityPercentage - lowestDensityZone.densityPercentage;
 
     if (densityGap < this.config.imbalanceGapPct) return [];
@@ -357,9 +358,14 @@ export class RecommendationService {
     const severityOrder: Record<string, number> = { critical: 0, warning: 1, info: 2 };
 
     return recommendations.sort((a, b) => {
-      const pd = (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3);
+      const pda = safeGet(priorityOrder, a.priority, 3);
+      const pdb = safeGet(priorityOrder, b.priority, 3);
+      const pd = pda - pdb;
       if (pd !== 0) return pd;
-      return (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3);
+      
+      const sda = safeGet(severityOrder, a.severity, 3);
+      const sdb = safeGet(severityOrder, b.severity, 3);
+      return sda - sdb;
     });
   }
 }

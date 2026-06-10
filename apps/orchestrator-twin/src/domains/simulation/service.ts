@@ -5,6 +5,7 @@ import type {
 } from './types';
 import type { LayoutSnapshot } from '../layout/types';
 import type { OccupancySnapshot } from '../occupancy/types';
+import { safeGet } from '../shared/safeRecord';
 
 /**
  * Deterministic simulation engine.
@@ -43,7 +44,7 @@ export class SimulationService {
 
               if (bin.isBlocked) continue;
 
-              const locationOccupancy = occupancy.locations[bin.locationId];
+              const locationOccupancy = safeGet(occupancy.locations, bin.locationId, undefined);
               if (locationOccupancy?.isOccupied) continue;
 
               allocations.push({

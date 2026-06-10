@@ -1,17 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useEventStateStore, type InventorySnapshotEntry, type IncidentSnapshotEntry } from '@/domains/events/stores/useEventStateStore'
+import { safeGet, safeSet } from '../../shared/safeRecord'
 
 interface LocationDto {
     id: string;
     zone: string | null;
 }
 
-interface InventoryDto extends InventorySnapshotEntry {
-}
+type InventoryDto = InventorySnapshotEntry;
 
-interface IncidentDto extends IncidentSnapshotEntry {
-}
+type IncidentDto = IncidentSnapshotEntry;
 
 interface MovementDto {
     id: string;
@@ -116,16 +115,16 @@ export const useMonitoringStore = defineStore('monitoring', () => {
         
         for (const [locationId, quantity] of Object.entries(stateStore.inventoryByLocation)) {
             if (quantity > 0) {
-                const zone = locationZoneMap.value[locationId];
+                const zone = safeGet(locationZoneMap.value, locationId, undefined as string | undefined);
                 if (zone) {
-                    occupiedPerZone[zone] = (occupiedPerZone[zone] || 0) + 1;
+                    safeSet(occupiedPerZone, zone, safeGet(occupiedPerZone, zone, 0) + 1);
                 }
             }
         }
         
         return Object.keys(totalLocationsPerZone.value).map(zone => {
-            const total = totalLocationsPerZone.value[zone];
-            const occupied = occupiedPerZone[zone] || 0;
+            const total = safeGet(totalLocationsPerZone.value, zone, 0);
+            const occupied = safeGet(occupiedPerZone, zone, 0);
             return {
                 zone,
                 occupied,
@@ -181,8 +180,10 @@ export const useMonitoringStore = defineStore('monitoring', () => {
         
         warehouseLocations.forEach((location: LocationDto) => {
             const zone = location.zone || 'Unassigned';
-            locationZoneMapping[location.id] = zone;
-            zonesConfigured[zone] = (zonesConfigured[zone] || 0) + 1;
+            const key = location.id;
+            if (key === '__proto__' || key === 'constructor' || key === 'prototype') return;
+            safeSet(locationZoneMapping, key, zone);
+            safeSet(zonesConfigured, zone, safeGet(zonesConfigured, zone, 0) + 1);
         });
         
         locationZoneMap.value = locationZoneMapping;

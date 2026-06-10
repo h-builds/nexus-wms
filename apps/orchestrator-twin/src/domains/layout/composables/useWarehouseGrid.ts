@@ -9,6 +9,7 @@ import type { ApiIncident } from '../../incidents/types';
 import { resolveBinState } from '../../shared/binState';
 import { LayoutService } from '../service';
 import { useEventStateStore } from '../../events/stores/useEventStateStore';
+import { safeGet, safeSet } from '../../shared/safeRecord';
 import { fetchFromApi } from '../../shared/api';
 
 export function useWarehouseGrid() {
@@ -36,7 +37,7 @@ export function useWarehouseGrid() {
           for (const rack of aisle.racks) {
              for (const bin of rack.bins) {
                 totalCount++;
-                if ((stateStore.inventoryByLocation[bin.locationId] || 0) > 0) {
+                if (safeGet(stateStore.inventoryByLocation, bin.locationId, 0) > 0) {
                    occupiedCount++;
                 }
              }
@@ -55,10 +56,10 @@ export function useWarehouseGrid() {
             for (const bin of rack.bins) {
               const locId = bin.locationId;
               const isBlocked = bin.isBlocked;
-              const qty = stateStore.inventoryByLocation[locId] || 0;
+              const qty = safeGet(stateStore.inventoryByLocation, locId, 0);
               const isOccupied = qty > 0;
               
-              const incidentMapped = stateStore._rawStateRef.openIncidentsByLocation[locId];
+              const incidentMapped = safeGet(stateStore._rawStateRef.openIncidentsByLocation, locId, undefined);
               const incidentCount = incidentMapped ? incidentMapped.size : 0;
               
               const highestSeverity = incidentCount > 0 ? 'high' : null;
@@ -87,7 +88,7 @@ export function useWarehouseGrid() {
       let highestSeverity = overlay.highestSeverity;
 
       if (!showIncidents.value && state === 'incident') {
-        state = (showOccupancy.value && (stateStore.inventoryByLocation[locId] || 0) > 0)
+        state = (showOccupancy.value && safeGet(stateStore.inventoryByLocation, locId, 0) > 0)
           ? 'occupied'
           : 'empty';
         incidentCount = 0;
@@ -98,7 +99,7 @@ export function useWarehouseGrid() {
         state = 'empty';
       }
 
-      filteredMap[locId] = { state, incidentCount, highestSeverity, densityPct: overlay.densityPct };
+      safeSet(filteredMap, locId, { state, incidentCount, highestSeverity, densityPct: overlay.densityPct });
     }
     return filteredMap;
   });
@@ -106,13 +107,13 @@ export function useWarehouseGrid() {
   const heatmapByZone = computed<Record<string, HeatmapIntensity>>(() => {
     const intensityMap: Record<string, HeatmapIntensity> = {};
     for (const entry of heatmapEntries.value) {
-      intensityMap[entry.zoneId] = entry.intensity;
+      safeSet(intensityMap, entry.zoneId, entry.intensity);
     }
     return intensityMap;
   });
 
   function getZoneIntensity(zoneId: string): HeatmapIntensity | null {
-    return heatmapByZone.value[zoneId] ?? null;
+    return safeGet(heatmapByZone.value, zoneId, null as HeatmapIntensity | null);
   }
 
   function runSimulation(units: number): SimulationResult | null {

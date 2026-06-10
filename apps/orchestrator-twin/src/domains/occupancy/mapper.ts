@@ -1,5 +1,6 @@
 import type { ApiStockItem, OccupancySnapshot, LocationOccupancy, ZoneDensity } from './types';
 import type { LayoutSnapshot } from '../layout/types';
+import { safeGet, safeSet } from '../shared/safeRecord';
 
 /**
  * Transforms flat stock items into an OccupancySnapshot.
@@ -22,10 +23,10 @@ export function mapStockToOccupancySnapshot(
 
   const locations: Record<string, LocationOccupancy> = {};
   for (const [locationId, sumQuantity] of locationQuantities.entries()) {
-    locations[locationId] = {
+    safeSet(locations, locationId, {
       locationId: locationId,
       isOccupied: sumQuantity > 0,
-    };
+    });
   }
 
   const zoneDensities: ZoneDensity[] = [];
@@ -39,7 +40,7 @@ export function mapStockToOccupancySnapshot(
         for (const rack of aisle.racks) {
           for (const bin of rack.bins) {
             totalBins++;
-            if (locations[bin.locationId]?.isOccupied) {
+            if (safeGet(locations, bin.locationId, undefined)?.isOccupied) {
               occupiedBins++;
             }
           }

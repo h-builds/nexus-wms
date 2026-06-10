@@ -1,4 +1,5 @@
 import type { CanonicalEvent } from '../stores/useEventIngestionStore'
+import { safeGet, safeSet } from '../../shared/safeRecord';
 
 export interface DriftedEvent {
     eventId: string;
@@ -23,20 +24,20 @@ export interface InterpretedState {
 type Transformer = (event: CanonicalEvent, state: InterpretedState) => void;
 
 export class EventInterpreter {
-    private handlers: Record<string, Transformer> = {};
+    private handlers: Map<string, Transformer> = new Map();
 
     constructor() {
         this.registerHandlers();
     }
 
     private registerHandlers() {
-        this.handlers['.inventory.stock.adjusted'] = this.handleStockAdjusted;
-        this.handlers['.inventory.stock.received'] = this.handleStockReceived;
-        this.handlers['.inventory.stock.picked'] = this.handleStockPicked;
-        this.handlers['.inventory.stock.relocated'] = this.handleStockRelocated;
-        this.handlers['.incident.reported'] = this.handleIncidentReported;
-        this.handlers['.incident.status.updated'] = this.handleIncidentStatusUpdated;
-        this.handlers['.movement.created'] = this.handleMovementCreated;
+        this.handlers.set('.inventory.stock.adjusted', this.handleStockAdjusted);
+        this.handlers.set('.inventory.stock.received', this.handleStockReceived);
+        this.handlers.set('.inventory.stock.picked', this.handleStockPicked);
+        this.handlers.set('.inventory.stock.relocated', this.handleStockRelocated);
+        this.handlers.set('.incident.reported', this.handleIncidentReported);
+        this.handlers.set('.incident.status.updated', this.handleIncidentStatusUpdated);
+        this.handlers.set('.movement.created', this.handleMovementCreated);
     }
 
     public interpret(event: CanonicalEvent, state: InterpretedState): void {
@@ -45,7 +46,7 @@ export class EventInterpreter {
             return;
         }
 
-        const handler = this.handlers[event.eventType];
+        const handler = this.handlers.get(event.eventType);
         if (handler) {
             handler.call(this, event, state);
         } else {
@@ -61,7 +62,7 @@ export class EventInterpreter {
         const { locationId, newQuantity, previousQuantity } = payload;
         if (!locationId) return;
 
-        const localQuantity = state.inventoryByLocation[locationId] ?? 0;
+        const localQuantity = safeGet(state.inventoryByLocation, locationId, 0);
         const expectedQuantity = previousQuantity ?? 0;
 
         if (localQuantity !== expectedQuantity) {
@@ -82,24 +83,24 @@ export class EventInterpreter {
             return;
         }
 
-        state.inventoryByLocation[locationId] = newQuantity ?? 0;
+        safeSet(state.inventoryByLocation, locationId, newQuantity ?? 0);
     }
 
     private handleStockReceived(event: CanonicalEvent, state: InterpretedState): void {
         const payload = event.payload as { locationId?: string, quantity: number };
         const { locationId, quantity } = payload;
-        if (locationId) {
-            const current = state.inventoryByLocation[locationId] || 0;
-            state.inventoryByLocation[locationId] = current + quantity;
+        if (locationId && quantity !== undefined) {
+            const currentQuantity = safeGet(state.inventoryByLocation, locationId, 0);
+            safeSet(state.inventoryByLocation, locationId, currentQuantity + quantity);
         }
     }
 
     private handleStockPicked(event: CanonicalEvent, state: InterpretedState): void {
         const payload = event.payload as { locationId?: string, quantity: number };
         const { locationId, quantity } = payload;
-        if (locationId) {
-            const current = state.inventoryByLocation[locationId] || 0;
-            state.inventoryByLocation[locationId] = Math.max(0, current - quantity);
+        if (locationId && quantity !== undefined) {
+            const currentQuantity = safeGet(state.inventoryByLocation, locationId, 0);
+            safeSet(state.inventoryByLocation, locationId, Math.max(0, currentQuantity - quantity));
         }
     }
 
@@ -107,14 +108,14 @@ export class EventInterpreter {
         const payload = event.payload as { fromLocationId?: string, toLocationId?: string, quantity: number };
         const { fromLocationId, toLocationId, quantity } = payload;
         
-        if (fromLocationId) {
-            const currentFrom = state.inventoryByLocation[fromLocationId] || 0;
-            state.inventoryByLocation[fromLocationId] = Math.max(0, currentFrom - quantity);
+        if (fromLocationId && quantity !== undefined) {
+            const currentFromQuantity = safeGet(state.inventoryByLocation, fromLocationId, 0);
+            safeSet(state.inventoryByLocation, fromLocationId, Math.max(0, currentFromQuantity - quantity));
         }
         
-        if (toLocationId) {
-            const currentTo = state.inventoryByLocation[toLocationId] || 0;
-            state.inventoryByLocation[toLocationId] = currentTo + quantity;
+        if (toLocationId && quantity !== undefined) {
+            const currentToQuantity = safeGet(state.inventoryByLocation, toLocationId, 0);
+            safeSet(state.inventoryByLocation, toLocationId, currentToQuantity + quantity);
         }
     }
 
@@ -124,10 +125,13 @@ export class EventInterpreter {
         if (incidentId) {
             state.openIncidents.add(incidentId);
             if (locationId) {
-                if (!state.openIncidentsByLocation[locationId]) {
-                    state.openIncidentsByLocation[locationId] = new Set<string>();
+                const existing = safeGet<Set<string> | undefined>(
+                    state.openIncidentsByLocation, locationId, undefined
+                );
+                if (!existing) {
+                    safeSet(state.openIncidentsByLocation, locationId, new Set<string>());
                 }
-                state.openIncidentsByLocation[locationId].add(incidentId);
+                safeGet(state.openIncidentsByLocation, locationId, new Set<string>()).add(incidentId);
             }
         }
     }
@@ -142,15 +146,18 @@ export class EventInterpreter {
                 // Status updates might not carry locationId if the domain doesn't pass it,
                 // but if they do, ensure we track it.
                 if (locationId) {
-                    if (!state.openIncidentsByLocation[locationId]) {
-                        state.openIncidentsByLocation[locationId] = new Set<string>();
+                    const existing = safeGet<Set<string> | undefined>(
+                        state.openIncidentsByLocation, locationId, undefined
+                    );
+                    if (!existing) {
+                        safeSet(state.openIncidentsByLocation, locationId, new Set<string>());
                     }
-                    state.openIncidentsByLocation[locationId].add(incidentId);
+                    safeGet(state.openIncidentsByLocation, locationId, new Set<string>()).add(incidentId);
                 }
             } else {
                 state.openIncidents.delete(incidentId);
-                for (const key of Object.keys(state.openIncidentsByLocation)) {
-                    state.openIncidentsByLocation[key].delete(incidentId);
+                for (const trackedLocationId of Object.keys(state.openIncidentsByLocation)) {
+                    safeGet(state.openIncidentsByLocation, trackedLocationId, new Set<string>()).delete(incidentId);
                 }
             }
         }

@@ -1,5 +1,6 @@
 import type { ApiIncident, IncidentsSnapshot, LocationIncidents, ZoneIncidents, IncidentSeverity } from './types';
 import type { LayoutSnapshot } from '../layout/types';
+import { safeGet, safeSet } from '../shared/safeRecord';
 
 const severityRank: Record<IncidentSeverity, number> = {
   'low': 1,
@@ -27,21 +28,23 @@ export function mapIncidentsToSnapshot(
   for (const activeIncident of activeIncidents) {
     if (!activeIncident.locationId) continue;
     
-    if (!locations[activeIncident.locationId]) {
-      locations[activeIncident.locationId] = {
+    if (!safeGet(locations, activeIncident.locationId, undefined)) {
+      safeSet(locations, activeIncident.locationId, {
         locationId: activeIncident.locationId,
         openCount: 0,
         highestSeverity: null,
         incidentIds: []
-      };
+      });
     }
 
-    const locationState = locations[activeIncident.locationId];
+    const locationState = safeGet(locations, activeIncident.locationId, undefined);
+    if (!locationState) continue;
     locationState.openCount++;
     locationState.incidentIds.push(activeIncident.id);
 
-    const currentRank = locationState.highestSeverity ? severityRank[locationState.highestSeverity] || 0 : 0;
-    const newRank = severityRank[activeIncident.severity] || 0;
+    const currentRank = locationState.highestSeverity 
+      ? safeGet(severityRank as unknown as Record<string, number>, locationState.highestSeverity, 0) : 0;
+    const newRank = safeGet(severityRank as unknown as Record<string, number>, activeIncident.severity, 0);
     if (newRank > currentRank) {
       locationState.highestSeverity = activeIncident.severity;
     }
@@ -57,7 +60,7 @@ export function mapIncidentsToSnapshot(
       for (const aisle of zone.aisles) {
         for (const rack of aisle.racks) {
           for (const bin of rack.bins) {
-            const locationIncidentState = locations[bin.locationId];
+            const locationIncidentState = safeGet(locations, bin.locationId, undefined);
             if (locationIncidentState) {
               totalOpenCount += locationIncidentState.openCount;
               if (locationIncidentState.highestSeverity === 'critical') {
