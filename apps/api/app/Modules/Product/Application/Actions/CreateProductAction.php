@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Product\Application\Actions;
 
 use App\Modules\Events\Application\Services\EventPublisher;
-use App\Modules\Product\Application\DTOs\CreateProductData;
+use App\Modules\Product\Application\DTOs\CreateProductPayload;
 use App\Modules\Product\Domain\Entities\Product;
 use App\Modules\Product\Domain\Enums\UnitOfMeasure;
 use App\Modules\Product\Domain\Exceptions\DuplicateSku;
@@ -21,7 +21,7 @@ final class CreateProductAction
         private readonly EventPublisher $eventPublisher,
     ) {}
 
-    public function execute(CreateProductData $command): Product
+    public function execute(CreateProductPayload $command): Product
     {
         $this->ensureSkuIsUnique($command->sku);
 
@@ -41,7 +41,7 @@ final class CreateProductAction
         }
     }
 
-    private function buildProductEntity(CreateProductData $command): Product
+    private function buildProductEntity(CreateProductPayload $command): Product
     {
         $unitOfMeasure = UnitOfMeasure::tryFrom($command->unitOfMeasure);
         

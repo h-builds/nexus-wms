@@ -17,26 +17,35 @@ use App\Modules\Inventory\Domain\Exceptions\OptimisticLockException;
 
 final class MovementController
 {
-    public function index(Request $request, GetMovementsAction $action): JsonResponse
+    public function index(Request $request, GetMovementsAction $getMovementsAction): JsonResponse
     {
-        $page = (int) $request->query('page', '1');
-        $perPage = (int) $request->query('per_page', '50');
+        $validated = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'productId' => ['nullable', 'string'],
+            'type' => ['nullable', 'string'],
+            'fromLocationId' => ['nullable', 'string'],
+            'toLocationId' => ['nullable', 'string'],
+        ]);
+
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 50);
 
         $filters = [
-            'productId' => $request->query('productId'),
-            'type' => $request->query('type'),
-            'fromLocationId' => $request->query('fromLocationId'),
-            'toLocationId' => $request->query('toLocationId'),
+            'productId' => $validated['productId'] ?? null,
+            'type' => $validated['type'] ?? null,
+            'fromLocationId' => $validated['fromLocationId'] ?? null,
+            'toLocationId' => $validated['toLocationId'] ?? null,
         ];
 
-        $paginator = $action->execute($page, $perPage, array_filter($filters));
+        $paginator = $getMovementsAction->execute($page, $perPage, array_filter($filters));
 
         return \App\Http\Responses\PaginatedResponse::make($paginator, MovementResource::class);
     }
 
-    public function show(string $id, GetMovementByIdAction $action): JsonResponse
+    public function show(string $id, GetMovementByIdAction $getMovementByIdAction): JsonResponse
     {
-        $movement = $action->execute($id);
+        $movement = $getMovementByIdAction->execute($id);
 
         if (!$movement) {
             return response()->json([
@@ -52,7 +61,7 @@ final class MovementController
         ]);
     }
 
-    public function store(RegisterMovementRequest $request, RegisterMovementAction $action): JsonResponse
+    public function store(RegisterMovementRequest $request, RegisterMovementAction $registerMovementAction): JsonResponse
     {
         try {
             // Actor identity must come from session, never from request payload.
@@ -69,10 +78,11 @@ final class MovementController
                 reason: $request->validated('reason'),
                 performedBy: $userId,
                 performedAt: now()->toIso8601String(),
+                correlationId: $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString()),
                 idempotencyKey: $request->header('Idempotency-Key')
             );
 
-            $movement = $action->execute($movementRegistration);
+            $movement = $registerMovementAction->execute($movementRegistration);
 
             return response()->json([
                 'data' => new MovementResource($movement)
@@ -92,16 +102,6 @@ final class MovementController
                     'message' => $e->getMessage()
                 ]
             ], 422);
-        } catch (\Illuminate\Database\QueryException $e) {
-            if ($e->getCode() === '23000' || $e->getCode() === '23505' || $e->getCode() === '19') {
-                return response()->json([
-                'error' => [
-                    'code' => 'conflict',
-                    'message' => 'Idempotency key already processed.',
-                ]
-            ], 409);
-            }
-            throw $e;
         }
     }
 }

@@ -9,7 +9,7 @@ use App\Http\Responses\PaginatedResponse;
 use App\Modules\Product\Application\Actions\CreateProductAction;
 use App\Modules\Product\Application\Actions\GetProductByIdAction;
 use App\Modules\Product\Application\Actions\ListProductsAction;
-use App\Modules\Product\Application\DTOs\CreateProductData;
+use App\Modules\Product\Application\DTOs\CreateProductPayload;
 use App\Modules\Product\Infrastructure\Http\Requests\StoreProductRequest;
 use App\Modules\Product\Infrastructure\Http\Resources\ProductResource;
 use Illuminate\Http\JsonResponse;
@@ -44,7 +44,10 @@ final class ProductController extends Controller
     public function store(StoreProductRequest $request, CreateProductAction $action): JsonResponse
     {
         $product = $action->execute(
-            CreateProductData::fromArray($request->validated())
+            CreateProductPayload::fromArray(array_merge(
+                $request->validated(),
+                ['correlationId' => $request->header('X-Correlation-ID', \Illuminate\Support\Str::uuid()->toString())]
+            ))
         );
 
         return response()->json([
