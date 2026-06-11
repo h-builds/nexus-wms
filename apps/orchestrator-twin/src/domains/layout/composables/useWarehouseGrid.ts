@@ -1,11 +1,13 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watchEffect } from 'vue';
 import type { LayoutSnapshot } from '../types';
 import type { BinOverlay, BinVisualState } from '../../shared/binState';
 import type { HeatmapIntensity, ZoneHeatmapEntry } from '../../heatmap/types';
 import type { Recommendation } from '../../recommendations/types';
 import type { SimulationResult } from '../../simulation/types';
-import type { ApiStockItem } from '../../occupancy/types';
-import type { ApiIncident } from '../../incidents/types';
+import { SimulationService } from '../../simulation/service';
+import { RecommendationService } from '../../recommendations/service';
+import type { ApiStockItem, OccupancySnapshot, ZoneDensity } from '../../occupancy/types';
+import type { ApiIncident, IncidentsSnapshot, ZoneIncidents, LocationIncidents } from '../../incidents/types';
 import { resolveBinState } from '../../shared/binState';
 import { LayoutService } from '../service';
 import { useEventStateStore } from '../../events/stores/useEventStateStore';
@@ -19,10 +21,13 @@ export function useWarehouseGrid() {
   const recommendations = ref<Recommendation[]>([]);
   const isLayoutLoading = ref(true);
   const layoutLoadError = ref<string | null>(null);
+  const lastSimulationResult = ref<SimulationResult | null>(null);
 
   const heatmapEnabled = ref(true);
   const showOccupancy = ref(true);
   const showIncidents = ref(true);
+
+  const recommendationService = new RecommendationService();
 
   const rawOverlays = computed<Record<string, BinOverlay>>(() => {
     const computedOverlays: Record<string, BinOverlay> = {};
@@ -78,6 +83,84 @@ export function useWarehouseGrid() {
     return computedOverlays;
   });
 
+  watchEffect(() => {
+    if (!layoutSnapshot.value) {
+      recommendations.value = [];
+      return;
+    }
+
+    const layout = layoutSnapshot.value;
+    const invMap = stateStore.inventoryByLocation;
+    const incMap = stateStore._rawStateRef.openIncidentsByLocation;
+
+    const occupancyLocations: Record<string, { locationId: string; isOccupied: boolean }> = {};
+    const zoneDensities: ZoneDensity[] = [];
+    const incidentsLocations: Record<string, LocationIncidents> = {};
+    const zoneIncidents: ZoneIncidents[] = [];
+
+    for (const warehouse of layout.warehouses) {
+      for (const zone of warehouse.zones) {
+        let occupiedBins = 0;
+        let totalBins = 0;
+        let zoneTotalOpen = 0;
+        const zoneCriticalCount = 0;
+
+        for (const aisle of zone.aisles) {
+          for (const rack of aisle.racks) {
+            for (const bin of rack.bins) {
+              totalBins++;
+              const locId = bin.locationId;
+              
+              const isOccupied = safeGet(invMap, locId, 0) > 0;
+              safeSet(occupancyLocations, locId, { locationId: locId, isOccupied });
+              if (isOccupied) occupiedBins++;
+
+              const incidentsAtBin = safeGet(incMap, locId, undefined);
+              if (incidentsAtBin && incidentsAtBin.size > 0) {
+                 const openCount = incidentsAtBin.size;
+                 const highestSeverity = 'high'; // Simplification since EventInterpreter drops severity
+
+                 safeSet(incidentsLocations, locId, {
+                   locationId: locId,
+                   openCount,
+                   highestSeverity,
+                   incidentIds: Array.from(incidentsAtBin)
+                 });
+
+                 zoneTotalOpen += openCount;
+              }
+            }
+          }
+        }
+        
+        zoneDensities.push({
+          zoneId: zone.id,
+          occupiedBins,
+          totalBins,
+          densityPercentage: totalBins > 0 ? (occupiedBins / totalBins) * 100 : 0
+        });
+
+        if (zoneTotalOpen > 0) {
+           zoneIncidents.push({
+             zoneId: zone.id,
+             totalOpenCount: zoneTotalOpen,
+             criticalCount: zoneCriticalCount
+           });
+        }
+      }
+    }
+
+    const occupancy: OccupancySnapshot = { locations: occupancyLocations, zoneDensities };
+    const incidents: IncidentsSnapshot = { locations: incidentsLocations, zoneIncidents };
+
+    recommendations.value = recommendationService.evaluate(
+      layout,
+      occupancy,
+      incidents,
+      lastSimulationResult.value
+    );
+  });
+
   const filteredOverlays = computed<Record<string, BinOverlay>>(() => {
     if (showOccupancy.value && showIncidents.value) return rawOverlays.value;
 
@@ -117,11 +200,25 @@ export function useWarehouseGrid() {
   }
 
   function runSimulation(units: number): SimulationResult | null {
-    return null;
+    if (!layoutSnapshot.value) return null;
+
+    const occupancyMap: Record<string, { locationId: string; isOccupied: boolean }> = {};
+    for (const [locId, qty] of Object.entries(stateStore.inventoryByLocation)) {
+      safeSet(occupancyMap, locId, { locationId: locId, isOccupied: (qty as number) > 0 });
+    }
+
+    const simService = new SimulationService();
+    const result = simService.simulate(
+      { units },
+      layoutSnapshot.value,
+      { locations: occupancyMap, zoneDensities: [] }
+    );
+    lastSimulationResult.value = result;
+    return result;
   }
 
   function clearSimulationRecommendations(): void {
-    recommendations.value = [];
+    lastSimulationResult.value = null;
   }
 
   async function fetchDomainBaseline<T>(endpoint: string): Promise<T[]> {
@@ -153,7 +250,7 @@ export function useWarehouseGrid() {
       stateStore.initializeFromBaseline(inventoryRaw, incidentsRaw);
       
       heatmapEntries.value = [];
-      recommendations.value = [];
+      lastSimulationResult.value = null;
     } catch (error) {
       layoutLoadError.value = error instanceof Error ? error.message : 'A domain error occurred while loading warehouse data';
     } finally {
