@@ -193,6 +193,7 @@ Completed features:
 - Critical severity emphasis enforcing strong contrast and visual cues for critical problems.
 - Cross-surface interaction feedback ensuring immediate local reflection of state changes (acknowledgments, dismissals) via CSS transitions.
 - Empty / Calm state handling avoiding completely empty dashboards and displaying positive confirmation of active monitoring.
+- Reactive Recommendation Wiring: Connected the deterministic `RecommendationService` to `useWarehouseGrid` to dynamically surface actionable operational intelligence based on live occupancy, incidents, and simulation results.
 
 Not implemented yet (deferred beyond Phase 4):
 

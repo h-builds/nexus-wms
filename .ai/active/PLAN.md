@@ -495,6 +495,7 @@ This phase establishes:
 - [x] unified alert system across modules
 - [x] visual feedback loops between surfaces
 - [x] highlight anomalies and system reactions in real-time
+- [x] reactive operational intelligence via RecommendationService wiring in Orchestrator Twin
 
 **Exit Criteria:**
 
