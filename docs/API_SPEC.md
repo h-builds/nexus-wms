@@ -941,6 +941,124 @@ Status codes:
 
 ---
 
+## Intelligence
+
+### GET /api/intelligence/traces
+
+Purpose:
+
+- list decision traces
+- support frontend observability with filtering
+
+Query params:
+
+- `status` (optional)
+- `severity` (optional)
+- `agentDomain` (optional)
+- `sort` (optional, e.g. `-createdAt`)
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "id": "trace_001",
+      "agentId": "InventoryAnomalyAgent",
+      "agentDomain": "inventory",
+      "causationId": "mov_001",
+      "severity": "high",
+      "detection": "Stock adjustment exceeded 30%",
+      "suggestion": "Initiate cycle count",
+      "status": "pending",
+      "createdAt": "2026-06-10T23:00:00Z"
+    }
+  ],
+  "meta": {
+    "currentPage": 1,
+    "perPage": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  }
+}
+```
+
+### GET /api/intelligence/traces/{id}
+
+Purpose:
+
+- return one decision trace by id
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "trace_001",
+    "agentId": "InventoryAnomalyAgent",
+    "agentDomain": "inventory",
+    "causationId": "mov_001",
+    "severity": "high",
+    "detection": "Stock adjustment exceeded 30%",
+    "suggestion": "Initiate cycle count",
+    "status": "pending",
+    "createdAt": "2026-06-10T23:00:00Z"
+  }
+}
+```
+
+### PATCH /api/intelligence/traces/{id}/status
+
+Purpose:
+
+- update the human-acknowledged status of a decision trace
+
+Request Body:
+
+```json
+{
+  "status": "acknowledged"
+}
+```
+
+Allowed values:
+
+- `acknowledged`
+- `acted_upon`
+- `dismissed`
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "trace_001",
+    "status": "acknowledged"
+  }
+}
+```
+
+### GET /api/intelligence/traces/metrics
+
+Purpose:
+
+- fetch summary metrics for decision traces (e.g., active advisories)
+
+Response:
+
+```json
+{
+  "data": {
+    "totalAdvisories": 10,
+    "actedUpon": 2,
+    "dismissed": 1,
+    "criticalAlerts": 3
+  }
+}
+```
+
+---
+
 ## MVP Boundaries
 
 This specification intentionally excludes:

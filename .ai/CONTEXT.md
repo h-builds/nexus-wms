@@ -152,7 +152,7 @@ Not implemented yet (deferred beyond Phase 4.2.2):
 - actual coding of backend asynchronous workers / queues
 - actual coding of AI agent logic
 
-### Phase 4.3 / Cross-Surface Consumption (ACTIVE)
+### Phase 4.3 / Cross-Surface Consumption (VALIDATED AND COMPLETE)
 
 Phase 4.3 connects the backend event pipeline into all real-time visual and functional surfaces (Vapor Monitor, Orchestrator Twin) via websocket bindings.
 
@@ -169,7 +169,7 @@ Implemented features:
 Not implemented yet:
 - Autonomous Multi-Agent action hooks (deferred to later phases).
 
-### Phase 4.4 / Decision Intelligence Layer (ACTIVE)
+### Phase 4.4 / Decision Intelligence Layer (VALIDATED AND COMPLETE)
 
 Phase 4.4 defines the formal decision intelligence model — how agents record, explain, and link their advisory outputs to the system's event-driven backbone.
 
@@ -445,7 +445,7 @@ Near-term implementation order should be:
 12. Phase 4.1 integration backbone definition (completed — architectural alignment)
 13. Phase 4.2 event pipeline implementation (completed — outbox integrity and broadcast safety)
 14. Phase 4.3 cross-surface consumption (completed — deterministic event interpretation and drift-detection)
-15. Phase 4.4 decision intelligence layer (active — model definition, persistence, and advisory emission completed)
+15. Phase 4.4 decision intelligence layer (completed — model definition, persistence, and advisory emission completed)
 16. AI governance extensions
 
 ---

@@ -242,35 +242,6 @@ Agents may evolve to:
 
 ---
 
-## Agent Output Contract (DecisionTrace)
-
-Every agent output is persisted as a `DecisionTrace` record with the following required fields:
-
-| Field             | Purpose                                                                                         |
-| :---------------- | :---------------------------------------------------------------------------------------------- |
-| `traceType`       | Classification: `anomaly_detection`, `pattern_insight`, `optimization_suggestion`, `risk_alert` |
-| `agentId`         | Identifier of the producing agent                                                               |
-| `agentDomain`     | Domain scope of the agent                                                                       |
-| `detection`       | Human-readable summary of what was detected                                                     |
-| `reasoning`       | Explanation of why the detection matters                                                        |
-| `suggestion`      | Recommended action for the operator                                                             |
-| `severity`        | `low`, `medium`, `high`, `critical`                                                             |
-| `causationId`     | The `eventId` that directly triggered analysis                                                  |
-| `correlationId`   | The originating correlation chain                                                               |
-| `triggerEventIds` | All event IDs the agent considered                                                              |
-| `status`          | Lifecycle state: `advisory` → `acknowledged` / `acted_upon` / `dismissed`                       |
-| `createdAt`       | Timestamp of trace creation                                                                     |
-
-**Optional (set during resolution)**:
-
-| Field         | Purpose                      |
-| :------------ | :--------------------------- |
-| `actedUponAt` | When the trace was resolved  |
-| `actedUponBy` | Actor who resolved the trace |
-
-See `docs/DOMAIN_MODEL.md` for full entity definition.
-
----
 
 ## Example Agent Output
 
