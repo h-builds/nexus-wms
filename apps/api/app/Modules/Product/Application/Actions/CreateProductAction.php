@@ -59,7 +59,7 @@ final class CreateProductAction
         );
     }
 
-    private function persistProductAndEvents(Product $newProduct, string $actorId, string $correlationId): Product
+    private function persistProductAndEvents(Product $newProduct, ?string $actorId, string $correlationId): Product
     {
         return DB::transaction(function () use ($newProduct, $actorId, $correlationId) {
             $persistedProduct = $this->products->create($newProduct);
@@ -70,18 +70,20 @@ final class CreateProductAction
         });
     }
 
-    private function publishProductCreatedEvent(Product $persistedProduct, string $actorId, string $correlationId): void
+    private function publishProductCreatedEvent(Product $persistedProduct, ?string $actorId, string $correlationId): void
     {
+        $payload = new \App\Modules\Product\Application\DTOs\ProductCreatedEventPayload(
+            productId: $persistedProduct->id(),
+            sku: $persistedProduct->sku(),
+            name: $persistedProduct->name(),
+            category: $persistedProduct->category(),
+            unitOfMeasure: $persistedProduct->unitOfMeasure()->value,
+        );
+
         $this->eventPublisher->publish(
             eventType: 'product.created',
-            payload: [
-                'productId' => $persistedProduct->id(),
-                'sku' => $persistedProduct->sku(),
-                'name' => $persistedProduct->name(),
-                'category' => $persistedProduct->category(),
-                'unitOfMeasure' => $persistedProduct->unitOfMeasure()->value,
-            ],
-            actorId: $actorId,
+            payload: $payload,
+            actorId: $actorId ?? 'system_user',
             correlationId: $correlationId
         );
     }

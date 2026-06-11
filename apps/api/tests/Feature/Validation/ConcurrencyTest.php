@@ -67,9 +67,9 @@ class ConcurrencyTest extends TestCase
 
         // Simulate concurrent version conflict via mock
         $mock = \Mockery::mock(InternalStockMutationService::class);
-        $mock->shouldReceive('applyMovement')
+        $mock->shouldReceive('applyMutation')
             ->andThrow(OptimisticLockException::forStockItem('fake'));
-        $this->app->instance(InternalStockMutationService::class, $mock);
+        app()->instance(InternalStockMutationService::class, $mock);
 
         $response = $this->actingAs($this->operator)->postJson('/api/movements', [
             'productId' => $this->productId,

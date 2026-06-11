@@ -18,6 +18,14 @@ use App\Modules\Movements\Application\DTOs\StockMovedEventPayload;
 use App\Modules\Movements\Application\DTOs\StockPickedEventPayload;
 use App\Modules\Movements\Application\DTOs\StockReceivedEventPayload;
 use App\Modules\Movements\Domain\Entities\InventoryMovement;
+use App\Modules\Product\Domain\Repositories\ProductRepository;
+use App\Modules\Movements\Domain\Repositories\MovementRepository;
+use App\Modules\Movements\Domain\Services\MovementValidator;
+use App\Modules\Movements\Domain\Enums\MovementType;
+use App\Modules\Product\Domain\Exceptions\ProductNotFound;
+use App\Modules\Movements\Domain\Exceptions\InvalidMovementType;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 final class RegisterMovementAction
 {

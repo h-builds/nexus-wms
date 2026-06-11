@@ -99,6 +99,7 @@ class BlockedLocationTest extends TestCase
     {
         $this->actingAs($this->supervisor)->patchJson("/api/locations/{$this->blockedLocationId}/status", [
             'isBlocked' => true,
+            'reason' => 'Testing',
         ])->assertStatus(200);
 
         $response = $this->actingAs($this->operator)->postJson('/api/movements', [
@@ -115,6 +116,7 @@ class BlockedLocationTest extends TestCase
     {
         $this->actingAs($this->supervisor)->patchJson("/api/locations/{$this->blockedLocationId}/status", [
             'isBlocked' => true,
+            'reason' => 'Testing',
         ])->assertStatus(200);
 
         $response = $this->actingAs($this->operator)->postJson('/api/movements', [
@@ -140,6 +142,7 @@ class BlockedLocationTest extends TestCase
 
         $this->actingAs($this->supervisor)->patchJson("/api/locations/{$this->blockedLocationId}/status", [
             'isBlocked' => true,
+            'reason' => 'Testing',
         ])->assertStatus(200);
 
         $response = $this->actingAs($this->operator)->postJson('/api/movements', [
@@ -156,6 +159,7 @@ class BlockedLocationTest extends TestCase
     {
         $this->actingAs($this->supervisor)->patchJson("/api/locations/{$this->blockedLocationId}/status", [
             'isBlocked' => true,
+            'reason' => 'Testing',
         ])->assertStatus(200);
 
         $blockedResponse = $this->actingAs($this->operator)->postJson('/api/movements', [
@@ -186,6 +190,7 @@ class BlockedLocationTest extends TestCase
     {
         $response = $this->actingAs($this->operator)->patchJson("/api/locations/{$this->blockedLocationId}/status", [
             'isBlocked' => true,
+            'reason' => 'Testing',
         ]);
 
         $response->assertStatus(403);

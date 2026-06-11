@@ -6,6 +6,7 @@ namespace App\Modules\Locations\Application\Actions;
 
 use App\Modules\Events\Application\Services\EventPublisher;
 use App\Modules\Locations\Application\DTOs\CreateLocationDTO;
+use App\Modules\Locations\Application\DTOs\LocationCreatedEventPayload;
 use App\Modules\Locations\Domain\Entities\Location;
 use App\Modules\Locations\Domain\Exceptions\DuplicateLocationLabel;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
@@ -72,13 +73,15 @@ final class CreateLocationAction
 
     private function dispatchLocationCreatedEvent(Location $persistedLocation, ?string $actorId, string $correlationId): void
     {
+        $payload = new LocationCreatedEventPayload(
+            locationId: $persistedLocation->id(),
+            label: $persistedLocation->label(),
+            warehouseCode: $persistedLocation->warehouseCode(),
+        );
+
         $this->eventPublisher->publish(
             eventType: 'location.created',
-            payload: [
-                'locationId' => $persistedLocation->id(),
-                'label' => $persistedLocation->label(),
-                'warehouseCode' => $persistedLocation->warehouseCode(),
-            ],
+            payload: $payload,
             actorId: $actorId ?? 'system_user',
             correlationId: $correlationId
         );

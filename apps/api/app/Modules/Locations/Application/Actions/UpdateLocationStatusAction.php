@@ -6,6 +6,7 @@ namespace App\Modules\Locations\Application\Actions;
 
 use App\Modules\Audit\Application\Services\AuditLogger;
 use App\Modules\Events\Application\Services\EventPublisher;
+use App\Modules\Locations\Application\DTOs\LocationStatusUpdatedEventPayload;
 use App\Modules\Locations\Application\DTOs\UpdateLocationStatusDTO;
 use App\Modules\Locations\Domain\Entities\Location;
 use App\Modules\Locations\Domain\Repositories\LocationRepository;
@@ -66,11 +67,11 @@ final class UpdateLocationStatusAction
 
     private function publishEvent(UpdateLocationStatusDTO $command, string $correlationId, string $eventType): void
     {
-        $eventPayload = ['locationId' => $command->locationId];
-        
-        if ($command->isBlocked && $command->reason !== null) {
-            $eventPayload['reason'] = $command->reason;
-        }
+        $eventPayload = new LocationStatusUpdatedEventPayload(
+            locationId: $command->locationId,
+            isBlocked: $command->isBlocked,
+            reason: $command->reason
+        );
 
         $this->eventPublisher->publish(
             eventType: $eventType,

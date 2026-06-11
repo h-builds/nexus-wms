@@ -107,8 +107,9 @@ class RegisterMovementTest extends TestCase
 
         // Mock InternalStockMutationService to throw OptimisticLockException
         $mock = \Mockery::mock(\App\Modules\Inventory\Application\Services\InternalStockMutationService::class);
-        $mock->shouldReceive('applyMovement')->andThrow(\App\Modules\Inventory\Domain\Exceptions\OptimisticLockException::forStockItem('fake_id'));
-        $this->app->instance(\App\Modules\Inventory\Application\Services\InternalStockMutationService::class, $mock);
+        $mock->shouldReceive('applyMutation')
+            ->andThrow(\App\Modules\Inventory\Domain\Exceptions\OptimisticLockException::forStockItem('fake'));
+        $this->instance(\App\Modules\Inventory\Application\Services\InternalStockMutationService::class, $mock);
 
         $payload = [
             'productId' => $product->id,

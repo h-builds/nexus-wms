@@ -11,4 +11,5 @@ return [
     App\Modules\Movements\Infrastructure\Providers\MovementServiceProvider::class,
     App\Modules\Incidents\Infrastructure\Providers\IncidentServiceProvider::class,
     App\Modules\Intelligence\Infrastructure\Providers\IntelligenceServiceProvider::class,
+    App\Modules\Events\Infrastructure\Providers\EventServiceProvider::class,
 ];

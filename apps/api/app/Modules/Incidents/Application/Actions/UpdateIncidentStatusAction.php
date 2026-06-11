@@ -46,12 +46,6 @@ final class UpdateIncidentStatusAction
             });
         } catch (\App\Modules\Incidents\Application\Exceptions\IdempotencyConflictException $e) {
             throw $e;
-        } catch (\Throwable $e) {
-            throw new \App\Modules\Incidents\Application\Exceptions\IncidentStatusUpdateFailedException(
-                'Failed to update incident status and dispatch events.',
-                0,
-                $e
-            );
         }
 
         return $incident;

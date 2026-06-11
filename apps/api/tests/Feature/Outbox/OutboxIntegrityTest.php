@@ -55,8 +55,8 @@ class OutboxIntegrityTest extends TestCase
         $this->assertGreaterThan(0, $outboxCountAfterFirst);
 
         $stockMutationMock = \Mockery::mock(\App\Modules\Inventory\Application\Services\InternalStockMutationService::class);
-        $stockMutationMock->shouldReceive('applyMovement')->andThrow(\App\Modules\Inventory\Domain\Exceptions\OptimisticLockException::forStockItem('fake_id'));
-        $this->app->instance(\App\Modules\Inventory\Application\Services\InternalStockMutationService::class, $stockMutationMock);
+        $stockMutationMock->shouldReceive('applyMutation')->andThrow(\App\Modules\Inventory\Domain\Exceptions\OptimisticLockException::forStockItem('fake_id'));
+        $this->instance(\App\Modules\Inventory\Application\Services\InternalStockMutationService::class, $stockMutationMock);
 
         $movementPayload = [
             'productId' => $stockItem->id,
