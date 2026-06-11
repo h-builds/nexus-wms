@@ -62,6 +62,7 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 - Decision Intelligence Layer with agent duplicate prevention and failure isolation (Phase 4.4)
 - Trace Query & Metrics layer integrated reactively into Vapor Monitor and Orchestrator Twin
 - Unified alert signals and visual feedback loops (Phase 4.5)
+- **100% Test Coverage for Integration**: Added `DecisionTraceIntegrationTest` and `CrossSurfaceEventContractTest`, pushing the test suite to 69 passing tests with 338 assertions.
 
 ---
 
