@@ -87,6 +87,14 @@ Purpose:
 - congestion awareness
 - future slotting and recommendation engine
 
+#### Inbound Simulation Architecture
+The current Inbound Simulation engine operates as a strictly **deterministic "What-if" capacity calculator**.
+- **Read-Only / No Mutation:** It reads the current warehouse state snapshot (zones, aisles, racks, and bins) to assess available capacity. It does *not* persist simulation data or mutate the actual system of record.
+- **Allocation Strategy:** It currently uses a simple sequential (first-fit) allocation logic—finding empty, non-blocked locations to see if a hypothetical inbound load fits.
+- **Suggestion Only:** The output purely drives the operational intelligence recommendations layer, advising operators on potential capacity overflow or zone congestion before real inbound shipping occurs.
+
+Developers modifying the simulation should maintain its side-effect-free nature. Any advanced algorithms (e.g., bin-packing, weight distribution) should be swapped into the `SimulationService` without breaking the core read-only contract.
+
 Style:
 - Vue 3.6
 - Vite
