@@ -162,7 +162,7 @@ sequenceDiagram
 
 ### 4. Event Flow
 
-The Transactional Outbox pattern is implemented. Event Relay and Message Broker are planned for Phase 2+.
+The Transactional Outbox pattern and WebSocket broadcasting (Laravel Reverb) are fully implemented. External enterprise Message Brokers (Kafka / RabbitMQ) are deferred to future scaling phases.
 
 ```mermaid
 flowchart LR
@@ -171,19 +171,19 @@ flowchart LR
 
     Action["Domain Action\n(Implemented ✅)"]:::current
     Outbox["Transactional Outbox\n(Implemented ✅)"]:::current
-    Relay["Event Relay\n(Phase 2+)"]:::future
-    Bus["Message Broker\n(Kafka / RabbitMQ - Phase 2+)"]:::future
-    Consumers["Consumers\n(Twin, Audit, etc. - Phase 2+)"]:::future
+    Relay["WebSocket Broadcast\n(Laravel Reverb ✅)"]:::current
+    Consumers["Consumers\n(Twin, Vapor Monitor ✅)"]:::current
+    Bus["Enterprise Broker\n(Kafka / RabbitMQ - Future)"]:::future
 
     Action -->|Transactional Insert| Outbox
-    Outbox -.->|Tails / Polls| Relay
-    Relay -.->|Publishes| Bus
-    Bus -.->|Consumes| Consumers
+    Outbox -->|Dispatches via Queue| Relay
+    Relay -->|Publishes to Clients| Consumers
+    Outbox -.->|Tails / Polls| Bus
 ```
 
 ### 5. MVP Scope Diagram
 
-A visual boundary of what was delivered in Phase 0 (Foundation Core) and what Phase 1 adds.
+A visual boundary of what was delivered across all phases up to the completion of Phase 4.
 
 ```mermaid
 flowchart TB
@@ -225,7 +225,7 @@ flowchart TB
         RS["Rule-based Orchestrator"]
     end
 
-    subgraph Phase4 ["🚧 Phase 4 — Total Integration (Active)"]
+    subgraph Phase4 ["✅ Phase 4 — Total Integration (Complete)"]
         direction TB
         IB["Integration Backbone"]
         EP["Event Pipeline"]
@@ -243,10 +243,10 @@ flowchart TB
 
 ## 📦 App Surfaces
 
-- [`apps/api`](apps/api): Laravel 13 backend (System of Record, Domain Logic).
-- [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6) — **Phase 2 complete**.
+- [`apps/api`](apps/api): Laravel 13 backend (System of Record, Domain Logic) — **Phase 0 & 4 complete**.
+- [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6) — **Phase 2 & 4 integrated**.
 - [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6) — **Phase 1 complete**.
-- [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation and spatial twin (Vue 3.6) — **Phase 3 complete**.
+- [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation and spatial twin (Vue 3.6) — **Phase 3 & 4 integrated**.
 
 ## 🏗️ Architecture Principles
 - **Modular Monolith:** Event-driven internal communication, zero circular dependencies.
