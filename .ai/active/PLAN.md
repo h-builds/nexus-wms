@@ -2,566 +2,653 @@
 
 ## Plan ID
 
-2026-03-field-agent-mobile
+2026-06-mission-control-solutions-engineering-demo
 
 ---
 
-## Objective
+## Current Stage
 
-Build the foundational, production-grade core of NexusWMS with:
+**Phase 5 / Mission Control & Enterprise Solutions Engineering Demo — ACTIVE**
 
-- clean domain boundaries
-- event-driven architecture
-- auditability by default
-- AI governance integrated from day one
+Phases 0 through 4.5 are considered complete and must not be rebuilt. The current goal is not to add random features. The goal is to package the existing operational core, realtime event pipeline, decision intelligence layer, and warehouse simulation surfaces into a single high-impact technical demo that proves AI Solutions Engineering capability.
 
-This phase prioritizes correctness, traceability, and structure over feature breadth.
+NexusWMS is not positioned as a generic SaaS product, a wrapper around an AI API, or a commercial subscription app. It is positioned as a portfolio-grade, enterprise-style integration case study for warehouse operations, legacy-system adaptation, realtime monitoring, event-driven UI, explainable AI decision traces, and resilient field execution.
 
 ---
 
-## Phase 0 — Foundation Core ✅ COMPLETE
+## Baseline Already Completed
 
-**Completed:** 2026-03-29
+The following capabilities are treated as existing foundations:
 
-This phase defined and validated the minimum system that can:
+- Laravel modular monolith API with domain boundaries.
+- Product, Locations, Inventory, Movements, Incidents, Events, Audit, and Intelligence foundations.
+- Transactional Outbox with event broadcasting through Laravel Reverb.
+- Vapor Monitor realtime operational dashboard.
+- Field-Agent Mobile execution surface with IndexedDB-backed offline draft persistence and sync queue foundation.
+- Orchestrator Twin Lite with 2.5D warehouse layout, occupancy, incidents, heatmap, simulation, and deterministic recommendations.
+- Decision Trace persistence, query layer, metrics, UI binding, and human interaction flows.
+- Cross-surface event interpretation, drift detection, burst stability, and alert feedback loops.
 
-- track inventory correctly
-- handle incidents safely
-- emit reliable events
-- support future AI agents without risk
-
-### Scope (In)
-
-#### Domains
-
-- Product
-- Inventory
-- Locations
-- Incidents
-- Movements (basic)
-- Events
-- Audit
-
-#### Core Capabilities
-
-1. **Inventory Integrity** — stock tracking per location, available vs blocked quantities, safe adjustments, no negative stock
-2. **Incident Management** — incident creation, classification (AI-assisted), inventory impact, resolution flow, audit trail
-3. **Event System** — event emission after domain actions, immutable event structure, correlation and causation tracking
-4. **API Layer** — clean REST endpoints, validated inputs, consistent response shape
-5. **Auditability** — actor tracking, timestamped changes, no silent mutations
-6. **AI Governance** — prompt injection protection, strict input sanitization, AI output validation, rule-based override of AI suggestions
-
-#### Scope (Out — Deferred to Later Phases)
-
-- advanced picking logic
-- replenishment automation
-- route optimization
-- multi-warehouse orchestration
-- billing or financial modules
-- external integrations
-- real-time streaming dashboards
-
-### Deliverables
-
-#### Documentation
-
-- [x] DOMAIN_MODEL.md
-- [x] API_SPEC.md
-- [x] EVENT_CATALOG.md
-- [x] SECURITY_MODEL.md
-- [x] docs/FLOWS/incident-flow.md
-
-#### AI Governance
-
-- [x] .ai/CONTEXT.md
-- [x] .ai/RULES.md
-- [x] .ai/DATA_GUARDRAILS.md
-- [x] .ai/EVALS.md
-- [x] .ai/PROMPT_LIBRARY.md
-- [x] .ai/AGENTS.md
-
-#### Developer Governance
-
-- [x] .ai/PR_TEMPLATE.md
-- [x] .ai/COMMIT_GUIDE.md
-- [x] .ai/REVIEW_CHECKLIST.md
-- [x] .github/pull_request_template.md
-
-#### Implementation
-
-- [x] implement Product domain
-- [x] implement Locations domain
-- [x] implement Inventory domain
-- [x] implement Movements domain
-- [x] implement Incident flow (end-to-end)
-- [x] implement Event emission layer (Transactional Outbox)
-- [x] implement Audit logging
-- [x] align backend with API_SPEC
-- [x] validate flows against real scenarios (49 tests, 218 assertions, 8 scenarios, 0 failures)
-
-### Implementation Order (Completed)
-
-1. Product
-2. Locations
-3. Inventory
-4. Incidents
-5. Events
-6. Audit
-7. API alignment
-8. Validation scenarios
-
-### Success Criteria (All Met)
-
-- ✅ inventory is always consistent (verified: quantityOnHand = quantityAvailable + quantityBlocked, no negative stock)
-- ✅ incidents are fully traceable (verified: full lifecycle audit + events, status machine enforced)
-- ✅ events are emitted correctly (verified: transactional outbox for all state-changing operations)
-- ✅ audit trail is complete (verified: all movements, incidents, and location changes audited)
-- ✅ API matches documentation (verified: envelopes, pagination, error codes, camelCase, actor identity)
-- ✅ AI cannot corrupt system state (verified: RBAC enforcement, immutable fields rejected, actor identity server-derived)
-
-### Exit Conditions (All Met)
-
-- ✅ all core domains implemented
-- ✅ no critical validation gaps (5 gaps found and fixed during validation)
-- ✅ no silent mutations
-- ✅ all flows tested (49 automated tests across 8 validation scenarios)
-- ✅ documentation and implementation aligned
+Previous phases remain valuable, but they are now part of the foundation, not the active plan.
 
 ---
 
-## Phase 1 — Field-Agent Mobile Core MVP ✅ VALIDATED AND COMPLETE
+## Strategic Objective
 
-**Started:** 2026-03-29
-**Completed:** 2026-03-29
+Build a unified demo experience that lets a recruiter, technical lead, architect, or engineering manager understand the system in under 30 seconds and then inspect its engineering depth in under 5 minutes.
 
-Phase 1 has been fully validated through manual end-to-end scenarios covering:
+The demo must prove four things:
 
-- product lookup
-- stock visibility
-- incident reporting
-- movement execution
-- offline draft persistence
+1. **Operational execution:** warehouse workers can report incidents, inspect stock, and prepare movements from a field interface.
+2. **Realtime visibility:** operational events propagate to monitoring surfaces without polling or manual refresh.
+3. **Spatial intelligence:** the warehouse layout reacts to incidents, occupancy pressure, and blocked locations.
+4. **Governed AI:** intelligence is explainable, auditable, suggestion-first, and never allowed to mutate domain state without an authorized command path.
 
-All flows behave correctly within MVP scope.
+---
+
+## Product Narrative
+
+### Positioning
+
+NexusWMS demonstrates how modern AI Solutions Engineering works inside traditional operational environments.
+
+The project does not say:
+
+> “I built a SaaS app with AI features.”
+
+It says:
+
+> “I engineered an event-driven logistics system that connects field execution, realtime monitoring, spatial simulation, legacy data ingestion, and explainable AI decision support without breaking domain invariants.”
+
+### Demo Promise
+
+A visitor should be able to press one button and see the entire architecture react:
+
+```text
+Scenario Trigger
+  -> Field/Legacy/Input Command
+  -> Laravel Domain Logic
+  -> Transactional Outbox
+  -> Reverb Broadcast
+  -> Vapor Monitor Telemetry
+  -> Orchestrator Twin Spatial Update
+  -> Decision Trace Explanation
+  -> Human-Approved Mitigation
+  -> Audited Operational Result
+```
+
+---
+
+## Non-Negotiable Engineering Guardrails
+
+### 1. No Fake Completeness
+
+Do not claim a feature is production-ready unless it is backed by real code, real API behavior, or clearly labeled demo simulation.
+
+Allowed:
+
+- demo scenario seeders
+- synthetic warehouse data
+- controlled simulation endpoints
+- read-only what-if calculations
+- explicitly labeled demo mode
+
+Forbidden:
+
+- fake realtime
+- fake AI autonomy
+- fake ERP integration presented as real SAP/AS400 connectivity
+- mocked state mutations that bypass the API
+- frontend-only business rules that should belong to backend domains
+
+### 2. AI Remains Suggestion-First
+
+In this phase, AI and deterministic intelligence may detect, explain, and suggest. They must not silently mutate inventory, block locations, or execute movements.
+
+Any state-changing mitigation must flow through an authorized command path:
+
+```text
+DecisionTrace suggestion
+  -> human clicks Apply / Act upon
+  -> authorized backend command
+  -> domain validation
+  -> audit log
+  -> domain event
+  -> realtime UI update
+```
+
+### 3. Inventory Integrity Is Untouchable
+
+Inventory state must only change through explicit movements or adjustments. Incidents, agents, simulations, and UI panels must not directly mutate stock.
+
+### 4. Simulation Must Be Isolated
+
+Public demo traffic must not poison the shared database. Every stress scenario must be either:
+
+- scoped to an explicit demo session, or
+- written with a `simulationRunId`, or
+- cleaned through a controlled purge/reset command.
+
+### 5. One Screen, Real System
+
+Mission Control should reduce demo friction, not replace the architecture. It should be a unified viewport over the real system behavior, not a detached mock landing page.
+
+---
+
+## Phase 5 Scope
+
+### In Scope
+
+- Add a unified `apps/mission-control` demo surface.
+- Build a controlled scenario trigger system for industrial stress and incident demos.
+- Add demo-session isolation and reset/purge mechanics.
+- Add a legacy ERP import simulator using CSV/XML-like synthetic data.
+- Add a technical narrative layer that explains architecture decisions inline.
+- Improve visual density and portfolio storytelling across existing surfaces.
+- Add end-to-end demo validation and browser walkthrough tests.
+- Update README, CONTEXT, ARCHITECTURE, EVENT_CATALOG, API_SPEC, and PLAN documentation to reflect the new active phase.
+
+### Out of Scope
+
+- Full commercial SaaS landing page.
+- Billing, plans, subscriptions, or pricing.
+- Real SAP, Oracle, AS400, or third-party ERP integration.
+- Fully autonomous AI agents that mutate state without human approval.
+- Full 3D physics simulation.
+- Robot orchestration.
+- Procurement, supplier scoring, or forecasting beyond optional demo read models.
+- Production-grade multi-tenant isolation.
+
+---
+
+## Target Runtime Surface
+
+### New App: `apps/mission-control`
+
+Purpose:
+
+- act as the single entry point for the portfolio demo
+- orchestrate scenario triggers
+- display compact live panels from the three existing surfaces
+- explain the architecture as it runs
+- expose reset/isolation status
+
+Recommended layout:
+
+```text
++----------------------------------------------------------------------------------+
+| NEXUSWMS — AI SOLUTIONS ENGINEERING MISSION CONTROL                              |
+| Modular Monolith • Transactional Outbox • Reverb • Offline Field UX • Decision AI |
++-------------------------------+--------------------------------------------------+
+| Scenario Control              | Orchestrator Twin Snapshot                       |
+|                               |                                                  |
+| [Run Industrial Stress]       | 2.5D warehouse grid                              |
+| [Trigger Critical Incident]   | blocked / congested / quarantined zones         |
+| [Replay Legacy ERP Import]    | DecisionTrace overlay                            |
+| [Reset Demo Session]          |                                                  |
++-------------------------------+--------------------------------------------------+
+| Field-Agent Mobile Snapshot   | Vapor Monitor Telemetry                          |
+|                               |                                                  |
+| offline toggle                | raw event stream                                 |
+| draft queue indicator         | KPI deltas                                       |
+| movement / incident form      | drift / burst diagnostics                        |
++-------------------------------+--------------------------------------------------+
+| Architecture Narrative Strip: current event chain, correlationId, causationId     |
++----------------------------------------------------------------------------------+
+```
+
+Implementation rule:
+
+`apps/mission-control` must consume shared contracts and real APIs. It may render compact demo panels, but it must not duplicate canonical business rules from `apps/api` or reinterpret domain ownership.
+
+---
+
+## Phase 5 Execution Plan
+
+## Phase 5.0 — Documentation Transition & Scope Lock
+
+**Type:** Governance / Planning
 
 ### Objective
 
-Build the first operational execution surface of NexusWMS through a mobile-first field workflow. This phase delivers a working mobile application that warehouse operators can use to perform core tasks in the field, with an offline-first architecture to handle connectivity gaps.
+Replace the completed historical plan with this active plan and prevent agents from continuing to optimize completed phases as if they were unfinished.
 
-### Scope (In)
+### Tasks
 
-- incident registration UI
-- product lookup UI
-- location selection UI
-- stock lookup UI
-- simple movement registration UI
-- offline-first local persistence foundation
-- sync queue foundation
+- [ ] Archive the old completed plan under a historical filename or docs archive.
+- [ ] Set this file as the new active `PLAN.md`.
+- [ ] Update `CONTEXT.md` current stage to `Phase 5 / Mission Control & Enterprise Solutions Engineering Demo`.
+- [ ] Add explicit note that Phases 0–4.5 are baseline and should not be rebuilt.
+- [ ] Add Phase 5 scope boundaries to AI governance docs.
+- [ ] Add a short `docs/FLOWS/demo-scenario-flow.md` describing the public demo flow.
 
-### Scope (Out — Deferred)
+### Exit Criteria
 
-- no Vapor Monitor work yet
-- no realtime dashboard
-- no advanced FIFO/FEFO
-- no full sync conflict resolution
-- no semantic search implementation unless already backed by real API capability
-- no production-grade voice pipeline unless grounded in actual backend support
-
-### Deliverables
-
-- [x] product lookup flow
-- [x] stock lookup flow
-- [x] incident registration flow
-- [x] simple movement registration flow
-- [x] local offline persistence foundation
-- [x] sync queue foundation
-
-### Success Criteria
-
-- [x] operator can look up products and view stock levels on mobile
-- [x] operator can register incidents from the field
-- [x] operator can execute simple movements (inbound, outbound, transfer)
-- [x] all operations persist locally when offline
-- [-] queued operations sync when connectivity is restored (Deferred to Phase 2)
-- [x] all UI flows consume the validated Phase 0 REST API
-
-### Exit Conditions
-
-- [x] all deliverables completed and tested
-- [x] offline persistence verified with simulated connectivity loss
-- [-] sync queue correctly replays queued operations (Deferred to Phase 2)
-- [x] no regressions in Phase 0 backend (test suite still green)
-- [x] documentation updated to reflect mobile architecture
+- [ ] AI assistants understand that Phase 5 is the only active implementation phase.
+- [ ] Documentation does not imply that already completed modules need to be rebuilt.
+- [ ] Every new Phase 5 capability has an owner and a bounded scope.
 
 ---
 
-## Phase 2 — Operational Visibility ✅ VALIDATED AND COMPLETE
+## Phase 5.1 — Demo Session Isolation & Reset Mechanics
 
-**Started:** 2026-03-29
-**Completed:** 2026-03-29
-
-Phase 2 has been formally validated through manual end-to-end integration mapping frontend state directly against Laravel Reverb.
+**Type:** Backend Infrastructure / Portfolio Safety
 
 ### Objective
 
-Build the first realtime operational monitoring surface of NexusWMS through Vapor-Monitor.
+Ensure public demo usage cannot corrupt the baseline operational dataset or pollute global metrics with endless synthetic events.
 
-This phase demonstrates the ability to handle event-driven warehouse visibility at scale using a decision-oriented dashboard, not a presentation-only UI.
+### Preferred MVP Strategy
 
-### Scope (In)
+Use a pragmatic `simulationRunId` and reset/purge approach instead of complex per-user ephemeral databases.
 
-- realtime dashboard for inbound, outbound, and incidents
-- WebSocket integration via Laravel Reverb
-- basic KPIs (inventory, incidents, differences)
-- occupancy view by zone
-- event-aligned frontend monitoring state
+### Tasks
 
-### Scope (Out)
+- [ ] Introduce a `simulationRunId` or equivalent demo context marker for generated demo events, decision traces, and audit records where appropriate.
+- [ ] Add `php artisan nexus:demo-reset` to restore the demo dataset to a known baseline.
+- [ ] Add `php artisan nexus:purge-simulations` to remove expired simulation records.
+- [ ] Add seed data for a stable warehouse demo baseline: products, stock, locations, incidents, and movement history.
+- [ ] Add a backend endpoint for resetting the current demo session if safe for the deployment environment.
+- [ ] Show demo isolation status in Mission Control.
 
-- purchasing / suppliers
-- forecasting / advanced analytics
-- digital twin simulation
-- multi-agent orchestration
-- high-polish UI work
+### Guardrails
 
-### Deliverables
+- Do not delete non-demo records.
+- Do not purge records without a clear simulation/session marker.
+- Do not break audit/event append-only principles for production-like records; demo reset must be clearly scoped to demo data.
 
-- [x] realtime dashboard connected to real backend data
-- [x] realtime incident updates via Reverb
-- [x] realtime inventory-related updates via Reverb
-- [x] KPI widgets for total inventory, open incidents, and differences
-- [x] occupancy-by-zone view
-- [x] domain-structured frontend monitoring state
+### Exit Criteria
 
-### Success Criteria
-
-- [x] operator/supervisor can see inbound, outbound, and incident state in one dashboard
-- [x] dashboard updates without manual refresh for supported events
-- [x] KPI values stay aligned with backend state
-- [x] occupancy can be understood quickly by zone
-- [x] no fake realtime behavior is introduced
-
-### Exit Conditions
-
-- [x] Vapor-Monitor provides real operational visibility
-- [x] Reverb transport is working for the selected MVP events
-- [x] frontend state remains aligned with event contracts
-- [x] documentation updated to reflect monitoring architecture
+- [ ] Running the public demo repeatedly does not permanently degrade the dataset.
+- [ ] A reset returns the system to a known baseline.
+- [ ] The UI clearly communicates whether the visitor is operating in demo mode.
 
 ---
 
-## Phase 3 — Orchestrator Twin Lite ✅ VALIDATED AND COMPLETE
+## Phase 5.2 — Scenario Engine & Industrial Stress Injector
 
-**Started:** 2026-03-30
-**Completed:** 2026-03-30
-
-Phase 3 has been fully validated through browser automation against the real UI, confirming spatial rendering, operational overlays, simulation flow, deterministic recommendations, and 2.5D visual density mapping.
+**Type:** Backend Application Layer / Simulation
 
 ### Objective
 
-Demonstrate tactical orchestration capability by transforming operational data into spatial intelligence and decision support.
+Create controlled scenario execution that generates realistic warehouse pressure without bypassing domain logic.
 
-### Scope (In)
+### Scenario Types
 
-- warehouse layout representation (zones, racks, bins)
-- occupancy visualization (per location / zone)
-- incident spatial mapping
-- blocked location visibility
-- simple heatmap (activity or anomalies)
-- simulation input (hypothetical inbound load)
-- rule-based recommendation engine (basic)
+1. **Industrial Stress Burst**
+   - Simulate multiple operators generating movements and incidents.
+   - Exercise idempotency, outbox dispatch, drift detection, and burst stability.
 
-### Scope (Out)
+2. **Critical Aisle Incident**
+   - Create a high-severity incident affecting a known location/aisle.
+   - Emit normal incident and inventory impact events through existing domain services.
+   - Generate or surface DecisionTrace output as advisory intelligence.
 
-- no real-time physics simulation
-- no multi-agent orchestration
-- no optimization algorithms
-- no full digital twin engine
+3. **Offline Field Recovery**
+   - Demonstrate local draft persistence in Field-Agent Mobile.
+   - Reconnect and replay only through valid sync/command boundaries.
 
-### Deliverables
+4. **Legacy ERP Import**
+   - Import synthetic CSV/XML-style records.
+   - Validate, reject, normalize, and transform accepted records into explicit domain commands/events.
 
-- [x] layout rendering engine (grid-based spatial projection)
-- [x] occupancy mapping from inventory API (domain layer)
-- [x] incident + blocked location overlays
-- [x] heatmap visualization (simple aggregation)
-- [x] simulation input panel (manual scenario)
-- [x] recommendation output (rule-based domain service)
+### Tasks
 
-### Success Criteria
+- [ ] Add `DemoScenario` definitions under a clear backend owner, preferably a `Simulation` or `Demo` module.
+- [ ] Implement a `ScenarioRunner` application service.
+- [ ] Add `php artisan nexus:inject-stress --scenario=<name> --count=<n>`.
+- [ ] Add API endpoint `POST /api/demo/scenarios/{scenario}/run` for Mission Control.
+- [ ] Ensure scenario actions call existing domain services instead of writing directly to tables.
+- [ ] Add correlation IDs to all events produced by a scenario run.
+- [ ] Return a scenario execution summary with counts, created IDs, warnings, and correlation ID.
 
-- [x] user can identify high-density zones visually
-- [x] user can detect problem areas without reading tables
-- [x] system provides at least one actionable suggestion
-- [x] visualization reflects real backend state (no mock drift)
+### Exit Criteria
 
-### Exit Conditions
-
-- [x] layout + occupancy working end-to-end
-- [x] incidents mapped spatially
-- [x] basic simulation working
-- [x] recommendation logic visible in UI
-
-### Phase 3.1 — Spatial Rendering ✅
-
-- [x] grid renderer
-- [x] zones visualized
-- [x] no business logic in UI
-
-### Phase 3.2 — Operational Layers ✅
-
-- [x] occupancy
-- [x] incidents
-- [x] blocked
-
-### Phase 3.3 — Intelligence Layer ✅
-
-- [x] heatmap
-- [x] simulation
-- [x] recommendations
-
-### Phase 3.4 — UX Hardening ✅
-
-- [x] toggles (occupancy, incidents, heatmap layer visibility)
-- [x] panels (SimulationPanel, RecommendationsPanel — extracted standalone components)
-- [x] clarity (legend, priority badges, explicit target actions, responsive layout)
+- [ ] A scenario produces visible events across Vapor Monitor and Orchestrator Twin.
+- [ ] Scenario execution is repeatable and bounded.
+- [ ] No scenario bypasses authorization, validation, audit, or event rules.
 
 ---
 
-### Phase 3.5 — Spatial Depth (2.5D Rendering) ✅
+## Phase 5.3 — Legacy ERP Sync Adapter Simulator
 
-- [x] perspective (BinCell lid and depth edges)
-- [x] depth (density-scaled shadows and vertical lift)
-- [x] stacking (internal segmentation for occupied bins)
-- [x] height mapping (data → visual volume mapping, expanded contrast)
-- [x] anomaly representation (structural skew and crack gradients for incidents)
-
----
-
-## Phase 4 — Total Integration ✅ VALIDATED AND COMPLETE
-
-**Started:** 2026-03-30
+**Type:** Backend Integration / Enterprise Storytelling
 
 ### Objective
 
-Transform NexusWMS into a fully integrated distributed system by introducing a unified event-driven backbone that connects all modules.
+Prove that NexusWMS can sit between old enterprise data formats and modern event-driven operational workflows.
 
-This phase establishes:
+### MVP Behavior
 
-- end-to-end system orchestration
-- cross-module communication via events
-- full traceability using correlation models
-- decision accountability through structured logging
+This is not a real ERP connector. It is a deterministic adapter simulator that ingests messy synthetic files and shows how enterprise integration should be validated, normalized, rejected, and audited.
 
----
+### Tasks
 
-### Phase 4.1 — Integration Backbone Definition ✅
+- [ ] Add sample files under `apps/api/database/demo/legacy-imports/` or `docs/samples/legacy-imports/`.
+- [ ] Define `LegacyInboundRecord` DTO.
+- [ ] Implement parser for CSV first; XML can be added only if CSV is complete.
+- [ ] Normalize product, quantity, location, lot, and reference fields.
+- [ ] Reject malformed records with structured errors.
+- [ ] Transform accepted records into existing movement/receipt command flow.
+- [ ] Emit normal `movement.created` and `inventory.stock.received` events through the current outbox path.
+- [ ] Add import summary endpoint or command output.
+- [ ] Display import results in Mission Control.
 
-**Type:** Architecture Alignment (NO implementation)
+### Exit Criteria
 
-- [x] align architecture to a true event-driven model
-- [x] define how the 3 modules connect and communicate
-- [x] establish the correlation model (correlationId, causationId)
-- [x] define decision logging concept (non-persistent)
-
-**Exit Criteria:**
-
-- architecture clearly defines event flow across all modules
-- correlation model is standardized across the system
-- integration flow is documented end-to-end
-- system reads as a distributed event-driven architecture
+- [ ] A legacy import can create valid inbound movements.
+- [ ] Bad rows are rejected without partial corruption.
+- [ ] Import activity is traceable by correlation ID.
+- [ ] The UI clearly labels this as a simulated legacy adapter.
 
 ---
 
-### Phase 4.2 — Event Pipeline Implementation
+## Phase 5.4 — Mission Control Unified Demo Surface
 
-**Type:** Backend Infrastructure
+**Type:** Frontend Product Surface
 
-- [ ] implement transactional outbox pattern
-- [ ] ensure consistent event broadcasting
-- [ ] normalize event structure across domains
+### Objective
 
-**Exit Criteria:**
+Create one entry point that lets the visitor see the full system react without opening three browser tabs.
 
-- events are emitted reliably after DB commit
-- no lost or duplicated events
-- event format is consistent and aligned with EVENT_CATALOG
+### Tasks
 
----
+- [ ] Scaffold `apps/mission-control` using the existing monorepo conventions.
+- [ ] Reuse `packages/shared-types`, `packages/shared-schemas`, `packages/event-contracts`, and `packages/ui-tokens`.
+- [ ] Add a scenario control panel.
+- [ ] Add compact Vapor Monitor telemetry panel.
+- [ ] Add compact Orchestrator Twin spatial panel.
+- [ ] Add compact Field-Agent Mobile panel or guided link to the full app when embedding would create excessive coupling.
+- [ ] Add architecture narrative strip showing current event chain.
+- [ ] Add `correlationId` and `causationId` visibility for the active scenario.
+- [ ] Add DecisionTrace preview with status controls.
+- [ ] Add demo reset/isolation indicator.
+- [ ] Add responsive behavior for laptop screens.
 
-### Phase 4.3 — Cross-Surface Consumption ✅
+### Frontend Guardrails
 
-**Type:** Integration Layer
+- Do not duplicate backend business logic.
+- Do not mutate cross-domain state inside components.
+- Do not create a massive global store.
+- Keep panels projection-only unless executing an explicit API command.
+- Keep domain folders aligned with the existing frontend architecture.
 
-- [x] Vapor Monitor consumes real-time events
-- [x] Orchestrator Twin consumes the same event stream
-- [x] correlation data is visible across all clients
+### Exit Criteria
 
-**Exit Criteria:**
-
-- all modules react to the same source of truth (event stream)
-- event-driven UI updates are observable
-- correlationId is traceable across surfaces
-
----
-
-### Phase 4.4 — Decision Intelligence Layer ✅
-
-**Type:** Intelligence + Persistence
-
-- [x] Orchestrator generates actionable recommendations
-- [x] persist decision logs (decision trace)
-- [x] establish full event → decision traceability
-
-**Exit Criteria:**
-
-- decisions are explainable and linked to events
-- decision logs can be queried and audited
-- system demonstrates reasoning capability (not just visualization)
-
-#### Phase 4.4.1 — Decision Trace Model Definition ✅
-
-**Type:** Architecture + Contract (NO implementation)
-
-- [x] define canonical DecisionTrace entity in DOMAIN_MODEL.md
-- [x] define Intelligence domain ownership in DOMAIN_MODEL.md
-- [x] define Decision Trace Layer architecture in ARCHITECTURE.md
-- [x] formalize Agent Output Contract as DecisionTrace in AGENTS.md
-- [x] establish boundary between domain events and decision traces in EVENT_CATALOG.md
-- [x] update CONTEXT.md to reflect Phase 4.4 awareness
-
-#### Phase 4.4.2 — DecisionTrace Persistence Layer ✅
-
-**Type:** Backend Infrastructure
-
-- [x] database migration for traces
-- [x] domain entity and invariant enforcement
-- [x] Eloquent repository with append-only persistence
-- [x] read-only API endpoints
-
-#### Phase 4.4.3 — Advisory Emission Layer ✅
-
-**Type:** Intelligence Logic
-
-- [x] DecisionAgent contract interface
-- [x] InventoryAnomalyAgent (deterministic rule)
-- [x] AgentExecutor orchestrator (duplicate prevention)
-- [x] synchronous listener on BroadcastableOutboxEvent
-
-#### Phase 4.4.4 — Decision Trace UI Binding ✅
-
-**Type:** Frontend Integration
-
-- [x] useDecisionTraceStore Pinia stores
-- [x] projection-only rendering panels (DecisionTraceFeed, DecisionTracePanel)
-
-#### Phase 4.4.5 — Decision Trace Human Interaction ✅
-
-**Type:** Frontend & Backend Mutative Actions
-
-- [x] PATCH backend endpoints (acknowledge, act-upon, dismiss)
-- [x] UI controls in DecisionTraceFeed and DecisionTracePanel
-- [x] strict attribution checks over Action executions
-
-#### Phase 4.4.6 — Decision Trace Query Layer ✅
-
-**Type:** Backend & Frontend Read Model
-
-- [x] stateless filtering and ordering parameters in repository
-- [x] UI dropdown controls in both surfaces
-
-#### Phase 4.4.7 — Decision Trace Metrics / Dashboard Layer ✅
-
-**Type:** Visualization & Summary
-
-- [x] minimalist metrics GET endpoint
-- [x] getMetrics repository aggregate
-- [x] fetchMetrics store functions
-- [x] non-logical summary panels in Vapor Monitor and Orchestrator Twin
-
-#### Phase 4.4.8 — Intelligence Layer Hardening ✅
-
-**Type:** Reliability & Stability
-
-- [x] strict failure isolation in AgentExecutor
-- [x] logical duplicate protection via causationId/agentId
-- [x] payload validation and reliable entity evolution
+- [ ] A visitor can run the main demo from one screen.
+- [ ] The event chain is visible without opening developer tools.
+- [ ] Field, monitor, twin, and decision trace panels feel like one system.
+- [ ] The page reads as engineering infrastructure, not a marketing landing page.
 
 ---
 
-### Phase 4.5 — Cross Alerts & UX Integration ✅
+## Phase 5.5 — Human-Approved Mitigation Flow
 
-**Type:** Product Layer
+**Type:** Governed Intelligence / Backend + Frontend
 
-- [x] unified alert system across modules
-- [x] visual feedback loops between surfaces
-- [x] highlight anomalies and system reactions in real-time
-- [x] reactive operational intelligence via RecommendationService wiring in Orchestrator Twin
+### Objective
 
-**Exit Criteria:**
+Upgrade the demo from “AI detected something” to “AI suggested an action, a human approved it, and the system executed it safely.”
 
-- ✅ alerts are triggered by real events
-- ✅ users can observe system reactions across modules
-- ✅ UX reflects a cohesive, intelligent system
+### Flow
 
----
+```text
+Critical incident occurs
+  -> event emitted
+  -> DecisionTrace created
+  -> Mission Control highlights suggestion
+  -> user clicks Acknowledge or Apply Mitigation
+  -> backend validates actor and action
+  -> domain command executes
+  -> audit log records action
+  -> event emitted
+  -> monitor and twin update
+```
 
-## Architectural Principles
+### MVP Mitigation Actions
 
-- domain-first design
-- thin controllers
-- explicit data flow
-- immutable events
-- audit-first thinking
-- no hidden side effects
+Choose one or two only:
 
----
+- block a warehouse location
+- create an adjustment movement with a controlled reason such as `quality_hold`
+- mark a decision trace as `acted_upon`
 
-## AI Principles
+### Tasks
 
-- AI is advisory, never authoritative
-- all AI output must be validated
-- no AI-generated logic is trusted blindly
-- untrusted input is always sanitized
-- system rules override AI decisions
+- [ ] Define allowed mitigation actions in documentation.
+- [ ] Ensure every mitigation action maps to an existing authorized API command.
+- [ ] Add UI action controls in Mission Control.
+- [ ] Add clear “human-approved” language in the UI.
+- [ ] Ensure action result is audited and linked to the original decision trace.
+- [ ] Add tests proving agents do not mutate state directly.
 
----
+### Exit Criteria
 
-## Risks
-
-### 1. Overengineering too early
-
-Mitigation: focus only on defined scope
-
-### 2. AI misuse
-
-Mitigation: strict RULES.md enforcement, DATA_GUARDRAILS.md validation
-
-### 3. Domain leakage
-
-Mitigation: REVIEW_CHECKLIST.md enforcement
-
-### 4. Event inconsistency
-
-Mitigation: EVENT_CATALOG.md as source of truth
-
-### 5. Offline data conflicts (Phase 1)
-
-Mitigation: queue-based sync with server-side idempotency, conflict detection deferred to Phase 2
+- [ ] The demo shows governed AI, not uncontrolled automation.
+- [ ] Every mitigation has actor attribution.
+- [ ] DecisionTrace status transitions are visible and auditable.
+- [ ] Security constraints remain intact.
 
 ---
 
-## Notes
+## Phase 5.6 — Engineering Insights Mode
 
-This plan defines the system's backbone.
+**Type:** Portfolio Storytelling / UX Layer
 
-Phase 0 / Foundation Core was validated and completed on 2026-03-29.
+### Objective
 
-Phase 1 / Field-Agent Mobile Core MVP was validated and completed on 2026-03-29.
+Make the project understandable to evaluators without requiring them to read every documentation file first.
 
-Phase 2 / Operational Visibility was validated and completed on 2026-03-29.
+### Tasks
 
-Phase 3 / Orchestrator Twin Lite was validated and completed on 2026-03-30.
+- [ ] Add an `Engineering Insights` toggle in Mission Control.
+- [ ] Add hover/click explanations for the most important architectural decisions.
+- [ ] Explain the following concepts inline:
+  - Modular Monolith
+  - Transactional Outbox
+  - Reverb WebSockets
+  - Event Interpretation
+  - Drift Detection
+  - Decision Trace
+  - IndexedDB Offline Drafts
+  - Idempotency Key
+  - Legacy Adapter Simulator
+  - Demo Session Isolation
+- [ ] Add short architecture callouts, not long paragraphs.
+- [ ] Add links to relevant docs for deeper review.
 
-Phase 4 / Total Integration was validated and completed on 2026-06-10.
+### Exit Criteria
 
-Every PR must align with this plan.
+- [ ] A technical reviewer can understand why each architectural choice exists.
+- [ ] The UI demonstrates seniority without becoming text-heavy.
+- [ ] The experience feels like a living architecture whitepaper.
+
+---
+
+## Phase 5.7 — Demo Hardening, QA, and Portfolio Packaging
+
+**Type:** QA / Release / Portfolio
+
+### Objective
+
+Make the project safe to share publicly.
+
+### Tasks
+
+- [ ] Add browser walkthrough test for the main Mission Control scenario.
+- [ ] Add backend tests for scenario execution, reset/purge, and legacy import validation.
+- [ ] Add tests proving scenario-generated events preserve canonical contracts.
+- [ ] Add tests proving duplicate scenario execution does not corrupt state.
+- [ ] Add accessibility checks for Mission Control critical controls.
+- [ ] Add failure states: API down, Reverb disconnected, scenario failed, reset failed.
+- [ ] Add a short demo video script.
+- [ ] Update README with a “Run the 5-minute demo” section.
+- [ ] Add architecture diagram for the Phase 5 flow.
+- [ ] Add screenshots/GIF placeholders for portfolio presentation.
+
+### Exit Criteria
+
+- [ ] The demo can be run by someone who has never seen the repo.
+- [ ] The main scenario is stable after multiple runs.
+- [ ] The README explains what to look at, why it matters, and how to verify it.
+- [ ] The portfolio story is clear: field execution → event backbone → telemetry → spatial intelligence → governed AI.
+
+---
+
+## Primary Demo Script
+
+This is the ideal flow for a recruiter or technical evaluator.
+
+### Step 1 — Enter Mission Control
+
+The visitor sees a dense but clear operational control panel. The system is calm. Baseline inventory, warehouse layout, telemetry, and decision trace panels are visible.
+
+### Step 2 — Run Industrial Stress
+
+The visitor clicks:
+
+```text
+Run Industrial Stress
+```
+
+Expected behavior:
+
+- backend executes a bounded scenario
+- events flow through the outbox and Reverb
+- telemetry panel shows event bursts
+- KPI deltas update
+- drift/burst diagnostics remain stable
+
+### Step 3 — Trigger Critical Incident
+
+The visitor clicks:
+
+```text
+Trigger Critical Aisle Incident
+```
+
+Expected behavior:
+
+- a real incident command is executed through the API
+- an `incident.reported` event is emitted
+- affected location/zone is highlighted in the 2.5D view
+- DecisionTrace appears with detection, reasoning, severity, and suggestion
+
+### Step 4 — Approve Mitigation
+
+The visitor clicks:
+
+```text
+Apply Human-Approved Mitigation
+```
+
+Expected behavior:
+
+- backend validates the action
+- location block or quality hold movement is executed through proper domain services
+- audit record is created
+- events are emitted
+- Mission Control shows the resulting event chain
+- DecisionTrace status changes to `acted_upon`
+
+### Step 5 — Replay Legacy Import
+
+The visitor clicks:
+
+```text
+Replay Legacy ERP Import
+```
+
+Expected behavior:
+
+- valid rows become domain commands
+- invalid rows are rejected with clear reasons
+- accepted records emit normal operational events
+- import summary appears in the UI
+
+### Step 6 — Reset Demo
+
+The visitor clicks:
+
+```text
+Reset Demo Session
+```
+
+Expected behavior:
+
+- demo state returns to baseline
+- synthetic scenario records are cleared or re-scoped
+- system is ready for the next visitor
+
+---
+
+## Success Criteria for Phase 5
+
+Phase 5 is complete when:
+
+- [ ] Mission Control exists as a single entry point.
+- [ ] The main demo can be understood in under 30 seconds.
+- [ ] The main demo can be completed in under 5 minutes.
+- [ ] Stress scenarios generate real backend events through valid domain paths.
+- [ ] Realtime updates appear across telemetry and spatial panels.
+- [ ] Decision traces remain advisory and explainable.
+- [ ] Human-approved mitigation is audited and event-backed.
+- [ ] Legacy adapter simulator demonstrates enterprise integration thinking.
+- [ ] Demo reset/isolation prevents public data pollution.
+- [ ] Documentation and code stay aligned.
+- [ ] Tests validate the demo path.
+- [ ] README explains the business and engineering value clearly.
+
+---
+
+## What This Phase Must Prove
+
+By the end of Phase 5, NexusWMS should communicate the following senior-level signals:
+
+- ability to work with existing systems instead of rebuilding everything
+- ability to integrate frontend, backend, realtime, offline, and AI layers
+- ability to preserve domain invariants under pressure
+- ability to design for auditability and traceability
+- ability to make AI useful without making it unsafe
+- ability to build demos that reveal engineering decisions, not just UI polish
+- ability to think like an AI Solutions Engineer for traditional industries
+
+---
+
+## Implementation Order
+
+Recommended execution order:
+
+1. Phase 5.0 — Documentation Transition & Scope Lock
+2. Phase 5.1 — Demo Session Isolation & Reset Mechanics
+3. Phase 5.2 — Scenario Engine & Industrial Stress Injector
+4. Phase 5.3 — Legacy ERP Sync Adapter Simulator
+5. Phase 5.4 — Mission Control Unified Demo Surface
+6. Phase 5.5 — Human-Approved Mitigation Flow
+7. Phase 5.6 — Engineering Insights Mode
+8. Phase 5.7 — Demo Hardening, QA, and Portfolio Packaging
+
+Do not start visual polish before scenario execution, reset mechanics, and governance boundaries are stable.
+
+---
+
+## Documentation Updates Required
+
+When Phase 5 work starts, update these files:
+
+- `PLAN.md` — replace old active plan with this Phase 5 plan.
+- `CONTEXT.md` — current stage and active mission.
+- `ARCHITECTURE.md` — add Mission Control and demo scenario architecture.
+- `API_SPEC.md` — add demo/scenario endpoints only after implementation.
+- `EVENT_CATALOG.md` — add no new events unless truly needed; prefer existing domain events.
+- `DATA_DICTIONARY.md` — add `SimulationRun`, `DemoScenario`, or `LegacyInboundRecord` only if implemented.
+- `SECURITY_MODEL.md` — clarify human-approved mitigation and demo action authorization.
+- `README.md` — add portfolio walkthrough and 5-minute demo path.
+
+---
+
+## Final Rule
+
+Phase 5 must not make NexusWMS bigger for the sake of looking bigger.
+
+Phase 5 must make the existing system easier to understand, harder to dismiss, safer to demo publicly, and stronger as evidence of real AI Solutions Engineering capability.
