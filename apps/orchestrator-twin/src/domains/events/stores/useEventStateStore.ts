@@ -103,7 +103,7 @@ export const useEventStateStore = defineStore('eventState', () => {
     // Explicit state exposure strictly for the Debugger Validation Panel
     const debuggerState = computed(() => ({
         timestamp: state.value.lastProcessedEventTime,
-        inventoryKeys: Object.keys(state.value.inventoryByLocation).length,
+        inventoryLocationCount: Object.keys(state.value.inventoryByLocation).length,
         openIncidentsCount: state.value.openIncidents.size,
         totalMovementsProcessed: state.value.totalMovementsProcessed,
         lastProcessedEventId: state.value.processedEventIds.size > 0 

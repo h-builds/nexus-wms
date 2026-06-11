@@ -110,7 +110,7 @@ stateStore.$id;
             </div>
             <div class="bg-black p-3 border border-zinc-800 rounded">
                 <div class="text-zinc-600 mb-1">Active Quantities</div>
-                <div class="text-zinc-200 font-medium">{{ stateStore.debuggerState.inventoryKeys }} locs</div>
+                <div class="text-zinc-200 font-medium">{{ stateStore.debuggerState.inventoryLocationCount }} locs</div>
             </div>
              <div class="bg-black p-3 border border-zinc-800 rounded">
                 <div class="text-zinc-600 mb-1">Open Incidents</div>
