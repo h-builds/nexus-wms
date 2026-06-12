@@ -26,6 +26,7 @@ export async function fetchFromApi<T>(
   });
 
   const response = await fetch(url.toString(), {
+    cache: 'no-store',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',

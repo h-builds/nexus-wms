@@ -6,7 +6,7 @@
         <h1>Orchestrator Twin</h1>
       </div>
       <div class="topbar-right">
-        <div class="status-pill">Phase 3 · Live</div>
+        <div class="status-pill">Phase 5 · Live</div>
       </div>
     </header>
 
