@@ -1,4 +1,5 @@
 import type { CanonicalEvent } from '../stores/useEventIngestionStore'
+import { safeGet, safeSet } from '../../shared/safeRecord'
 
 export interface DriftedEvent {
     eventId: string;
@@ -22,23 +23,6 @@ export interface InterpretedState {
 
 type Transformer = (event: CanonicalEvent, state: InterpretedState) => void;
 
-function safeGet<V>(record: Record<string, V>, key: string, fallback: V): V {
-    const descriptor = Object.getOwnPropertyDescriptor(record, key);
-    return descriptor !== undefined ? (descriptor.value as V) : fallback;
-}
-
-function safeSet<V>(record: Record<string, V>, key: string, value: V): void {
-    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-        console.warn(`[EventInterpreter] Refusing to set dangerous key: ${key}`);
-        return;
-    }
-    Object.defineProperty(record, key, {
-        value,
-        writable: true,
-        enumerable: true,
-        configurable: true,
-    });
-}
 
 export class EventInterpreter {
     private handlers: Map<string, Transformer> = new Map();
@@ -48,13 +32,13 @@ export class EventInterpreter {
     }
 
     private registerHandlers() {
-        this.handlers.set('inventory.stock.adjusted', this.handleStockAdjusted);
-        this.handlers.set('inventory.stock.received', this.handleStockReceived);
-        this.handlers.set('inventory.stock.picked', this.handleStockPicked);
-        this.handlers.set('inventory.stock.relocated', this.handleStockRelocated);
-        this.handlers.set('incident.reported', this.handleIncidentReported);
-        this.handlers.set('incident.status.updated', this.handleIncidentStatusUpdated);
-        this.handlers.set('movement.created', this.handleMovementCreated);
+        this.handlers.set('.inventory.stock.adjusted', this.handleStockAdjusted);
+        this.handlers.set('.inventory.stock.received', this.handleStockReceived);
+        this.handlers.set('.inventory.stock.picked', this.handleStockPicked);
+        this.handlers.set('.inventory.stock.relocated', this.handleStockRelocated);
+        this.handlers.set('.incident.reported', this.handleIncidentReported);
+        this.handlers.set('.incident.status.updated', this.handleIncidentStatusUpdated);
+        this.handlers.set('.movement.created', this.handleMovementCreated);
     }
 
     public interpret(event: CanonicalEvent, state: InterpretedState): void {
@@ -81,6 +65,7 @@ export class EventInterpreter {
 
         const localQuantity = safeGet(state.inventoryByLocation, locationId, 0);
         const expectedQuantity = previousQuantity ?? 0;
+        console.log(`[DEBUG] eventId=${event.eventId} loc=${locationId} prev=${previousQuantity} expected=${expectedQuantity} local=${localQuantity} descriptor=${JSON.stringify(Object.getOwnPropertyDescriptor(state.inventoryByLocation, locationId))}`);
 
         if (localQuantity !== expectedQuantity) {
             state.driftedEvents.push({
