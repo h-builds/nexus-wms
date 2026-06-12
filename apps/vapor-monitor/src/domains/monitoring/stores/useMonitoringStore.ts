@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useEventStateStore, type InventorySnapshotEntry, type IncidentSnapshotEntry } from '@/domains/events/stores/useEventStateStore'
+import { useEventIngestionStore } from '@/domains/events/stores/useEventIngestionStore'
 import { safeGet, safeSet } from '../../shared/safeRecord'
+
 
 interface LocationDto {
     id: string;
@@ -88,6 +90,7 @@ interface MovementCreatedPayload {
 
 export const useMonitoringStore = defineStore('monitoring', () => {
     const stateStore = useEventStateStore();
+    const ingestionStore = useEventIngestionStore();
     
     const isLoading = ref<boolean>(true);
     const error = ref<string | null>(null);
@@ -246,7 +249,44 @@ export const useMonitoringStore = defineStore('monitoring', () => {
         return warehouseMovements;
     }
 
+    watch(
+        () => ingestionStore.rawEvents,
+        (events) => {
+            if (events.length === 0) return;
+            const latestEvent = events[0];
+            
+            if (latestEvent.eventType === 'incident.reported') {
+                const payload = latestEvent.payload as IncidentReportedPayload;
+                recentIncidents.value.unshift({
+                    id: payload.incidentId,
+                    type: payload.type,
+                    description: payload.description,
+                    time: latestEvent.occurredAt
+                });
+                if (recentIncidents.value.length > 50) recentIncidents.value.pop();
+            } else if (latestEvent.eventType === 'movement.created') {
+                const payload = latestEvent.payload as MovementCreatedPayload;
+                const isOutbound = ['picking', 'relocation', 'PICKING', 'RELOCATION'].includes(payload.type);
+                const isInbound = ['receipt', 'putaway', 'return_internal', 'RECEIPT', 'PUTAWAY'].includes(payload.type);
+                
+                const feedItem: MovementFeedItem = {
+                    id: payload.movementId,
+                    type: payload.type,
+                    quantity: payload.quantity,
+                    time: latestEvent.occurredAt
+                };
 
+                if (isInbound) {
+                    recentInbound.value.unshift(feedItem);
+                    if (recentInbound.value.length > 50) recentInbound.value.pop();
+                } else if (isOutbound) {
+                    recentOutbound.value.unshift(feedItem);
+                    if (recentOutbound.value.length > 50) recentOutbound.value.pop();
+                }
+            }
+        },
+        { deep: true }
+    );
 
     return {
         isLoading,

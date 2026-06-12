@@ -48,13 +48,13 @@ export class EventInterpreter {
     }
 
     private registerHandlers() {
-        this.handlers.set('.inventory.stock.adjusted', this.handleStockAdjusted);
-        this.handlers.set('.inventory.stock.received', this.handleStockReceived);
-        this.handlers.set('.inventory.stock.picked', this.handleStockPicked);
-        this.handlers.set('.inventory.stock.relocated', this.handleStockRelocated);
-        this.handlers.set('.incident.reported', this.handleIncidentReported);
-        this.handlers.set('.incident.status.updated', this.handleIncidentStatusUpdated);
-        this.handlers.set('.movement.created', this.handleMovementCreated);
+        this.handlers.set('inventory.stock.adjusted', this.handleStockAdjusted);
+        this.handlers.set('inventory.stock.received', this.handleStockReceived);
+        this.handlers.set('inventory.stock.picked', this.handleStockPicked);
+        this.handlers.set('inventory.stock.relocated', this.handleStockRelocated);
+        this.handlers.set('incident.reported', this.handleIncidentReported);
+        this.handlers.set('incident.status.updated', this.handleIncidentStatusUpdated);
+        this.handlers.set('movement.created', this.handleMovementCreated);
     }
 
     public interpret(event: CanonicalEvent, state: InterpretedState): void {

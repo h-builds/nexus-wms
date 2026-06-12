@@ -8,7 +8,10 @@
           <span class="movement-type">{{ movement.type }}</span>
           <div class="movement-time">{{ new Date(movement.time).toLocaleTimeString() }}</div>
         </div>
-        <div class="movement-qty movement-qty-out">-{{ movement.quantity }}</div>
+        <div class="movement-qty movement-qty-out">
+          <template v-if="movement.type.toLowerCase() === 'relocation'">⇌</template>
+          <template v-else>-</template>{{ movement.quantity }}
+        </div>
       </li>
     </ul>
   </div>

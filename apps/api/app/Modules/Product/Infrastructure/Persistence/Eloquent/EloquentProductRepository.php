@@ -52,7 +52,8 @@ final class EloquentProductRepository implements ProductRepository
             $q = $filters['q'];
             $query->where(function ($qBuilder) use ($q) {
                 $qBuilder->where('sku', 'like', "%{$q}%")
-                      ->orWhere('name', 'like', "%{$q}%");
+                      ->orWhere('name', 'like', "%{$q}%")
+                      ->orWhere('id', 'like', "%{$q}%");
             });
         }
 
