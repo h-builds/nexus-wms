@@ -8,7 +8,7 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 
 ## 🚀 Current Project State
 
-**Phase 4: Total Integration — (Status: Complete)**
+**Phase 5: Mission Control & Enterprise Solutions Engineering Demo — (Status: ACTIVE)**
 
 | Phase | Description | Status |
 |-------|-------------|--------|
@@ -17,6 +17,7 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 | **Phase 2** | Operational Visibility — Realtime dashboard, event monitoring | ✅ Complete |
 | **Phase 3** | Orchestrator Twin Lite — Tactical interpretation, spatial mapping, basic simulation | ✅ Complete |
 | **Phase 4** | Total Integration — Event pipeline, cross-surface sync, decision intelligence | ✅ Complete |
+| **Phase 5** | Mission Control & Enterprise Demo — Unified demo, stress scenarios, legacy ERP sim, governed AI | 🔄 Active |
 
 ### Phase 0 Achievements (Foundation Core)
 
@@ -63,6 +64,15 @@ This repository serves as a showcase of a production-grade **Modular Monolith** 
 - Trace Query & Metrics layer integrated reactively into Vapor Monitor and Orchestrator Twin
 - Unified alert signals and visual feedback loops (Phase 4.5)
 - **100% Test Coverage for Integration**: Added `DecisionTraceIntegrationTest` and `CrossSurfaceEventContractTest`, pushing the test suite to 69 passing tests with 338 assertions.
+
+### Phase 5 Focus (Mission Control & Enterprise Solutions Engineering Demo)
+
+- **Unified Mission Control**: A single entry point demo surface to orchestrate scenarios.
+- **Controlled Scenarios**: Industrial stress injectors and critical incident generators.
+- **Legacy ERP Simulator**: Deterministic inbound record validation and transformation.
+- **Demo Session Isolation**: Run/purge mechanics to keep baseline operational data clean.
+- **Human-Approved Mitigation Flow**: Governed AI decision traces tied to executable API commands.
+- **Engineering Insights Mode**: Inline architectural storytelling and explanation.
 
 ---
 
@@ -233,10 +243,20 @@ flowchart TB
         DIL["Decision Intelligence"]
     end
 
+    subgraph Phase5 ["🔄 Phase 5 — Mission Control & Demo (Active)"]
+        direction TB
+        MC["Mission Control"]
+        SCE["Scenario Engine"]
+        ERP["Legacy ERP Simulator"]
+        HAM["Human-Approved Mitigation"]
+        EIM["Engineering Insights"]
+    end
+
     Phase0 ~~~ Phase1
     Phase1 ~~~ Phase2
     Phase2 ~~~ Phase3
     Phase3 ~~~ Phase4
+    Phase4 ~~~ Phase5
 ```
 
 ---
@@ -247,6 +267,7 @@ flowchart TB
 - [`apps/vapor-monitor`](apps/vapor-monitor): Real-time monitoring dashboard (Vue 3.6) — **Phase 2 & 4 integrated**.
 - [`apps/field-agent-mobile`](apps/field-agent-mobile): Mobile operational capture (Vue 3.6) — **Phase 1 complete**.
 - [`apps/orchestrator-twin`](apps/orchestrator-twin): Tactical simulation and spatial twin (Vue 3.6) — **Phase 3 & 4 integrated**.
+- `apps/mission-control`: Unified portfolio demo surface (Vue 3.6) — **Phase 5 target**.
 
 ## 🏗️ Architecture Principles
 - **Modular Monolith:** Event-driven internal communication, zero circular dependencies.
