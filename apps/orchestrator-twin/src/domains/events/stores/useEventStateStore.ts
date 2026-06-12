@@ -20,6 +20,7 @@ export const useEventStateStore = defineStore('eventState', () => {
     });
 
     const isInitialized = ref(false);
+    const interpretationError = ref<string | null>(null);
 
     /**
      * Initializes the state store from raw HTTP snapshots.
@@ -87,9 +88,15 @@ export const useEventStateStore = defineStore('eventState', () => {
                 unprocessed.push(event);
             }
 
-            unprocessed.reverse();
-            for (const event of unprocessed) {
-                interpreter.interpret(event, state.value);
+            try {
+                unprocessed.reverse();
+                for (const event of unprocessed) {
+                    interpreter.interpret(event, state.value);
+                }
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Unknown interpretation failure';
+                console.error(`[EventStateStore] Failed to interpret incoming events: ${message}`);
+                interpretationError.value = message;
             }
         },
         { deep: true }
@@ -118,6 +125,7 @@ export const useEventStateStore = defineStore('eventState', () => {
         openIncidentsCount,
         totalMovementsProcessed,
         debuggerState,
+        interpretationError,
         _rawStateRef: state // Exported strictly for deep JSON inspection
     };
 });

@@ -33,11 +33,12 @@ export const useEventStateStore = defineStore('eventState', () => {
     });
 
     const isInitialized = ref(false);
+    const interpretationError = ref<string | null>(null);
 
     function buildInventoryBaselineEvent(entry: InventorySnapshotEntry, index: number): CanonicalEvent {
         return {
             eventId: `baseline-inv-${index}`,
-            eventType: '.inventory.stock.received',
+            eventType: 'inventory.stock.received',
             eventVersion: 1,
             occurredAt: new Date().toISOString(),
             actorId: 'system',
@@ -53,7 +54,7 @@ export const useEventStateStore = defineStore('eventState', () => {
     function buildIncidentBaselineEvent(entry: IncidentSnapshotEntry, index: number): CanonicalEvent {
         return {
             eventId: `baseline-inc-${index}`,
-            eventType: '.incident.reported',
+            eventType: 'incident.reported',
             eventVersion: 1,
             occurredAt: entry.createdAt ?? new Date().toISOString(),
             actorId: 'system',
@@ -106,11 +107,12 @@ export const useEventStateStore = defineStore('eventState', () => {
                 for (let i = unprocessedEvents.length - 1; i >= 0; i--) {
                     interpreter.interpret(unprocessedEvents[i], state.value);
                 }
-            } catch (interpretationError: unknown) {
-                const message = interpretationError instanceof Error
-                    ? interpretationError.message
+            } catch (err: unknown) {
+                const message = err instanceof Error
+                    ? err.message
                     : 'Unknown interpretation failure';
                 console.error(`[EventStateStore] Failed to interpret incoming events: ${message}`);
+                interpretationError.value = message;
             }
         },
         { deep: true }
@@ -138,6 +140,7 @@ export const useEventStateStore = defineStore('eventState', () => {
         openIncidentsCount,
         totalMovementsProcessed,
         debuggerState,
+        interpretationError,
         _rawStateRef: state,
     };
 });
