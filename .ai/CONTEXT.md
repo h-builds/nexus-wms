@@ -20,7 +20,17 @@ It is a domain-structured logistics system with future AI governance requirement
 
 ## Current Project Stage
 
-**Current stage: Phase 4.5 / Cross Alerts & UX Integration (VALIDATED AND COMPLETE)**
+**Current stage: Phase 5 / Mission Control & Enterprise Solutions Engineering Demo — ACTIVE**
+
+Phases 0–4.5 are validated and complete. They represent the existing foundation. Future agents must not treat them as unfinished work. The active objective is Phase 5 only.
+
+Phase 5 focus:
+- unified Mission Control demo surface
+- controlled scenario execution
+- demo session isolation/reset
+- legacy ERP adapter simulator
+- governed DecisionTrace / human-approved mitigation
+- portfolio demo hardening
 
 ### Phase 0 / Foundation Core (VALIDATED AND COMPLETE)
 

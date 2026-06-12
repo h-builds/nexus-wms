@@ -330,6 +330,24 @@ This evaluation system can be extended to:
 
 ---
 
+## Phase 5.0 Governance Evaluation
+
+Check:
+
+- Does the documentation clearly mark Phase 5 as active?
+- Does the documentation prevent agents from rebuilding Phases 0–4.5?
+- Are Phase 5 boundaries explicit?
+- Are AI mutation limits explicit?
+- Is demo simulation clearly separated from production-like system behavior?
+- Is `docs/FLOWS/demo-scenario-flow.md` present and aligned with the active plan?
+- Were no fake contracts or unimplemented APIs added as if complete?
+- Is `TASK.md` present and scoped only to Phase 5.0?
+- Were no runtime files, migrations, controllers, routes, frontend apps, or fake endpoints created during Phase 5.0?
+- Are new Phase 5 capabilities described as planned unless already implemented?
+- Does each Phase 5 capability declare an intended owner or owning domain?
+
+---
+
 ## Final Rule
 
 If an output passes functionality but violates governance:

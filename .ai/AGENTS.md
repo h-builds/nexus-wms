@@ -240,6 +240,14 @@ Agents may evolve to:
 > - expose sensitive information
 > - assume features that are not implemented
 
+### Phase 5 Specific Guardrails
+* Runtime AI agents remain suggestion-first.
+* Agents may detect, explain, and suggest.
+* Agents must not mutate inventory, block locations, execute movements, or trigger mitigations directly.
+* Any mitigation must be human-approved and executed through authorized backend command paths.
+* Demo scenarios must be clearly labeled as demo/simulation behavior.
+* Agents must not present simulated ERP integration as real SAP, Oracle, AS400, or production ERP connectivity.
+
 ---
 
 

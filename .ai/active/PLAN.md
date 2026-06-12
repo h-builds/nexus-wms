@@ -215,18 +215,18 @@ Replace the completed historical plan with this active plan and prevent agents f
 
 ### Tasks
 
-- [ ] Archive the old completed plan under a historical filename or docs archive.
-- [ ] Set this file as the new active `PLAN.md`.
-- [ ] Update `CONTEXT.md` current stage to `Phase 5 / Mission Control & Enterprise Solutions Engineering Demo`.
-- [ ] Add explicit note that Phases 0–4.5 are baseline and should not be rebuilt.
-- [ ] Add Phase 5 scope boundaries to AI governance docs.
-- [ ] Add a short `docs/FLOWS/demo-scenario-flow.md` describing the public demo flow.
+- [x] Archive the old completed plan under a historical filename or docs archive.
+- [x] Set this file as the new active `PLAN.md`.
+- [x] Update `CONTEXT.md` current stage to `Phase 5 / Mission Control & Enterprise Solutions Engineering Demo`.
+- [x] Add explicit note that Phases 0–4.5 are baseline and should not be rebuilt.
+- [x] Add Phase 5 scope boundaries to AI governance docs.
+- [x] Add a short `docs/FLOWS/demo-scenario-flow.md` describing the public demo flow.
 
 ### Exit Criteria
 
-- [ ] AI assistants understand that Phase 5 is the only active implementation phase.
-- [ ] Documentation does not imply that already completed modules need to be rebuilt.
-- [ ] Every new Phase 5 capability has an owner and a bounded scope.
+- [x] AI assistants understand that Phase 5 is the only active implementation phase.
+- [x] Documentation does not imply that already completed modules need to be rebuilt.
+- [x] Every new Phase 5 capability has an owner and a bounded scope.
 
 ---
 

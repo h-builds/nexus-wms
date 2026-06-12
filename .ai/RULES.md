@@ -1334,3 +1334,20 @@ When acting as an AI Coding Assistant generating system codebase artifacts, you 
 - no placeholder logic (unless explicitly allowed via Phase deferral tags like `TODO(Phase2)`)
 - no unnecessary comments
 - no verbose explanations inside code
+
+---
+
+## Rule 61 — Phase 5 Boundaries and Scope
+
+During Phase 5.0 and beyond, AI must strictly adhere to the following governance bounds:
+
+- Do not rebuild completed phases (Phases 0-4.5 are baseline).
+- Do not implement Mission Control before demo isolation and scenario boundaries are defined.
+- Do not duplicate backend business rules inside Mission Control.
+- Do not create fake realtime behavior.
+- Do not create fake ERP integrations.
+- Do not allow AI/autonomous agents to mutate state directly.
+- Do not modify inventory except through explicit movement or adjustment flows.
+- Every new Phase 5 capability must declare its owner.
+- Do not update `API_SPEC.md`, `EVENT_CATALOG.md`, `DATA_DICTIONARY.md`, or `DOMAIN_MODEL.md` with Phase 5 contracts unless the corresponding implementation exists.
+- Use "planned", "intended", or "Phase 5 target" language for capabilities that are not implemented yet.
