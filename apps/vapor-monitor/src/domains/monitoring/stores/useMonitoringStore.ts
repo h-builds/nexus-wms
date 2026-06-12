@@ -172,7 +172,7 @@ export const useMonitoringStore = defineStore('monitoring', () => {
     }
 
     async function loadLocations(): Promise<LocationDto[]> {
-        const response = await fetch('/api/locations');
+        const response = await fetch('/api/locations', { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`Location service unavailable (${response.status}).`);
         }
@@ -195,7 +195,7 @@ export const useMonitoringStore = defineStore('monitoring', () => {
     }
 
     async function loadInventory(): Promise<InventoryDto[]> {
-        const response = await fetch('/api/inventory');
+        const response = await fetch('/api/inventory', { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`Inventory service unavailable (${response.status}).`);
         }
@@ -205,7 +205,7 @@ export const useMonitoringStore = defineStore('monitoring', () => {
     }
 
     async function loadIncidents(): Promise<IncidentDto[]> {
-        const response = await fetch('/api/incidents');
+        const response = await fetch('/api/incidents', { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`Incident service unavailable (${response.status}).`);
         }
@@ -222,7 +222,7 @@ export const useMonitoringStore = defineStore('monitoring', () => {
     }
 
     async function loadMovements(): Promise<MovementDto[]> {
-        const response = await fetch('/api/movements');
+        const response = await fetch('/api/movements', { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`Movement service unavailable (${response.status}).`);
         }

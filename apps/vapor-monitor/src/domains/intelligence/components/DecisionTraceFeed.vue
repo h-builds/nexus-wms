@@ -169,8 +169,8 @@ onMounted(() => {
 }
 
 .control-select option {
-  background-color: #1f2937;
-  color: #e2e8f0;
+  background-color: #0b1020;
+  color: #ffffff;
 }
 
 .control-btn {

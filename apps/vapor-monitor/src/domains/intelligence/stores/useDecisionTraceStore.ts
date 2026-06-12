@@ -96,7 +96,7 @@ export const useDecisionTraceStore = defineStore('decisionTrace', () => {
 
         try {
             const queryParams = buildTraceQueryParams();
-            const response = await fetch(`/api/intelligence/decision-traces?${queryParams.toString()}`);
+            const response = await fetch(`/api/intelligence/decision-traces?${queryParams.toString()}`, { cache: 'no-store' });
 
             if (!response.ok) {
                 throw new Error(`Decision traces service unavailable (${response.status}).`);
@@ -124,7 +124,7 @@ export const useDecisionTraceStore = defineStore('decisionTrace', () => {
 
     async function fetchMetrics(): Promise<void> {
         try {
-            const response = await fetch('/api/intelligence/decision-traces/metrics');
+            const response = await fetch('/api/intelligence/decision-traces/metrics', { cache: 'no-store' });
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch decision trace metrics (${response.status}).`);
