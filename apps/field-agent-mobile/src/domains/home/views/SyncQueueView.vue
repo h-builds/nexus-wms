@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { syncQueueManager, QueuedRequest } from '@/offline/SyncQueue'
+import { syncQueueManager, type QueuedRequest } from '@/offline/SyncQueue'
 import api from '@/services/api'
 
 const router = useRouter()
