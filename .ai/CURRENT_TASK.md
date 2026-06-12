@@ -12,6 +12,7 @@ Phase 4.5 completed:
 - new trace highlighting
 - critical severity emphasis
 - cross-surface interaction feedback
+- end-to-end UX verification (WebSockets string-match fix, Vapor Monitor tabs, Mobile Select searchability)
 
 The system is now fully connected end-to-end and ready for Phase 5 or any operational enhancements requested by the user.
 
