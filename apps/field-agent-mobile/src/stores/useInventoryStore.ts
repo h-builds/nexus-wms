@@ -16,9 +16,9 @@ export const useInventoryStore = defineStore('inventory', {
         const response = await api.get(`/products?q=${encodeURIComponent(query)}`) as unknown as CollectionResponse<Product>
         return response.data || []
       } catch (err) {
-        // Fallback for offline lookup would exist here in Phase 2
-        console.warn('Could not fetch products', err)
-        return []
+        const msg = err instanceof Error ? err.message : 'Unknown network error';
+        console.error('[InventoryStore] Product search failed:', msg);
+        throw new Error(`Failed to search products: ${msg}`);
       }
     },
     async getInventoryForProduct(productId: string): Promise<StockItem[]> {
@@ -26,8 +26,9 @@ export const useInventoryStore = defineStore('inventory', {
         const response = await api.get(`/inventory?productId=${encodeURIComponent(productId)}`) as unknown as CollectionResponse<StockItem>
         return response.data || []
       } catch (err) {
-        console.warn('Could not fetch inventory', err)
-        return []
+        const msg = err instanceof Error ? err.message : 'Unknown network error';
+        console.error('[InventoryStore] Inventory lookup failed:', msg);
+        throw new Error(`Failed to fetch inventory: ${msg}`);
       }
     }
   }

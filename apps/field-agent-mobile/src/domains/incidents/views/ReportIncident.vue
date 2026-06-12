@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useIncidentsStore } from "@/stores/useIncidentsStore";
+import { useInventoryStore } from "@/stores/useInventoryStore";
+import { useLocationStore } from "@/stores/useLocationStore";
 import { OfflineQueueError } from "@/services/api";
 import { useQuasar } from "quasar";
 
 const $q = useQuasar();
 const store = useIncidentsStore();
+const inventoryStore = useInventoryStore();
+const locationStore = useLocationStore();
 
 const incidentDraft = ref({
   productId: "",
@@ -30,6 +34,40 @@ const severityOptions = [
   { label: "Medium", value: "medium" },
   { label: "High", value: "high" },
 ];
+
+const productOptions = ref<{label: string, value: string}[]>([]);
+const filterProducts = async (val: string, update: (callback: () => void) => void) => {
+  if (val === '') {
+    update(() => {
+      productOptions.value = []
+    })
+    return
+  }
+  const products = await inventoryStore.searchProducts(val)
+  update(() => {
+    productOptions.value = products.map((p) => ({
+      label: `${p.name} (${p.sku})`,
+      value: p.id
+    }))
+  })
+}
+
+const locationOptions = ref<{label: string, value: string}[]>([]);
+const filterLocations = async (val: string, update: (callback: () => void) => void) => {
+  if (val === '') {
+    update(() => {
+      locationOptions.value = []
+    })
+    return
+  }
+  const locations = await locationStore.searchLocations(val)
+  update(() => {
+    locationOptions.value = locations.map((l) => ({
+      label: `${l.label} (${l.id})`,
+      value: l.id
+    }))
+  })
+}
 
 const submitIncident = async () => {
   if (
@@ -75,9 +113,9 @@ const submitIncident = async () => {
         quantityAffected: 1,
       };
     } else if (err && typeof err === "object" && "error" in err) {
-      const apiErr = err as { error: { message?: string; details?: any[] } };
+      const apiErr = err as { error: { message?: string; details?: Record<string, unknown>[] } };
       const msg =
-        apiErr.error.details?.[0]?.message ||
+        (apiErr.error.details?.[0]?.message as string) ||
         apiErr.error.message ||
         "Validation failed";
       $q.notify({ type: "negative", message: msg });
@@ -102,17 +140,32 @@ const submitIncident = async () => {
     <q-card>
       <q-card-section>
         <q-form @submit="submitIncident" class="q-gutter-md">
-          <q-input
+          <q-select
             v-model="incidentDraft.productId"
-            label="Product ID *"
+            :options="productOptions"
+            use-input
+            fill-input
+            hide-selected
+            emit-value
+            map-options
+            @filter="filterProducts"
+            label="Product *"
             outlined
-            hint="Use Product Lookup to find ID"
+            hint="Type to search products"
           />
 
-          <q-input
+          <q-select
             v-model="incidentDraft.locationId"
-            label="Location ID *"
+            :options="locationOptions"
+            use-input
+            fill-input
+            hide-selected
+            emit-value
+            map-options
+            @filter="filterLocations"
+            label="Location *"
             outlined
+            hint="Type to search locations"
           />
 
           <q-select

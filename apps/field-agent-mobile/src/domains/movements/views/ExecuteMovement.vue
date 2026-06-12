@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useMovementsStore } from "@/stores/useMovementsStore";
+import { useInventoryStore } from "@/stores/useInventoryStore";
+import { useLocationStore } from "@/stores/useLocationStore";
 import { OfflineQueueError } from "@/services/api";
 import { useQuasar } from "quasar";
 
 const $q = useQuasar();
 const store = useMovementsStore();
+const inventoryStore = useInventoryStore();
+const locationStore = useLocationStore();
 
 const movementDraft = ref({
   type: "receipt",
@@ -23,6 +27,40 @@ const movementTypes = [
   { label: "Location Transfer", value: "relocation" },
   { label: "Positive Adjustment", value: "adjustment" },
 ];
+
+const productOptions = ref<{label: string, value: string}[]>([]);
+const filterProducts = async (val: string, update: (callback: () => void) => void) => {
+  if (val === '') {
+    update(() => {
+      productOptions.value = []
+    })
+    return
+  }
+  const products = await inventoryStore.searchProducts(val)
+  update(() => {
+    productOptions.value = products.map((p) => ({
+      label: `${p.name} (${p.sku})`,
+      value: p.id
+    }))
+  })
+}
+
+const locationOptions = ref<{label: string, value: string}[]>([]);
+const filterLocations = async (val: string, update: (callback: () => void) => void) => {
+  if (val === '') {
+    update(() => {
+      locationOptions.value = []
+    })
+    return
+  }
+  const locations = await locationStore.searchLocations(val)
+  update(() => {
+    locationOptions.value = locations.map((l) => ({
+      label: `${l.label} (${l.id})`,
+      value: l.id
+    }))
+  })
+}
 
 const submitMovement = async () => {
   if (!movementDraft.value.productId || !movementDraft.value.quantity) {
@@ -67,9 +105,9 @@ const submitMovement = async () => {
         reference: "",
       };
     } else if (err && typeof err === "object" && "error" in err) {
-      const apiErr = err as { error: { message?: string; details?: any[] } };
+      const apiErr = err as { error: { message?: string; details?: Record<string, unknown>[] } };
       const msg =
-        apiErr.error.details?.[0]?.message ||
+        (apiErr.error.details?.[0]?.message as string) ||
         apiErr.error.message ||
         "Validation failed";
       $q.notify({ type: "negative", message: msg });
@@ -103,25 +141,50 @@ const submitMovement = async () => {
             outlined
           />
 
-          <q-input
+          <q-select
             v-model="movementDraft.productId"
-            label="Product ID *"
+            :options="productOptions"
+            use-input
+            fill-input
+            hide-selected
+            emit-value
+            map-options
+            @filter="filterProducts"
+            label="Product *"
             outlined
+            hint="Type to search products"
           />
 
-          <q-input
+          <q-select
             v-model="movementDraft.fromLocationId"
-            label="Source Location ID *"
+            :options="locationOptions"
+            use-input
+            fill-input
+            hide-selected
+            emit-value
+            map-options
+            @filter="filterLocations"
+            label="Source Location *"
             outlined
+            hint="Type to search source locations"
             v-if="
               movementDraft.type === 'relocation' ||
               movementDraft.type === 'adjustment'
             "
           />
-          <q-input
+
+          <q-select
             v-model="movementDraft.toLocationId"
-            label="Destination Location ID *"
+            :options="locationOptions"
+            use-input
+            fill-input
+            hide-selected
+            emit-value
+            map-options
+            @filter="filterLocations"
+            label="Destination Location *"
             outlined
+            hint="Type to search destination locations"
             v-if="
               movementDraft.type === 'relocation' ||
               movementDraft.type === 'receipt' ||
