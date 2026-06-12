@@ -7,8 +7,12 @@ import IncidentFeed from '@/domains/incidents/components/IncidentFeed.vue';
 import ZoneOccupancy from '@/domains/locations/components/ZoneOccupancy.vue';
 import EventLogDebugger from '@/domains/events/components/EventLogDebugger.vue';
 import DecisionTraceFeed from '@/domains/intelligence/components/DecisionTraceFeed.vue';
+import InventoryView from '@/domains/inventory/views/InventoryView.vue';
+import IncidentView from '@/domains/incidents/views/IncidentView.vue';
+import { ref } from 'vue';
 
 const monitoringStore = useMonitoringStore();
+const activeTab = ref<'monitoring' | 'inventory' | 'incidents'>('monitoring');
 
 onMounted(() => {
   monitoringStore.fetchInitialData();
@@ -34,15 +38,9 @@ onMounted(() => {
       <aside class="sidebar">
         <nav>
           <ul>
-            <li class="active">Monitoring</li>
-            <li class="disabled" title="Coming in Phase 3">
-              Inventory
-              <span class="phase-label">Phase 3</span>
-            </li>
-            <li class="disabled" title="Coming in Phase 3">
-              Incidents
-              <span class="phase-label">Phase 3</span>
-            </li>
+            <li :class="{ active: activeTab === 'monitoring' }" @click="activeTab = 'monitoring'" style="cursor: pointer">Monitoring</li>
+            <li :class="{ active: activeTab === 'inventory' }" @click="activeTab = 'inventory'" style="cursor: pointer">Inventory</li>
+            <li :class="{ active: activeTab === 'incidents' }" @click="activeTab = 'incidents'" style="cursor: pointer">Incidents</li>
           </ul>
         </nav>
       </aside>
@@ -58,39 +56,49 @@ onMounted(() => {
         </div>
 
         <div v-else class="dashboard-content">
-          <div class="card-grid">
-            <article class="card">
-              <p class="label">Total Inventory</p>
-              <strong>{{ monitoringStore.totalInventoryCount }}</strong>
-              <p class="card-context">units across {{ monitoringStore.activeLocationsCount }} locations</p>
+          <div v-if="activeTab === 'monitoring'">
+            <div class="card-grid">
+              <article class="card">
+                <p class="label">Total Inventory</p>
+                <strong>{{ monitoringStore.totalInventoryCount }}</strong>
+                <p class="card-context">units across {{ monitoringStore.activeLocationsCount }} locations</p>
+              </article>
+              <article class="card">
+                <p class="label">Open Incidents</p>
+                <strong class="text-red">{{ monitoringStore.openIncidentsCount }}</strong>
+              </article>
+              <article class="card">
+                <p class="label">Processed Events</p>
+                <strong class="text-blue">{{ monitoringStore.totalMovementsProcessed }}</strong>
+              </article>
+            </div>
+
+            <article class="panel mb-section mt-6">
+              <ZoneOccupancy />
             </article>
-            <article class="card">
-              <p class="label">Open Incidents</p>
-              <strong class="text-red">{{ monitoringStore.openIncidentsCount }}</strong>
-            </article>
-            <article class="card">
-              <p class="label">Processed Events</p>
-              <strong class="text-blue">{{ monitoringStore.totalMovementsProcessed }}</strong>
-            </article>
+
+            <div class="feeds-grid mt-6">
+              <article class="panel feed-inbound">
+                <InboundFeed />
+              </article>
+              <article class="panel feed-outbound">
+                <OutboundFeed />
+              </article>
+              <article class="panel feed-incident">
+                <IncidentFeed />
+              </article>
+              <article class="panel feed-intelligence">
+                <DecisionTraceFeed />
+              </article>
+            </div>
           </div>
 
-          <article class="panel mb-section">
-            <ZoneOccupancy />
-          </article>
+          <div v-else-if="activeTab === 'inventory'">
+            <InventoryView />
+          </div>
 
-          <div class="feeds-grid">
-            <article class="panel feed-inbound">
-              <InboundFeed />
-            </article>
-            <article class="panel feed-outbound">
-              <OutboundFeed />
-            </article>
-            <article class="panel feed-incident">
-              <IncidentFeed />
-            </article>
-            <article class="panel feed-intelligence">
-              <DecisionTraceFeed />
-            </article>
+          <div v-else-if="activeTab === 'incidents'">
+            <IncidentView />
           </div>
         </div>
 
@@ -224,6 +232,9 @@ h1 {
 
 .mb-section {
   margin-bottom: 24px;
+}
+.mt-6 {
+  margin-top: 24px;
 }
 
 .dashboard-content {
