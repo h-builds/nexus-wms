@@ -22,6 +22,11 @@ const router = createRouter({
       path: '/movements/register',
       name: 'RegisterMovement',
       component: () => import('@/domains/movements/views/ExecuteMovement.vue')
+    },
+    {
+      path: '/sync-queue',
+      name: 'SyncQueue',
+      component: () => import('@/domains/home/views/SyncQueueView.vue')
     }
   ]
 })

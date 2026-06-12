@@ -29,7 +29,7 @@ onMounted(async () => {
           </q-card-section>
           
           <q-card-actions align="right" v-if="syncQueueLength > 0">
-            <q-btn flat color="grey" label="View Queue (Phase 2)" disable />
+            <q-btn flat color="primary" label="View Queue" to="/sync-queue" />
           </q-card-actions>
         </q-card>
       </div>
